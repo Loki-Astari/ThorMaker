@@ -19,7 +19,7 @@
 #
 #
 
-include $(THORSANVIL_ROOT)/Makefile.config
+-include $(THORSANVIL_ROOT)/Makefile.config
 include $(THORSANVIL_ROOT)/build/tools/Colour.Makefile
 include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
 
@@ -113,7 +113,7 @@ CXXSTDVER_FLAGS_11			=	-std=c++0x
 
 CC							=	$(CXX)
 CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) $(BOOST_FLAGS) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXXSTDVER_FLAGS_$(CXXSTDVER))
-ALL_LDLIBS					+=	$(THORSANVIL_LIBS) $(BOOST_LIBS) $(TEST_LIBS) $(OPTIMIZER_LIBS)
+ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS) $(BOOST_LIBS)
 
 
 
@@ -268,7 +268,7 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	@echo $(call colour_text, GRAY, "$(CC) -o $@")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(TARGET_MODE)/$*.o$(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS)$(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
+	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(TARGET_MODE)/$*.o$(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\

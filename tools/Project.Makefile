@@ -1,4 +1,6 @@
 
+-include $(CLOUD_ROOT)/Makefile.config
+
 .PHONY:	all test clean install %.dir
 
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
