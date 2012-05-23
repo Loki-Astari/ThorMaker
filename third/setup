@@ -1,0 +1,36 @@
+#!/bin/bash
+
+sudo apt-get install wget
+
+ROOT=`pwd`
+
+
+echo "Un-archiving google test"
+GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
+if [[ ${GTEST_ARCHIEVE} == "" ]]; then
+    echo "Retrieving: gtest-1.6.0"
+    wget http://googletest.googlecode.com/files/gtest-1.6.0.zip
+    GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
+fi
+GTEST_ARCHIEVE_DIR=${GTEST_ARCHIEVE%.zip}
+
+if [[ ! -d ${GTEST_ARCHIEVE_DIR} ]]; then
+    unzip ${GTEST_ARCHIEVE}
+fi
+
+echo "Building google test"
+cd ${GTEST_ARCHIEVE_DIR}
+GTEST_DIR=${ROOT}/${GTEST_ARCHIEVE_DIR}
+g++ -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
+g++ -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest_main.cc
+ar -rv libgtest.a gtest-all.o gtest_main.o
+
+echo "Installing google test"
+cd ../..
+mkdir bin include include3rd lib
+rm -f lib/libgtest.*
+cp ${GTEST_DIR}/libgtest.a lib/
+rm -f include3rd/gtest
+ln -s ${GTEST_DIR}/include/gtest include3rd/gtest
+
+
