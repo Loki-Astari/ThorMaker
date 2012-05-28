@@ -268,7 +268,7 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	@echo $(call colour_text, GRAY, "$(CC) -o $@")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(TARGET_MODE)/$*.o$(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
+	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
