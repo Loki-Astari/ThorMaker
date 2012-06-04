@@ -25,6 +25,7 @@ include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
 
 YACC			= bison
 LEX				= flex
+GPERF			= gperf --ignore-case
 CXX				= $(CXX_$(TARGET_MODE))
 	
 CXX_debug		= g++
@@ -41,10 +42,11 @@ CP				= cp
 NOCOVERAGE		+=
 
 APP_SRC						= $(patsubst %.app,%.cpp,$(TARGET))
-CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp $(APP_SRC),$(wildcard *.cpp))
+CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
 LEX_SRC						= $(wildcard *.l)
+GPERF_SRC					= $(wildcard *.gperf)
 YACC_SRC					= $(wildcard *.y)
-SRC							= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(CPP_SRC)
+SRC							= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
 HEAD						= $(wildcard *.h) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
@@ -168,7 +170,7 @@ objectarch:	buildDir $(GCOV_OBJ)
 	@echo $(call colour_text, BLUE, "Done")
 clean: test_clean
 	$(RM) $(OBJ) $(GCOV) 
-	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(CLEAN_EXTRA)
+	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET) $(patsubst %.app,%,$(filter %.app,$(TARGET))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET)))
 veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage
@@ -249,6 +251,7 @@ buildDir:	$(TARGET_MODE).Dir
 .PRECIOUS:	$(TARGET_MODE)/lib%.$(SO)
 .PRECIOUS:	%.tab.cpp
 .PRECIOUS:	%.lex.cpp
+.PRECIOUS:	%.gperf.cpp
 
 
 .PHONY:	%.app %.slib
@@ -342,6 +345,21 @@ $(TARGET_MODE)/%.o: %.cpp
 		echo $(GREEN_OK);								\
 	fi
 
+%.gperf.cpp: %.gperf
+	@echo $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}'
+	@$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@ 2>makefile_tmp;				\
+	if [ $$? != 0 ];									\
+	then												\
+		echo "Failed in Lexer Generator";				\
+		echo $(RED_ERROR);								\
+		echo "$(GPERF) -l -L C++ --class-name=$@_Hash $^ > $@"; \
+		echo "========================================";\
+		cat $@;											\
+		exit 1;											\
+	else 												\
+		echo $(GREEN_OK);								\
+	fi
+
 NotImplemented.%:
 	@echo $(call colour_text, RED, "$* Not Implemented Yet")
 
@@ -354,6 +372,7 @@ Print_On:
 	@echo "OBJ:		 $(OBJ)"
 	@echo "GCOV:	 $(GCOV)"
 	@echo "GCOV_OBJ: $(GCOV_OBJ)"
+	@echo "GPERF_SRC:$(GPERF_SRC)"
 
 .PHONY: always
 always:
