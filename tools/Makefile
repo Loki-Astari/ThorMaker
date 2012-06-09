@@ -179,17 +179,17 @@ test:
 	@echo $(call section_title,Building Objects for Testing and Coverage)
 	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
 	@echo $(call section_title,Building Unit Tests)
-	@touch test/unittest.cpp
-	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)"
-	@rm    test/unittest.cpp
-	@echo $(call section_title,Running Unit Tests)
-	@$(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app
+	@(! test -d test) || touch test/unittest.cpp
+	@(! test -d test) || $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)"
+	@(! test -d test) || rm    test/unittest.cpp
+	@(! test -d test) || echo $(call section_title,Running Unit Tests)
+	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app
 	@echo
 	@echo
 	@echo $(call colour_text, GRAY, $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage report_coverage COVERAGE=$(COVERAGE))
 	@echo
 	@echo
-	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage coverage COVERAGE=$(COVERAGE)
+	@(!test -d test) || $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage coverage COVERAGE=$(COVERAGE)
 
 install_app_%:
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
