@@ -6,7 +6,7 @@
 
 
 
-#if (__GNUG__ == 4) && (__GNUC_PATCHLEVEL__ == 3) && (__GNUC_MINOR__ == 6)
+#if (__GNUG__ == 4) && (__GNUC_MINOR__ == 6) && ((__GNUC_PATCHLEVEL__ == 3) || (__GNUC_PATCHLEVEL__ == 1))
 
 #define PORTABILITY_TESTED
 
