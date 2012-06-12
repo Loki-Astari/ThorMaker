@@ -1,6 +1,7 @@
 
 
 PLATFORM					= $(shell uname -s)
+PLATFORMVER					= $(subst _server,,$(subst -,_,$(subst .,_,$(shell uname -r))))
 SO							= $(SHARD_LIB_EXTENSOION_$(PLATFORM))
 
 #

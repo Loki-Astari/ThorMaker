@@ -26,16 +26,23 @@ include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
 YACC			= bison
 LEX				= flex
 GPERF			= gperf --ignore-case
+CP				= cp
 CXX				= $(CXX_$(TARGET_MODE))
 	
-CXX_debug		= g++
-CXX_release		= g++
-CXX_coverage	= $(CXX_coverage_$(PLATFORM))
+CXX_debug		= g++$(CXX_debug_$(PLATFORM))
+CXX_release		= g++$(CXX_release_$(PLATFORM))
+CXX_coverage	= g++$(CXX_coverage_$(PLATFORM))
 
-CXX_coverage_Darwin	= g++-4.2
-CXX_coverage_Linux	= g++
+CXX_coverage_Darwin				= -4.2
 
-CP				= cp
+CXX_debug_Linux					= $(CXX_debug_$(PLATFORM)$(PLATFORMVER))
+CXX_release_Linux				= $(CXX_release_$(PLATFORM)$(PLATFORMVER))
+CXX_coverage_Linux				= $(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
+
+CXX_debug_Linux2_6_32_36		= -4.6
+CXX_release_Linux2_6_32_36		= -4.6
+CXX_coverage_Linux2_6_32_36		= -4.6
+
 
 #
 # Add Files(without extension) that you do not want coverage metrics for
