@@ -39,9 +39,9 @@ CXX_debug_Linux					= $(CXX_debug_$(PLATFORM)$(PLATFORMVER))
 CXX_release_Linux				= $(CXX_release_$(PLATFORM)$(PLATFORMVER))
 CXX_coverage_Linux				= $(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
 
-CXX_debug_Linux2_6_32_36		= -4.6
-CXX_release_Linux2_6_32_36		= -4.6
-CXX_coverage_Linux2_6_32_36		= -4.6
+CXX_debug_Linux2_6_32			= -4.6
+CXX_release_Linux2_6_32			= -4.6
+CXX_coverage_Linux2_6_32		= -4.6
 
 
 #

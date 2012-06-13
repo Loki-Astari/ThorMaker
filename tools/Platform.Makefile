@@ -1,7 +1,7 @@
 
 
 PLATFORM					= $(shell uname -s)
-PLATFORMVER					= $(subst _server,,$(subst -,_,$(subst .,_,$(shell uname -r))))
+PLATFORMVER					= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
 SO							= $(SHARD_LIB_EXTENSOION_$(PLATFORM))
 
 #
