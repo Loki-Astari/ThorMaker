@@ -32,16 +32,20 @@ CXX				= $(CXX_$(TARGET_MODE))
 CXX_debug		= g++$(CXX_debug_$(PLATFORM))
 CXX_release		= g++$(CXX_release_$(PLATFORM))
 CXX_coverage	= g++$(CXX_coverage_$(PLATFORM))
+CXX_profile		= g++$(CXX_profile_$(PLATFORM))
 
 CXX_coverage_Darwin				= -4.2
+CXX_profile_Darwin				= -4.2
 
 CXX_debug_Linux					= $(CXX_debug_$(PLATFORM)$(PLATFORMVER))
 CXX_release_Linux				= $(CXX_release_$(PLATFORM)$(PLATFORMVER))
 CXX_coverage_Linux				= $(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
+CXX_profile_Linux				= $(CXX_profile_$(PLATFORM)$(PLATFORMVER))
 
 CXX_debug_Linux2_6_32			= -4.6
 CXX_release_Linux2_6_32			= -4.6
 CXX_coverage_Linux2_6_32		= -4.6
+CXX_profile_Linux2_6_32			= -4.6
 
 
 #
@@ -116,6 +120,7 @@ OPTIMIZER_LIBS				=	$(OPTIMIZER_LIBS_$(TARGET_MODE))
 OPTIMIZER_FLAGS_debug		=	-g
 OPTIMIZER_FLAGS_release		=	-O3
 OPTIMIZER_FLAGS_coverage	=	-g -fprofile-arcs -ftest-coverage
+OPTIMIZER_FLAGS_profile		=	-g -pg
 
 CXXSTDVER_FLAGS_03			=
 CXXSTDVER_FLAGS_11			=	-std=c++0x
@@ -136,6 +141,7 @@ BUILD_EXTENSION_CXXSTDVER_03	=   03
 BUILD_EXTENSION_CXXSTDVER_11	=	11
 BUILD_EXTENSION_TYPE_debug		=	D
 BUILD_EXTENSION_TYPE_coverage	=	D
+BUILD_EXTENSION_TYPE_profile	=	P
 
 
 #
@@ -151,11 +157,14 @@ validate:		test
 install:		test try_install_head install_Dodebug install_Dorelease
 install_debug:	test try_install_head install_Dodebug
 install_release:test try_install_head install_Dorelease
+install_profile:     try_install_head install_Doprofile
 	
 install_Dodebug:
 	$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all doInstall
 install_Dorelease:
 	$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all doInstall
+install_Doprofile:
+	$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all doInstall
 
 doInstall:	try_install_app try_install_lib
 
@@ -180,7 +189,7 @@ clean: test_clean
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET) $(patsubst %.app,%,$(filter %.app,$(TARGET))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET)))
 veryclean: clean test_veryclean
-	$(RM) -rf debug release coverage
+	$(RM) -rf debug release coverage profile
 test:
 	@-$(RM) -rf coverage/libobject.a coverage/*.gcov coverage/*.gcda test/coverage/unittest.app
 	@echo $(call section_title,Building Objects for Testing and Coverage)
@@ -246,6 +255,8 @@ debug:
 	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	 all
 release:
 	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
+profile:
+	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all try_install_head doInstall
 
 buildDir:	$(TARGET_MODE).Dir
 

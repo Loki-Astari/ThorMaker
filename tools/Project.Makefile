@@ -9,6 +9,7 @@ all:		ACTION=install
 clean:		ACTION=clean
 veryclean:	ACTION=veryclean
 install:	ACTION=install
+profile:	ACTION=profile
 
 ACTION		?=all
 PREFIX		?=$(THORSANVIL_ROOT)/build
@@ -18,6 +19,7 @@ all:		$(SUB_PROJECTS)
 clean:		$(SUB_PROJECTS)
 veryclean:	$(SUB_PROJECTS)
 install:	$(SUB_PROJECTS)
+profile:	$(SUB_PROJECTS)
 
 
 %.dir:
