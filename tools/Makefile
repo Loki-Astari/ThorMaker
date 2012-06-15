@@ -288,8 +288,8 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
-	@echo $(call colour_text, GRAY, "$(CC) -o $@")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
+	@echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS)")	| awk '{printf "%-80s", $$0}'
+	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
@@ -303,8 +303,8 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
-	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
+	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS)")	| awk '{printf "%-80s", $$0}'
+	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
@@ -318,7 +318,7 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	fi
 
 $(TARGET_MODE)/%.o: %.cpp
-	@echo $(call colour_text, GRAY, "$(CXX) -c $^") | awk '{printf "%-80s", $$0}'
+	@echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS)") | awk '{printf "%-80s", $$0}'
 	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS) 2>makefile_tmp;	\
 	if [ $$? != 0 ];									\
 	then												\
