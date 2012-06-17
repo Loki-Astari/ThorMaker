@@ -97,7 +97,6 @@ COMPILER_gpp_4_4_3_FLAGS	= -Wno-unreachable-code
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
 WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing -ansi -pedantic -Werror -Wunreachable-code -Wno-long-long
-WARNING_FLAGS_coverage		=	-DCOVERAGE_TEST
 
 
 expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
@@ -119,8 +118,8 @@ OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_$(TARGET_MODE))
 OPTIMIZER_LIBS				=	$(OPTIMIZER_LIBS_$(TARGET_MODE))
 OPTIMIZER_FLAGS_debug		=	-g
 OPTIMIZER_FLAGS_release		=	-O3
-OPTIMIZER_FLAGS_coverage	=	-g -fprofile-arcs -ftest-coverage
-OPTIMIZER_FLAGS_profile		=	-g -pg
+OPTIMIZER_FLAGS_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST
+OPTIMIZER_FLAGS_profile		=	-g -pg -DPROFILE_TEST
 
 CXXSTDVER_FLAGS_03			=
 CXXSTDVER_FLAGS_11			=	-std=c++0x
@@ -149,7 +148,7 @@ BUILD_EXTENSION_TYPE_profile	=	P
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install objectarch clean veryclean test coverage
+.PHONY:	all validate install objectarch clean veryclean test coverage debug release profile
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
