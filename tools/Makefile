@@ -224,9 +224,10 @@ test_%:
 coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
 	@left=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;				\
 	 right=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;				\
+	 a=$${right};b=$${left};c=$$(($$a-$$b));d=$$(($$c*100));e=$$(($$d/$$a));		\
 	 res=`echo "$${left} > ($${right}  * 0.2)"  | bc`;				\
 	 if [ $${res} -ne 0 ]; then										\
-		echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage does not exceed 80% of total);	\
+		echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${e}% does not exceed 80% of total);	\
 		echo "Use: '$(MAKE) test PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) COVERAGE=On' to get details about coverage";		\
 		exit 1;														\
 	 else															\
@@ -248,7 +249,7 @@ report_coverage_%.cpp:
 report_coverage_%.tpp:
 	@if [ -e coverage/$*.cpp.out ]; then echo $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.tpp.gcov ; fi
-	@if [ "$(COVERAGE)" = "$*.cpp" ]; then cat coverage/$*.tpp.gcov ; fi
+	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat coverage/$*.tpp.gcov ; fi
 	
 debug:
 	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	 all
