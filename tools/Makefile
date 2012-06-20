@@ -76,7 +76,7 @@ INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head
 CXXSTDVER					?=  03
 VERBOSE						?=	Off
 TARGET_MODE					?=	debug
-
+COVERAGE_TARGET				?= COVERAGE_$(notdir $(shell pwd))
 
 #
 # Warning flags turned off for test suite.
@@ -101,7 +101,7 @@ WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing -ansi -pedantic -Werror -Wun
 
 expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
 THORSANVIL_FLAGS			=	-I$(PREFIX_INC)
-THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS))
+THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS)) $(EX_LDLIBS)
 
 
 BOOST_FLAGS					=	-isystem $(PREFIX_INC3RD)
@@ -118,7 +118,7 @@ OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_$(TARGET_MODE))
 OPTIMIZER_LIBS				=	$(OPTIMIZER_LIBS_$(TARGET_MODE))
 OPTIMIZER_FLAGS_debug		=	-g
 OPTIMIZER_FLAGS_release		=	-O3
-OPTIMIZER_FLAGS_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST
+OPTIMIZER_FLAGS_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST -D$(COVERAGE_TARGET)
 OPTIMIZER_FLAGS_profile		=	-g -pg -DPROFILE_TEST
 
 CXXSTDVER_FLAGS_03			=
@@ -195,7 +195,7 @@ test:
 	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
 	@echo $(call section_title,Building Unit Tests)
 	@(! test -d test) || touch test/unittest.cpp
-	@(! test -d test) || $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)"
+	@(! test -d test) || $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
 	@(! test -d test) || rm    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
 	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app
