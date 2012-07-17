@@ -23,6 +23,14 @@
 #endif
 
 
+// Tested on Mac with g++ and boost installed via brew
+#if (__GNUG__ == 4) && (__GNUC_MINOR__ == 2)
+
+#define PORTABILITY_TESTED
+#define SMART_OWNED_PTR_TYPE_STD_AUTO_PTR    1
+
+#endif
+
 
 
 #ifndef PORTABILITY_TESTED
