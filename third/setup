@@ -1,6 +1,14 @@
 #!/bin/bash
 
-sudo apt-get install wget
+install=sudo apt-get
+
+host=`uname`
+if [[ "${host}" == "Darwin" ]]; then 
+	# This is a mac use brew
+	install=brew
+fi
+
+${install} install wget
 
 ROOT=`pwd`
 
@@ -27,7 +35,8 @@ ar -rv libgtest.a gtest-all.o gtest_main.o
 
 echo "Installing google test"
 cd ../..
-mkdir bin include include3rd lib
+pwd
+mkdir -p bin include include3rd lib
 rm -f lib/libgtest.*
 cp ${GTEST_DIR}/libgtest.a lib/
 rm -f include3rd/gtest
