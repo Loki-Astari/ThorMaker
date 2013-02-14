@@ -17,6 +17,9 @@
 #		Note: This will build a shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
 #
+# Flags Help:
+#	THORSANVIL_ANSI_USE	= OFF		(turn off ansi)	Default THORSANVIL_ANSI_USE = ON
+#
 #
 
 -include $(THORSANVIL_ROOT)/Makefile.config
@@ -82,6 +85,14 @@ COVERAGE_TARGET				?= COVERAGE_$(notdir $(shell pwd))
 # Warning flags turned off for test suite.
 # As long as the main code compiles without warnings
 
+
+#
+# ANSI (turn it off)
+THORSANVIL_ANSI_USE			?= ON
+THORSANVIL_ANSI				= $(THORSANVIL_ANSI_$(THORSANVIL_ANSI_USE))
+THORSANVIL_ANSI_ON			= -ansi
+
+
 ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS) 
 
 PLATFORM_SPECIFIC_FLAGS		=	$(PLATFORM_$(PLATFORM)_FLAGS)
@@ -96,7 +107,7 @@ COMPILER_gpp_4_4_3_FLAGS	= -Wno-unreachable-code
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
-WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing -ansi -pedantic -Werror -Wunreachable-code -Wno-long-long
+WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Werror -Wunreachable-code -Wno-long-long
 
 
 expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
