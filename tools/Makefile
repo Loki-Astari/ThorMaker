@@ -18,7 +18,7 @@
 #			  In the directory TARGET_Mode (debug/release)
 #
 # Flags Help:
-#	THORSANVIL_ANSI_USE	= OFF		(turn off ansi)	Default THORSANVIL_ANSI_USE = ON
+#	CXXSTDVER=03					(set to 11 for newer C++)
 #
 #
 
@@ -87,10 +87,9 @@ COVERAGE_TARGET				?= COVERAGE_$(notdir $(shell pwd))
 
 
 #
-# ANSI (turn it off)
-THORSANVIL_ANSI_USE			?= ON
-THORSANVIL_ANSI				= $(THORSANVIL_ANSI_$(THORSANVIL_ANSI_USE))
-THORSANVIL_ANSI_ON			= -ansi
+# ANSI (turn it off for C++11)
+THORSANVIL_ANSI_03			= -ansi
+THORSANVIL_ANSI				= $(THORSANVIL_ANSI_$(CXXSTDVER))
 
 
 ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS) 
