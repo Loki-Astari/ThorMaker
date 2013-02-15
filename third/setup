@@ -1,14 +1,15 @@
 #!/bin/bash
 
-install=sudo apt-get
+install="sudo apt-get"
 
 host=`uname`
 if [[ "${host}" == "Darwin" ]]; then 
 	# This is a mac use brew
-	install=brew
+	install="brew"
 fi
 
 ${install} install wget
+exit 1
 
 ROOT=`pwd`
 
