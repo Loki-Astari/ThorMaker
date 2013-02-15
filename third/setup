@@ -9,7 +9,6 @@ if [[ "${host}" == "Darwin" ]]; then
 fi
 
 ${install} install wget
-exit 1
 
 ROOT=`pwd`
 
