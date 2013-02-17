@@ -125,12 +125,15 @@ TEST_FLAGS_on				=	-I..
 TEST_LIBS_on				=	-L../coverage -lobject -lgtest
 
 
-OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_$(TARGET_MODE))
+OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_DISP)$(OPTIMIZER_FLAGS_HIDE)
+OPTIMIZER_FLAGS_DISP		=	$(OPTIMIZER_FLAGS_DISP_$(TARGET_MODE))
+OPTIMIZER_FLAGS_HIDE		=	$(OPTIMIZER_FLAGS_HIDE_$(TARGET_MODE))
 OPTIMIZER_LIBS				=	$(OPTIMIZER_LIBS_$(TARGET_MODE))
-OPTIMIZER_FLAGS_debug		=	-g
-OPTIMIZER_FLAGS_release		=	-O3
-OPTIMIZER_FLAGS_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST -D$(COVERAGE_TARGET)
-OPTIMIZER_FLAGS_profile		=	-g -pg -DPROFILE_TEST
+OPTIMIZER_FLAGS_DISP_debug		=	-g
+OPTIMIZER_FLAGS_DISP_release	=	-O3
+OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET)  
+OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST
+OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
 CXXSTDVER_FLAGS_03			=
 CXXSTDVER_FLAGS_11			=	-std=c++0x
@@ -299,7 +302,7 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
-	@echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS)")	| awk '{printf "%-80s", $$0}'
+	@echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
 	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -314,7 +317,7 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
-	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS)")	| awk '{printf "%-80s", $$0}'
+	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
 	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -329,7 +332,7 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	fi
 
 $(TARGET_MODE)/%.o: %.cpp
-	@echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS)") | awk '{printf "%-80s", $$0}'
+	@echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)") | awk '{printf "%-80s", $$0}'
 	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS) 2>makefile_tmp;	\
 	if [ $$? != 0 ];									\
 	then												\
