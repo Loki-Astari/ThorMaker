@@ -31,19 +31,20 @@ LEX				= flex
 GPERF			= gperf --ignore-case
 CP				= cp
 CXX				= $(CXX_$(TARGET_MODE))
+COV				= gcov$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
 	
-CXX_debug		= g++$(CXX_debug_$(PLATFORM))
-CXX_release		= g++$(CXX_release_$(PLATFORM))
-CXX_coverage	= g++$(CXX_coverage_$(PLATFORM))
-CXX_profile		= g++$(CXX_profile_$(PLATFORM))
+CXX_debug		= g++$(CXX_debug_$(PLATFORM)$(PLATFORMVER))
+CXX_release		= g++$(CXX_release_$(PLATFORM)$(PLATFORMVER))
+CXX_coverage	= g++$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
+CXX_profile		= g++$(CXX_profile_$(PLATFORM)$(PLATFORMVER))
 
-CXX_coverage_Darwin				= -4.2
-CXX_profile_Darwin				= -4.2
+CXX_coverage_Darwin11_3_0		= -4.2
+CXX_profile_Darwin11_3_0		= -4.2
 
-CXX_debug_Linux					= $(CXX_debug_$(PLATFORM)$(PLATFORMVER))
-CXX_release_Linux				= $(CXX_release_$(PLATFORM)$(PLATFORMVER))
-CXX_coverage_Linux				= $(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
-CXX_profile_Linux				= $(CXX_profile_$(PLATFORM)$(PLATFORMVER))
+CXX_debug_Darwin12_2_1			= -4.7
+CXX_release_Darwin12_2_1		= -4.7
+CXX_coverage_Darwin12_2_1		= -4.7
+CXX_profile_Darwin12_2_1		= -4.7
 
 CXX_debug_Linux2_6_32			= -4.6
 CXX_release_Linux2_6_32			= -4.6
@@ -245,7 +246,7 @@ coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_R
 	 fi
 coverage/%.cpp.gcov: always
 	@echo "Generating Coverage for $*.cpp"
-	@if [ -e $*.cpp ]; then gcov --long-file-names --object-directory coverage $*.cpp 2>/dev/null	> coverage/$*.cpp.out ; fi;
+	@if [ -e $*.cpp ]; then $(COV) --long-file-names --object-directory coverage $*.cpp 2>/dev/null	> coverage/$*.cpp.out ; fi;
 	@if [ -e $*.cpp*$*.tpp.gcov ]; then mv $*.cpp*$*.tpp.gcov coverage/$*.tpp.gcov; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
 	@$(RM) *.gcov
