@@ -13,9 +13,16 @@
 # A name with a *.app  extension is an executable			(the app will NOT be part of the final name)
 # A name with a *.a    extension is a static library		(the lib prefix will automatically be added)
 # A name with a *.slib extension is a shared library		(the lib prefix will automatically be added. And platform specific suffix will replace slib)
+# A name with a *.head extension will build a header only library.
 # A name with a *.dir  extension builds a subdirectory
-#		Note: This will build a shared library with the appropriate platform specific extension
+#
+#		Note: This will build a applications/shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
+#
+#		Note: A makefile can only define (1) shared library of (1) header only library.  (mutually exclusive)
+#			  But you can define multiple applications/directories (and one of the above).
+#			  Applications assume the * names a source file with main()
+#			
 #
 # Flags Help:
 #	CXXSTDVER=03					(set to 11 for newer C++)
@@ -73,7 +80,7 @@ GCOV_ACTUAL					= $(filter $(GCOV_REPORT), $(wildcard coverage/*.gcov))
 
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET)), $(patsubst %.app,  install_app_%, $(TARGET)))
 INSTALL_LIB					= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_lib_%, $(TARGET)))
-INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head_%, $(HEAD)))
+INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)) $(filter %.head, $(TARGET)), $(patsubst %, install_head_%, $(HEAD)))
 
 #
 # Set to On to see debug output
@@ -167,7 +174,7 @@ BUILD_EXTENSION_TYPE_profile	=	P
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test try_install_head install_Dodebug install_Dorelease
+install:		test install_head install_Dodebug install_Dorelease
 install_debug:	test try_install_head install_Dodebug
 install_release:test try_install_head install_Dorelease
 install_profile:     try_install_head install_Doprofile
@@ -228,8 +235,8 @@ install_lib_%:
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
-install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
-	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
+install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)) $(filter %.head, $(TARGET))).Dir
+	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)) $(filter %.head, $(TARGET)))/
 	@echo $(call subsection_title, Install Header $*)
 
 test_%:
@@ -297,6 +304,9 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 
 %.slib:		buildDir $(TARGET_MODE)/lib%.$(SO)
 	@echo $(call subsection_title, Done Building $(TARGET_MODE)/lib$*.$(SO))
+
+%.head:
+	@echo $(call subsection_title, Done Header Only $*)
 
 
 
