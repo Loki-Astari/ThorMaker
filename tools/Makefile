@@ -328,11 +328,11 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
+	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo $(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS); \
+		echo $(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS); \
 		echo "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
@@ -343,11 +343,11 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 
 $(TARGET_MODE)/%.o: %.cpp
 	@echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)") | awk '{printf "%-80s", $$0}'
-	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS) 2>makefile_tmp;	\
+	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS) $($*_FLAGS) 2>makefile_tmp;	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo $(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS);\
+		echo $(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS) $($*_FLAGS);\
 		echo "========================================";\
 		cat makefile_tmp;								\
 		exit 1;											\
