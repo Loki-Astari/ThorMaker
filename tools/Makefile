@@ -202,7 +202,7 @@ Note_%:
 %.cpp:	%.h
 	
 objectarch:	buildDir $(GCOV_OBJ)
-	@$(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null
+	@-$(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null
 	@echo $(call colour_text, BLUE, "Done")
 clean: test_clean
 	$(RM) $(OBJ) $(GCOV) 
@@ -328,11 +328,11 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS) 2>makefile_tmp; \
+	@$(CXX) -dynamiclib -o $@ $(LDFLAGS) -Wl,$(SONAME),lib$*$(BUILD_EXTENSION).$(SO) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo $(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS); \
+		echo $(CXX) -dynamiclib -o $@ $(LDFLAGS) -Wl,$(SONAME),lib$*$(BUILD_EXTENSION).$(SO) $(OBJ) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS); \
 		echo "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
