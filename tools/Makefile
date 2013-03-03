@@ -327,8 +327,8 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
-	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -dynamiclib -o $@ $(LDFLAGS) -Wl,$(SONAME),lib$*$(BUILD_EXTENSION).$(SO) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS) 2>makefile_tmp; \
+	@echo $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG) -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
+	@$(CXX) $(SHARED_LIB_FLAG) -o $@ $(LDFLAGS) -Wl,$(SONAME),lib$*$(BUILD_EXTENSION).$(SO) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\

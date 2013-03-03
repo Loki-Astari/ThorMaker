@@ -4,6 +4,7 @@ PLATFORM					= $(shell uname -s)
 PLATFORMVER					= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
 SO							= $(SHARD_LIB_EXTENSOION_$(PLATFORM))
 SONAME						= $(SHARD_LIB_NAME_FLAG_$(PLATFORM))
+SHARED_LIB_FLAG				= $(SHARED_LIB_FLAG_$(PLATFORM))
 
 #
 COMPILER_NAME				= $(subst +,p,$(CXX))
@@ -16,8 +17,11 @@ COMPILER_CXX_gpp_VERSION	= $(subst .,_,$(shell g++ -dumpversion))
 SHARD_LIB_EXTENSOION_Darwin	= dylib
 SHARD_LIB_EXTENSOION_Linux	= so
 
+SHARED_LIB_FLAG_Darwin		= -dynamiclib
+SHARED_LIB_FLAG_Linux		= -shared
+
 SHARD_LIB_NAME_FLAG_Darwin	= -install_name
-HARD_LIB_NAME_FLAG_Linux	= -soname
+SHARD_LIB_NAME_FLAG_Linux	= -soname
 
 RUNTIME_SHARED_PATH_SET			= $(RUNTIME_SHARED_PATH_SET_$(PLATFORM))
 RUNTIME_SHARED_PATH_SET_Darwin	= DYLD_LIBRARY_PATH
