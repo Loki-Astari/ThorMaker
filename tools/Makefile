@@ -13,19 +13,30 @@
 # A name with a *.app  extension is an executable			(the app will NOT be part of the final name)
 # A name with a *.a    extension is a static library		(the lib prefix will automatically be added)
 # A name with a *.slib extension is a shared library		(the lib prefix will automatically be added. And platform specific suffix will replace slib)
-# A name with a *.head extension will build a header only library.
 # A name with a *.dir  extension builds a subdirectory
-#
-#		Note: This will build a applications/shared library with the appropriate platform specific extension
+#		Note: This will build a shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
-#
-#		Note: A makefile can only define (1) shared library of (1) header only library.  (mutually exclusive)
-#			  But you can define multiple applications/directories (and one of the above).
-#			  Applications assume the * names a source file with main()
-#			
 #
 # Flags Help:
 #	CXXSTDVER=03					(set to 11 for newer C++)
+# 
+# Flags For Specific files:
+#	<TARGET>_LDLIBS			= <Libs>
+#		Adds libs for specific targets in the makefile.
+#		Libs is used exactly as shown with no processing.
+#
+#	<TARGET>_LINK_LIBS		= <Libs>
+#		Adds libs for specific targets in the makefile.
+#		Each item in Libs will be expanded with -l<ib><build-extension>
+#		This this is used for libraries build with this project
+#
+#	UNITTEST_LDLIBS			= <Libs>
+#	UNITTEST_LINK_LIBS		= <Libs>
+#		Like the above two but specifically for unit tests
+#
+#	<SOURCE>_CXXFLAGS		= <Flags>
+#		Adds specific flags for a file.
+#		Usually used to suppress warnings.
 #
 #
 
@@ -80,7 +91,7 @@ GCOV_ACTUAL					= $(filter $(GCOV_REPORT), $(wildcard coverage/*.gcov))
 
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET)), $(patsubst %.app,  install_app_%, $(TARGET)))
 INSTALL_LIB					= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_lib_%, $(TARGET)))
-INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)) $(filter %.head, $(TARGET)), $(patsubst %, install_head_%, $(HEAD)))
+INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head_%, $(HEAD)))
 
 #
 # Set to On to see debug output
@@ -118,11 +129,12 @@ WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic
 
 
 expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
+expandFlag					=   $(foreach flag, $(1), $(flag))
 THORSANVIL_FLAGS			=	-I$(PREFIX_INC)
 THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS)) $(EX_LDLIBS)
 
 
-BOOST_FLAGS					=	-isystem $(PREFIX_INC3RD)
+BOOST_FLAGS					=	-isystem $(PREFIX_INC3RD) -DBOOST_FILESYSTEM_VERSION=3
 BOOST_LIBS					=
 
 
@@ -174,7 +186,7 @@ BUILD_EXTENSION_TYPE_profile	=	P
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test install_head install_Dodebug install_Dorelease
+install:		test try_install_head install_Dodebug install_Dorelease
 install_debug:	test try_install_head install_Dodebug
 install_release:test try_install_head install_Dorelease
 install_profile:     try_install_head install_Doprofile
@@ -202,7 +214,7 @@ Note_%:
 %.cpp:	%.h
 	
 objectarch:	buildDir $(GCOV_OBJ)
-	@-$(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null
+	@$(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null
 	@echo $(call colour_text, BLUE, "Done")
 clean: test_clean
 	$(RM) $(OBJ) $(GCOV) 
@@ -235,8 +247,8 @@ install_lib_%:
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
-install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)) $(filter %.head, $(TARGET))).Dir
-	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)) $(filter %.head, $(TARGET)))/
+install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
+	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
 	@echo $(call subsection_title, Install Header $*)
 
 test_%:
@@ -305,15 +317,12 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 %.slib:		buildDir $(TARGET_MODE)/lib%.$(SO)
 	@echo $(call subsection_title, Done Building $(TARGET_MODE)/lib$*.$(SO))
 
-%.head:
-	@echo $(call subsection_title, Done Header Only $*)
 
 
 
-
-$(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
-	@echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
+$(TARGET_MOD)E/%.app:	$(OBJ) $(TARGET_MODE)/%.o
+	@echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}'
+	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
@@ -327,12 +336,12 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
-	@echo $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG) -o $@ $(OPTIMIZER_FLAGS_DISP)")	| awk '{printf "%-80s", $$0}'
-	@$(CXX) $(SHARED_LIB_FLAG) -o $@ $(LDFLAGS) -Wl,$(SONAME),lib$*$(BUILD_EXTENSION).$(SO) $(OBJ) $(CXXFLAGS) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS) 2>makefile_tmp; \
+	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}'
+	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo $(CXX) -dynamiclib -o $@ $(LDFLAGS) -Wl,$(SONAME),lib$*$(BUILD_EXTENSION).$(SO) $(OBJ) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_FLAGS); \
+		echo $(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS); \
 		echo "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
@@ -342,12 +351,12 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	fi
 
 $(TARGET_MODE)/%.o: %.cpp
-	@echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)") | awk '{printf "%-80s", $$0}'
-	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS) $($*_FLAGS) 2>makefile_tmp;	\
+	@echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}'
+	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) 2>makefile_tmp;	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo $(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS) $($*_FLAGS);\
+		echo $(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS));\
 		echo "========================================";\
 		cat makefile_tmp;								\
 		exit 1;											\
