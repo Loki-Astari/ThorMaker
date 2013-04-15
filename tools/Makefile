@@ -111,13 +111,21 @@ THORSANVIL_ANSI_03			= -ansi
 THORSANVIL_ANSI				= $(THORSANVIL_ANSI_$(CXXSTDVER))
 
 
-ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS) 
+ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS)  $(LANGUAGE_SPECIFIC_FLAGS)
 
 PLATFORM_SPECIFIC_FLAGS		=	$(PLATFORM_$(PLATFORM)_FLAGS)
 PLATFORM_Darwin_FLAGS		=
 PLATFORM_Linux_FLAGS		=
 
 COMPILER_SPECIFIC_FLAGS		= $(COMPILER_$(COMPILER_NAME)_$(COMPILER_VERSION)_FLAGS)
+
+LANGUAGE_SPECIFIC_FLAGS		= $(LANGUAGE_SPECIFIC_$(CXXSTDVER)_FLAGS)
+#
+# Bug in gcc
+# The macro __cplusplus is always 1 so you can detect the language version at the pre-processor level.
+# So we defined the flag THOR_USE_CPLUSPLUS11 to be used instead
+LANGUAGE_SPECIFIC_11_FLAGS	= -DTHOR_USE_CPLUSPLUS11
+
 #
 # Having problems with unreachable code being reported in the system header files
 # Had to turn this on to make the code compile with no errors.
