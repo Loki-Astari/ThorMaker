@@ -19,6 +19,7 @@
 #
 # Flags Help:
 #	CXXSTDVER=03					(set to 11 for newer C++)
+#	VERBOSE=On						Turn on verbose mode
 # 
 # Flags For Specific files:
 #	<TARGET>_LDLIBS			= <Libs>
@@ -200,11 +201,11 @@ install_release:test try_install_head install_Dorelease
 install_profile:     try_install_head install_Doprofile
 	
 install_Dodebug:
-	$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all doInstall
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all doInstall
 install_Dorelease:
-	$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all doInstall
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all doInstall
 install_Doprofile:
-	$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all doInstall
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all doInstall
 
 doInstall:	try_install_app try_install_lib
 
@@ -233,19 +234,19 @@ veryclean: clean test_veryclean
 test:
 	@-$(RM) -rf coverage/libobject.a coverage/*.gcov coverage/*.gcda test/coverage/unittest.app
 	@echo $(call section_title,Building Objects for Testing and Coverage)
-	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
+	@$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
 	@echo $(call section_title,Building Unit Tests)
 	@(! test -d test) || touch test/unittest.cpp
-	@(! test -d test) || $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
+	@(! test -d test) || $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
 	@(! test -d test) || rm    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
 	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app
 	@echo
 	@echo
-	@echo $(call colour_text, GRAY, $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage report_coverage COVERAGE=$(COVERAGE))
+	@echo $(call colour_text, GRAY, $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage report_coverage COVERAGE=$(COVERAGE))
 	@echo
 	@echo
-	@(! test -d test) || $(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage coverage COVERAGE=$(COVERAGE)
+	@(! test -d test) || $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage coverage COVERAGE=$(COVERAGE)
 
 install_app_%:
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
@@ -260,7 +261,7 @@ install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
 	@echo $(call subsection_title, Install Header $*)
 
 test_%:
-	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TEST_STATE=on TARGET=unittest.app $*; fi
+	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TEST_STATE=on TARGET=unittest.app $*; fi
 
 coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
 	@left=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;				\
@@ -269,7 +270,7 @@ coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_R
 	 res=`echo "$${left} > ($${right}  * 0.2)"  | bc`;				\
 	 if [ $${res} -ne 0 ]; then										\
 		echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${e}% does not exceed 80% of total);	\
-		echo "Use: '$(MAKE) test PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) COVERAGE=On' to get details about coverage";		\
+		echo "Use: '$(MAKE) test VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) COVERAGE=On' to get details about coverage";		\
 		exit 1;														\
 	 else															\
 		echo $(GREEN_OK) Code Coverage Passed;						\
@@ -293,11 +294,11 @@ report_coverage_%.tpp:
 	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat coverage/$*.tpp.gcov ; fi
 	
 debug:
-	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	 all
+	@$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	 all
 release:
-	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
+	@$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
 profile:
-	@$(MAKE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all try_install_head doInstall
+	@$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all try_install_head doInstall
 
 buildDir:	$(TARGET_MODE).Dir
 
@@ -323,13 +324,15 @@ buildDir:	$(TARGET_MODE).Dir
 xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO)
 
 %.slib:		buildDir $(TARGET_MODE)/lib%.$(SO)
-	@echo $(call subsection_title, Done Building $(TARGET_MODE)/lib$*.$(SO))
+	@echo $(call subsection_title, Done Building $(shell basename `pwd`) $(TARGET_MODE)/lib$*.$(SO))
 
 
 
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
-	@echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}'
+	@if [[ "$(VERBOSE)" == "Off" ]]; then \
+		 echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ;	\
+	else echo '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; fi
 	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -344,7 +347,9 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
-	@echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}'
+	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+		 echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; \
+	else echo '$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS)' ; fi
 	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -359,7 +364,9 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	fi
 
 $(TARGET_MODE)/%.o: %.cpp
-	@echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}'
+	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+		 echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
+	else echo '$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS))' ; fi
 	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) 2>makefile_tmp;	\
 	if [ $$? != 0 ];									\
 	then												\
@@ -374,7 +381,9 @@ $(TARGET_MODE)/%.o: %.cpp
 	fi
 
 %.tab.cpp: %.y
-	@echo $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}'
+	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+		 echo $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
+	else echo '$(YACC) -o $@ -d $<' ; fi
 	@$(YACC) -o $@ -d $< 2>makefile_tmp;				\
 	if [ $$? != 0 ];									\
 	then												\
@@ -390,8 +399,10 @@ $(TARGET_MODE)/%.o: %.cpp
 	fi
 
 %.lex.cpp: %.l
-	@echo $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}'
-	@$(LEX) -t $< | sed -e 's/<stdout>/$*.lex.cpp/' -e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' > $@;	\
+	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+		 echo $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
+	else echo '$(LEX) -t $< > $@' ; fi
+	@$(LEX) -t $< | sed -e 's/<stdout>/$*.lex.cpp/' -e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' -e 's/max_size )) < 0 )/max_size )) == std::size_t(-1) )/' > $@;	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo "Failed in Lexer Generator";				\
@@ -405,7 +416,9 @@ $(TARGET_MODE)/%.o: %.cpp
 	fi
 
 %.gperf.cpp: %.gperf
-	@echo $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}'
+	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+		 echo $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
+	else echo '$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@'	; fi
 	@$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@ 2>makefile_tmp;				\
 	if [ $$? != 0 ];									\
 	then												\
