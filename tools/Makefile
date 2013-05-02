@@ -126,19 +126,21 @@ PLATFORM_SPECIFIC_FLAGS		=	$(PLATFORM_$(PLATFORM)_FLAGS)
 PLATFORM_Darwin_FLAGS		=
 PLATFORM_Linux_FLAGS		=
 
-COMPILER_SPECIFIC_FLAGS		= $(COMPILER_$(COMPILER_NAME)_$(COMPILER_VERSION)_FLAGS)
-
-LANGUAGE_SPECIFIC_FLAGS		= $(LANGUAGE_SPECIFIC_$(CXXSTDVER)_FLAGS)
-#
-# Bug in gcc
-# The macro __cplusplus is always 1 so you can detect the language version at the pre-processor level.
-# So we defined the flag THOR_USE_CPLUSPLUS11 to be used instead
-LANGUAGE_SPECIFIC_11_FLAGS	= -DTHOR_USE_CPLUSPLUS11
 
 #
 # Having problems with unreachable code being reported in the system header files
 # Had to turn this on to make the code compile with no errors.
-COMPILER_gpp_4_4_3_FLAGS	= -Wno-unreachable-code
+COMPILER_SPECIFIC_FLAGS		= $(COMPILER_$(COMPILER_NAME)_$(COMPILER_VERSION)_FLAGS)
+COMPILER_gpp_4_4_FLAGS		= -Wno-unreachable-code
+COMPILER_gpp_4_7_FLAGS		= -Wno-unreachable-code
+
+
+#
+# Bug in gcc
+# The macro __cplusplus is always 1 so you can detect the language version at the pre-processor level.
+# So we defined the flag THOR_USE_CPLUSPLUS11 to be used instead
+LANGUAGE_SPECIFIC_FLAGS		= $(LANGUAGE_SPECIFIC_$(CXXSTDVER)_FLAGS)
+LANGUAGE_SPECIFIC_11_FLAGS	= -DTHOR_USE_CPLUSPLUS11
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
@@ -209,13 +211,16 @@ install_release:test try_install_head install_Dorelease
 install_profile:     try_install_head install_Doprofile
 
 tools:
-	@echo "PLATFORM: $(PLATFORM)  $(PLATFORMVER)"
-	@echo "YACC:     $(YACC)"
-	@echo "LEX:      $(LEX)"
-	@echo "GPERF:    $(GPERF)"
-	@echo "CP:       $(CP)"
-	@echo "CXX:      $(CXX)"
-	@echo "COV:      $(COV)"
+	@echo "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
+	@echo "PLATFORM FLAGS:   $(PLATFORM_SPECIFIC_FLAGS)"
+	@echo "COMPILER FLAGS:   $(COMPILER_SPECIFIC_FLAGS)"
+	@echo "LANGUAGE FLAGS:   $(LANGUAGE_SPECIFIC_FLAGS)"
+	@echo "YACC:             $(YACC)"
+	@echo "LEX:              $(LEX)"
+	@echo "GPERF:            $(GPERF)"
+	@echo "CP:               $(CP)"
+	@echo "CXX:              $(CXX)   :  Name: $(COMPILER_NAME) Version:$(COMPILER_VERSION) Language:$(CXXSTDVER)"
+	@echo "COV:              $(COV)"
 
 	
 install_Dodebug:
