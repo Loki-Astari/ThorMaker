@@ -39,6 +39,9 @@
 #		Adds specific flags for a file.
 #		Usually used to suppress warnings.
 #
+#	FILE_WARNING_FLAGS
+#		Extra project specific warning flags
+#
 #
 
 -include $(THORSANVIL_ROOT)/Makefile.config
@@ -64,6 +67,11 @@ CXX_debug_Darwin12_2_1			= -4.7
 CXX_release_Darwin12_2_1		= -4.7
 CXX_coverage_Darwin12_2_1		= -4.7
 CXX_profile_Darwin12_2_1		= -4.7
+
+CXX_debug_Darwin12_3_0			= -4.7
+CXX_release_Darwin12_3_0		= -4.7
+CXX_coverage_Darwin12_3_0		= -4.7
+CXX_profile_Darwin12_3_0		= -4.7
 
 CXX_debug_Linux2_6_32			= -4.6
 CXX_release_Linux2_6_32			= -4.6
@@ -199,6 +207,16 @@ install:		test try_install_head install_Dodebug install_Dorelease
 install_debug:	test try_install_head install_Dodebug
 install_release:test try_install_head install_Dorelease
 install_profile:     try_install_head install_Doprofile
+
+tools:
+	@echo "PLATFORM: $(PLATFORM)  $(PLATFORMVER)"
+	@echo "YACC:     $(YACC)"
+	@echo "LEX:      $(LEX)"
+	@echo "GPERF:    $(GPERF)"
+	@echo "CP:       $(CP)"
+	@echo "CXX:      $(CXX)"
+	@echo "COV:      $(COV)"
+
 	
 install_Dodebug:
 	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all doInstall
@@ -226,7 +244,7 @@ objectarch:	buildDir $(GCOV_OBJ)
 	@$(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null
 	@echo $(call colour_text, BLUE, "Done")
 clean: test_clean
-	$(RM) $(OBJ) $(GCOV) 
+	$(RM) $(OBJ) $(GCOV)  makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET) $(patsubst %.app,%,$(filter %.app,$(TARGET))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET)))
 veryclean: clean test_veryclean
