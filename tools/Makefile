@@ -81,7 +81,7 @@ CXX_profile_Linux2_6_32			= -4.6
 
 #
 # Add Files(without extension) that you do not want coverage metrics for
-NOCOVERAGE		+=
+NOCOVERAGE		+= %.lex %.tab
 
 APP_SRC						= $(patsubst %.app,%.cpp,$(TARGET))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
