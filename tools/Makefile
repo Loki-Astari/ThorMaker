@@ -60,6 +60,9 @@ CXX_release		= g++$(CXX_release_$(PLATFORM)$(PLATFORMVER))
 CXX_coverage	= g++$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
 CXX_profile		= g++$(CXX_profile_$(PLATFORM)$(PLATFORMVER))
 
+#
+# This is obviously not working
+# Need to look at this
 CXX_coverage_Darwin11_3_0		= -4.2
 CXX_profile_Darwin11_3_0		= -4.2
 
@@ -72,6 +75,11 @@ CXX_debug_Darwin12_3_0			= -4.7
 CXX_release_Darwin12_3_0		= -4.7
 CXX_coverage_Darwin12_3_0		= -4.7
 CXX_profile_Darwin12_3_0		= -4.7
+
+CXX_debug_Darwin12_4_0			= -4.7
+CXX_release_Darwin12_4_0		= -4.7
+CXX_coverage_Darwin12_4_0		= -4.7
+CXX_profile_Darwin12_4_0		= -4.7
 
 CXX_debug_Linux2_6_32			= -4.6
 CXX_release_Linux2_6_32			= -4.6
