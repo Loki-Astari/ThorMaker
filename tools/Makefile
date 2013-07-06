@@ -14,6 +14,8 @@
 # A name with a *.a    extension is a static library		(the lib prefix will automatically be added)
 # A name with a *.slib extension is a shared library		(the lib prefix will automatically be added. And platform specific suffix will replace slib)
 # A name with a *.dir  extension builds a subdirectory
+# HEADER means a header only library
+#
 #		Note: This will build a shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
 #
@@ -208,7 +210,7 @@ BUILD_EXTENSION_TYPE_profile	=	P
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install objectarch clean veryclean test coverage debug release profile
+.PHONY:	all validate install objectarch clean veryclean test coverage debug release profile header_only
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
@@ -217,6 +219,7 @@ install:		test try_install_head install_Dodebug install_Dorelease
 install_debug:	test try_install_head install_Dodebug
 install_release:test try_install_head install_Dorelease
 install_profile:     try_install_head install_Doprofile
+header_only:	$(error Header only libs not supported yet)
 
 tools:
 	@echo "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
@@ -254,7 +257,7 @@ Note_%:
 %.cpp:	%.h
 	
 objectarch:	buildDir $(GCOV_OBJ)
-	@$(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null
+	@if (( "$(GCOV_OBJ)" )); then $(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null; fi
 	@echo $(call colour_text, BLUE, "Done")
 clean: test_clean
 	$(RM) $(OBJ) $(GCOV)  makefile_tmp
