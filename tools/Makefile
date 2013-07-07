@@ -22,6 +22,7 @@
 # Flags Help:
 #	CXXSTDVER=03					(set to 11 for newer C++)
 #	VERBOSE=On						Turn on verbose mode
+#										This will print the full compile command rather than a summary
 # 
 # Flags For Specific files:
 #	<TARGET>_LDLIBS			= <Libs>
@@ -30,7 +31,7 @@
 #
 #	<TARGET>_LINK_LIBS		= <Libs>
 #		Adds libs for specific targets in the makefile.
-#		Each item in Libs will be expanded with -l<ib><build-extension>
+#		Each item in Libs will be expanded with -l<item><build-extension>
 #		This this is used for libraries build with this project
 #
 #	UNITTEST_LDLIBS			= <Libs>
@@ -219,7 +220,7 @@ install:		test try_install_head install_Dodebug install_Dorelease
 install_debug:	test try_install_head install_Dodebug
 install_release:test try_install_head install_Dorelease
 install_profile:     try_install_head install_Doprofile
-header_only:	$(error Header only libs not supported yet)
+header_only:	test try_install_head
 
 tools:
 	@echo "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
@@ -257,7 +258,7 @@ Note_%:
 %.cpp:	%.h
 	
 objectarch:	buildDir $(GCOV_OBJ)
-	@if (( "$(GCOV_OBJ)" )); then $(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null; fi
+	@if ( test "$(GCOV_OBJ)" != "" ); then $(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null; fi
 	@echo $(call colour_text, BLUE, "Done")
 clean: test_clean
 	$(RM) $(OBJ) $(GCOV)  makefile_tmp
@@ -364,7 +365,7 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
-	@if [[ "$(VERBOSE)" == "Off" ]]; then \
+	@if ( test "$(VERBOSE)" = "Off" ); then \
 		 echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ;	\
 	else echo '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; fi
 	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
@@ -381,10 +382,10 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
-	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
-		 echo $(call colour_text, GRAY, "$(CC) -shared -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; \
-	else echo '$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS)' ; fi
-	@$(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
+	@if ( test "$(VERBOSE)" = "Off" ); then				\
+		 echo $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; \
+	else echo '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS)' ; fi
+	@$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
@@ -398,7 +399,7 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	fi
 
 $(TARGET_MODE)/%.o: %.cpp
-	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 	else echo '$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS))' ; fi
 	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) 2>makefile_tmp;	\
@@ -415,7 +416,7 @@ $(TARGET_MODE)/%.o: %.cpp
 	fi
 
 %.tab.cpp: %.y
-	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
 	else echo '$(YACC) -o $@ -d $<' ; fi
 	@$(YACC) -o $@ -d $< 2>makefile_tmp;				\
@@ -433,7 +434,7 @@ $(TARGET_MODE)/%.o: %.cpp
 	fi
 
 %.lex.cpp: %.l
-	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
 	else echo '$(LEX) -t $< > $@' ; fi
 	@$(LEX) -t $< | sed -e 's/<stdout>/$*.lex.cpp/' -e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' -e 's/max_size )) < 0 )/max_size )) == std::size_t(-1) )/' > $@;	\
@@ -450,7 +451,7 @@ $(TARGET_MODE)/%.o: %.cpp
 	fi
 
 %.gperf.cpp: %.gperf
-	@if [[ "$(VERBOSE)" == "Off" ]]; then				\
+	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
 	else echo '$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@'	; fi
 	@$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@ 2>makefile_tmp;				\

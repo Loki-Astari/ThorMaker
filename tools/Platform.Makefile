@@ -17,7 +17,7 @@ COMPILER_CXX_gpp_VERSION	= $(subst .,_,$(basename $(shell $(CXX) -dumpversion)))
 SHARD_LIB_EXTENSOION_Darwin	= dylib
 SHARD_LIB_EXTENSOION_Linux	= so
 
-SHARED_LIB_FLAG_Darwin		= -dynamiclib
+SHARED_LIB_FLAG_Darwin		= -dynamiclib -install_name lib$*$(BUILD_EXTENSION).$(SO)
 SHARED_LIB_FLAG_Linux		= -shared
 
 SHARD_LIB_NAME_FLAG_Darwin	= -install_name
