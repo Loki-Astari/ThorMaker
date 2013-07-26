@@ -12,7 +12,8 @@ install:	ACTION=install
 profile:	ACTION=profile
 
 ACTION		?=all
-PREFIX		?=$(THORSANVIL_ROOT)/build
+BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
+PREFIX		?=$(BUILD_ROOT)
 
 
 all:		$(SUB_PROJECTS)

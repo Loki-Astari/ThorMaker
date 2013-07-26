@@ -1,0 +1,186 @@
+
+
+#Generic build files.
+
+Rather then re-write and copy build files from project to project, I have my own set of generic makefiles that I include from each projects makefile. The project makefiles can be customized with a couple of simple variable definitions.
+
+## Default Targets
+
+    These build files allow the following easy "make" targets:
+
+        <none>      =>  debug
+        debug       =>  Builds debug version of target(s)
+        release     =>  Builds release version of target(s)
+        install     =>  1) Builds test
+                        2) Builds debug
+                        3) Builds release
+                        4)  copies headers to ${PREFIX_INC}
+                            copies lib     to ${PREFIX_LIB}
+                            copies bin     to ${PREFIX_BIN}
+
+                        Note: If tests fails then nothing else is done.
+                              Thus you can not continue until all tests work.
+
+        test        =>  1) Builds code coverage vesion of target(s)
+                        2) Builds Unit-Tests
+                        3) Runs   Unit-Tests
+                        4) Generate code-coverage information
+                            Average code-coverage must exceed 80%
+
+        clean       => Removes all generated files
+        cleanall    => Removes all generated directories (where generated files are placed)
+
+###Notes:
+    Each target builds object files into its own directory. Thus release go into the directory release, debug files go into the debug directory etc.
+
+    When building libraries and executables they are suffixed with extra information to maintain binary compatability. Thus a target of library `X` we will build `libXD11.so` (debug C++11) and `libX11.so` (release C++11). Thus linking will be done against the correct version of each library.
+
+##SetUp
+
+####In one line:
+        git clone git@github.com:Loki-Astari/ThorMaker.git build;cd build/third;./setup;cd ../..
+
+####Details:
+        git clone git@github.com:Loki-Astari/ThorMaker.git build
+        cd build/third
+        ./setup
+
+        "./setup":
+            1) creates bin lib include include3rd
+            2) installs wget
+            3) uses wget to get gtest  (google's test framework)
+            4) install(s) gtest
+
+##Simplified Makefile
+        Each project directory you will need a makefile that looks like this:
+
+           
+            #
+            # The directory where you installed build (see the git clone above)
+            PROJECT_ROOT         = $(realpath ../../)
+
+            #
+            # The targets you want to build
+            # There are three types of target static-lib/shared-lib/application
+            # A TARGET may specify more than one thing to build (but only one lib per directory)
+            # See features for details.
+            TARGET               ?= MyLibName.slib
+
+            include $(CLOUD_ROOT)/build/tools/Makefile
+
+
+    Features:
+    =========
+        1: Integration with autotools
+        -----------------------------
+        Automatically includes $(PROJECT_ROOT)/Makefile.cfg (if it exists)
+        Thus making it easy to use with Makefile generators like autotools (Autoconf, Automake and Libtool)
+
+        2: Target Specific Extensions
+        -----------------------------
+        Target are automatically suffixed to make them unique. Thus all versions can be installed simultaneously.
+        03          => C++ 03 release binary
+        03D         => C++ 03 debug binary
+        11          => C++ 11 release binary
+        11D         => C++ 11 debug binary
+        (Support for specifically single threaded code is planned with the `S` suffix)
+
+        When specifying libraries to link against:
+            LDLIBS      specifies generic system libraries.
+            LINK_LIBS   specifies Thor libraries.
+                        The makefile will automatically suffix these library names with the correct
+                        suffix to match the current build so that they link correctly.
+
+        3: Platform  Specific Extensions
+        --------------------------------
+        The library will use the platform specific extension required for shared libraries.
+
+
+        4: Neat Easy to read output
+        ---------------------------
+        When compiling and no error are encountered then only the compiler file-name are printed
+            -- I hate having all the compiler arguments taking up screen real-estate when not required.
+        When an error is encountered for command line parameters are displayed.
+        Also on colour terminals (the output is colour coded to make reading easy)
+        
+        Example:    Working:
+
+            $ make
+            Building debug
+            g++ -c CloudStream.cpp                                               OK
+            g++ -c ConfigFileLoader.cpp                                          OK
+            g++ -c Logger.cpp                                                    OK
+            g++ -shared -o debug/libCloudUtil.so                                 OK
+            Done Building debug/libCloudUtil.so
+
+        Example Failure:
+
+            $ make
+            Building debug
+            g++ -c CloudStream.cpp                                               OK
+            g++ -c ConfigFileLoader.cpp                                          ERROR
+            g++ -c ConfigFileLoader.cpp -o debug/ConfigFileLoader.o -std=c++0x -Wno-deprecated-declarations -fPIC -Wall -Wextra -Wstrict-aliasing -ansi -pedantic -Werror -Wunreachable-code -Wno-long-long -I/home/Loki/Clean/Cloud/build/include -isystem /home/Loki/Clean/Cloud/build/include3rd -g -std=c++0x
+            ========================================
+            ConfigFileLoader.cpp: In member function ‘void Moz::Cloud::CloudUtil::ConfigFileLoader::convertCommandLineToJsonMap(const std::vector<std::basic_string<char> >&)’:
+            ConfigFileLoader.cpp:175:13: error: expected ‘;’ before ‘}’ token
+            make: *** [debug/ConfigFileLoader.o] Error 1
+
+        3:Unit-Test and code coverage
+        -----------------------------
+
+        No extra work is required.
+        Just create a directory called test (in the same directory as your code) and add unit test files in this directory.
+        Currently only google's unit test framework is supported.
+
+    TARGET:
+    =======
+
+        To build a static-library specify the *.a extension
+        To build a shared-library specify the *.slib extension
+        To build an application specify the *.app extension.
+
+        Note: For applications the .app is not placed on the final executable.
+
+        For libraries       All *.c *.cpp *.lex *.yacc files are compiled into the libraies.
+                            Except any files that have the same name as an application target in the same directory.
+
+        For Applications    If the application is the only target then all files (just like a library are used).
+                            If the application is NOT the only target then only the source file with the same name as the application is used.
+
+        FLAGS automatically used:
+
+
+            CXXSTDVER           03/11   Default     03      Builds C++ 03 version of the executable.
+            VERBOSE				Off/On  Default     Off     Dumps extra debug information about the make processes.
+
+            LINK_LIBS                                       Like LDLIBS (bug suffix automatically applied)
+
+        Flags used as normal by Make (Should probably use += with these)
+            CPPFLAGS
+            CXXFLAGS
+            LDFLAGS
+
+            LOADLIBES
+            LDLIBS
+
+        Target Specific FLAGS (libs applied only to target)
+            UNITTEST_LINK_LIBS
+            <TargetName>_LDLIBS
+            <TargetName>_LINK_LIBS
+
+    Example:
+    ========
+        All these features are used in several libraries.
+        A publicly available one that I have also built is ThorsSerializer (please check it out for example usages)
+
+
+
+
+
+
+
+
+                            
+
+
+

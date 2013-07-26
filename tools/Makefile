@@ -48,8 +48,9 @@
 #
 
 -include $(THORSANVIL_ROOT)/Makefile.config
-include $(THORSANVIL_ROOT)/build/tools/Colour.Makefile
-include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
+BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
+include $(BUILD_ROOT)/tools/Colour.Makefile
+include $(BUILD_ROOT)/tools/Platform.Makefile
 
 YACC			= bison
 LEX				= flex
@@ -193,7 +194,7 @@ ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS) $(BOOST_LIBS
 
 
 
-PREFIX						?=	$(THORSANVIL_ROOT)/build
+PREFIX						?=	$(BUILD_ROOT)
 PREFIX_BIN					?=	$(PREFIX)/bin
 PREFIX_LIB					?=	$(PREFIX)/lib
 PREFIX_INC					?=	$(PREFIX)/include
@@ -272,7 +273,7 @@ test:
 	@$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
 	@echo $(call section_title,Building Unit Tests)
 	@(! test -d test) || touch test/unittest.cpp
-	@(! test -d test) || $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
+	@(! test -d test) || $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
 	@(! test -d test) || rm    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
 	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app
@@ -296,7 +297,7 @@ install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
 	@echo $(call subsection_title, Install Header $*)
 
 test_%:
-	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TEST_STATE=on TARGET=unittest.app $*; fi
+	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TEST_STATE=on TARGET=unittest.app $*; fi
 
 coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
 	@left=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;				\
