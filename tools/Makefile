@@ -14,7 +14,7 @@
 # A name with a *.a    extension is a static library		(the lib prefix will automatically be added)
 # A name with a *.slib extension is a shared library		(the lib prefix will automatically be added. And platform specific suffix will replace slib)
 # A name with a *.dir  extension builds a subdirectory
-# HEADER means a header only library
+# A name with a *.head extension builds a header only library
 #
 #		Note: This will build a shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
@@ -352,9 +352,10 @@ buildDir:	$(TARGET_MODE).Dir
 .PRECIOUS:	%.gperf.cpp
 
 
-.PHONY:	%.app %.slib
+.PHONY:	%.app %.slib %.head
 
-
+%.head:
+	@echo $(call subsection_title, Nothing to build for $*)
 	
 %.app:		buildDir $(TARGET_MODE)/%.app
 	@echo $(call subsection_title, Done Building $(TARGET_MODE)/$*)
