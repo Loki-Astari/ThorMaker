@@ -300,16 +300,18 @@ test_%:
 	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TEST_STATE=on TARGET=unittest.app $*; fi
 
 coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
-	@left=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;				\
-	 right=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;				\
-	 a=$${right};b=$${left};c=$$(($$a-$$b));d=$$(($$c*100));e=$$(($$d/$$a));		\
-	 res=`echo "$${left} > ($${right}  * 0.2)"  | bc`;				\
-	 if [ $${res} -ne 0 ]; then										\
-		echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${e}% does not exceed 80% of total);	\
-		echo "Use: '$(MAKE) test VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) COVERAGE=On' to get details about coverage";		\
-		exit 1;														\
-	 else															\
-		echo $(GREEN_OK) Code Coverage Passed;						\
+	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
+		 left=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;				\
+		 right=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;				\
+		 a=$${right};b=$${left};c=$$(($$a-$$b));d=$$(($$c*100));e=$$(($$d/$$a));		\
+		 res=`echo "$${left} > ($${right}  * 0.2)"  | bc`;				\
+		 if [ $${res} -ne 0 ]; then										\
+			echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${e}% does not exceed 80% of total);	\
+			echo "Use: '$(MAKE) test VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) COVERAGE=On' to get details about coverage";		\
+			exit 1;														\
+		 else															\
+			echo $(GREEN_OK) Code Coverage Passed;						\
+		 fi																\
 	 fi
 coverage/%.cpp.gcov: always
 	@echo "Generating Coverage for $*.cpp"
