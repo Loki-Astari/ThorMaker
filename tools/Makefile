@@ -116,10 +116,19 @@ INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head
 
 #
 # Set to On to see debug output
-CXXSTDVER					?=  03
-VERBOSE						?=	Off
+# On:		Full message all the time
+# Off:		Nice messages easy to read
+# NONE:		Turn of messages and build in parallel
+VERBOSE						?=	NONE
+#
+# Set to 03 for old C++
+CXXSTDVER					?=  11
+#
+# By default build debug when in a directory
 TARGET_MODE					?=	debug
 COVERAGE_TARGET				?= COVERAGE_$(notdir $(shell pwd))
+PARALLEL					= $(PARALLEL_$(VERBOSE))
+PARALLEL_NONE				= -j8
 
 #
 # Warning flags turned off for test suite.
@@ -237,11 +246,14 @@ tools:
 
 	
 install_Dodebug:
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doInstall
 install_Dorelease:
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doInstall
 install_Doprofile:
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doInstall
 
 doInstall:	try_install_app try_install_lib
 
@@ -270,10 +282,10 @@ veryclean: clean test_veryclean
 test:
 	@-$(RM) -rf coverage/libobject.a coverage/*.gcov coverage/*.gcda test/coverage/unittest.app
 	@echo $(call section_title,Building Objects for Testing and Coverage)
-	@$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
+	@$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
 	@echo $(call section_title,Building Unit Tests)
 	@(! test -d test) || touch test/unittest.cpp
-	@(! test -d test) || $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
+	@(! test -d test) || $(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
 	@(! test -d test) || rm    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
 	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app
@@ -405,42 +417,50 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 $(TARGET_MODE)/%.o: %.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
-	else echo '$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS))' ; fi
-	@$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) 2>makefile_tmp;	\
+	elif ( test "$(VERBOSE)" = "On" ); then				\
+		echo '$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS))' ;		\
+	fi
+	@export tmpfile=$(shell mktemp -u);					\
+	$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
 		echo $(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS));\
 		echo "========================================";\
-		cat makefile_tmp;								\
+		cat $${tmpfile};								    \
 		exit 1;											\
 	else 												\
 		echo $(GREEN_OK);								\
-		$(RM) makefile_tmp;								\
+		$(RM) $${tmpfile};								\
 	fi
 
 %.tab.cpp: %.y
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
-	else echo '$(YACC) -o $@ -d $<' ; fi
-	@$(YACC) -o $@ -d $< 2>makefile_tmp;				\
+	elif ( test "$(VERBOSE)" = "On" ); then				\
+		 echo '$(YACC) -o $@ -d $<' ;					\
+	fi
+	@export tmpfile=$(shell mktemp -u);					\
+	$(YACC) -o $@ -d $< 2>$${tmpfile};				    \
 	if [ $$? != 0 ];									\
 	then												\
 		echo "Failed in Parser Generator";				\
 		echo $(RED_ERROR);								\
 		echo $(YACC) -o $@ -d $<;						\
 		echo "========================================";\
-		cat makefile_tmp;								\
+		cat $${tmpfile};								    \
 		exit 1;											\
 	else 												\
 		echo $(GREEN_OK);								\
-		$(RM) makefile_tmp;								\
+		$(RM) $${tmpfile};								\
 	fi
 
 %.lex.cpp: %.l
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
-	else echo '$(LEX) -t $< > $@' ; fi
+	elif ( test "$(VERBOSE)" = "On" ); then				\
+		echo '$(LEX) -t $< > $@' ;						\
+	fi
 	@$(LEX) -t $< | sed -e 's/<stdout>/$*.lex.cpp/' -e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' -e 's/max_size )) < 0 )/max_size )) == std::size_t(-1) )/' > $@;	\
 	if [ $$? != 0 ];									\
 	then												\
@@ -457,8 +477,11 @@ $(TARGET_MODE)/%.o: %.cpp
 %.gperf.cpp: %.gperf
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		 echo $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
-	else echo '$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@'	; fi
-	@$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@ 2>makefile_tmp;				\
+	elif ( test "$(VERBOSE)" = "On" ); then				\
+		echo '$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@'	;	\
+	fi
+	@export tmpfile=$(shell mktemp -u);					\
+	$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@ 2>$${tmpfile};				\
 	if [ $$? != 0 ];									\
 	then												\
 		echo "Failed in Lexer Generator";				\
@@ -478,6 +501,7 @@ NotImplemented.%:
 .PHONY:	Print_Off Print_On
 PrintDebug:	Print_$(VERBOSE)
 Print_Off:
+Print_NONE:
 Print_On:
 	@echo "SRC:		 $(SRC)"
 	@echo "OBJ:		 $(OBJ)"
