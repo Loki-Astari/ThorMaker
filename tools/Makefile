@@ -119,7 +119,7 @@ INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head
 # On:		Full message all the time
 # Off:		Nice messages easy to read
 # NONE:		Turn of messages and build in parallel
-VERBOSE						?=	Off
+VERBOSE						?=	NONE
 #
 # Set to 03 for old C++
 CXXSTDVER					?=  11
@@ -381,9 +381,9 @@ xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO
 
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
-	@if ( test "$(VERBOSE)" = "Off" ); then \
-		 echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ;	\
-	else echo '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; fi
+	@if ( test "$(VERBOSE)" = "On" ); then \
+		echo '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
+	else echo $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ;	fi
 	@$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -398,9 +398,9 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
-	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		 echo $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; \
-	else echo '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS)' ; fi
+	@if ( test "$(VERBOSE)" = "On" ); then				\
+		 echo '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS)' ; \
+	else echo $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; fi
 	@$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -413,8 +413,6 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 		echo $(GREEN_OK);								\
 		$(RM) makefile_tmp;								\
 	fi
-XVT:
-		 echo $(call colour_text, RED, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 
 $(TARGET_MODE)/%.o: %.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
@@ -429,9 +427,12 @@ $(TARGET_MODE)/%.o: %.cpp
 		echo $(RED_ERROR);								\
 		echo $(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS));\
 		echo "========================================";\
-		cat $${tmpfile};								    \
+		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
+		if ( test "$(VERBOSE)" = "NONE" ); then			\
+			echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
+		fi;												\
 		echo $(GREEN_OK);								\
 		$(RM) $${tmpfile};								\
 	fi
@@ -453,6 +454,9 @@ $(TARGET_MODE)/%.o: %.cpp
 		cat $${tmpfile};								    \
 		exit 1;											\
 	else 												\
+		if ( test "$(VERBOSE)" = "NONE" ); then			\
+			echo $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
+		fi;												\
 		echo $(GREEN_OK);								\
 		$(RM) $${tmpfile};								\
 	fi
@@ -473,6 +477,9 @@ $(TARGET_MODE)/%.o: %.cpp
 		cat $@;											\
 		exit 1;											\
 	else 												\
+		if ( test "$(VERBOSE)" = "NONE" ); then			\
+			echo $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
+		fi;												\
 		echo $(GREEN_OK);								\
 	fi
 
@@ -493,6 +500,9 @@ $(TARGET_MODE)/%.o: %.cpp
 		cat $@;											\
 		exit 1;											\
 	else 												\
+		if ( test "$(VERBOSE)" = "NONE" ); then			\
+			echo $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
+		fi;												\
 		echo $(GREEN_OK);								\
 	fi
 
