@@ -181,7 +181,7 @@ BOOST_LIBS					=
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
 TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread
 TEST_FLAGS_on				=	-I..
-TEST_LIBS_on				=	-L../coverage -lobject -lgtest
+TEST_LIBS_on				=	-L../coverage -L$(THORSANVIL_ROOT)/build/lib -lobject -lgtest
 
 
 OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_DISP)$(OPTIMIZER_FLAGS_HIDE)
@@ -207,7 +207,7 @@ PREFIX						?=	$(BUILD_ROOT)
 PREFIX_BIN					?=	$(PREFIX)/bin
 PREFIX_LIB					?=	$(PREFIX)/lib
 PREFIX_INC					?=	$(PREFIX)/include
-PREFIX_INC3RD				?=	$(PREFIX)/include3rd
+PREFIX_INC3RD				?=	$(THORSANVIL_ROOT)/build/include3rd
 BUILD_EXTENSION				=	$(BUILD_EXTENSION_CXXSTDVER_$(CXXSTDVER))$(BUILD_EXTENSION_TYPE_$(TARGET_MODE))
 BUILD_EXTENSION_CXXSTDVER_03	=   03
 BUILD_EXTENSION_CXXSTDVER_11	=	11
