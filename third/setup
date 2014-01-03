@@ -12,7 +12,7 @@ git submodule update
 popd
 
 
-install="sudo apt-get"
+install="sudo apt-get --yes"
 
 host=`uname`
 if [[ "${host}" == "Darwin" ]]; then 
