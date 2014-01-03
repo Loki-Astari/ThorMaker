@@ -1,5 +1,17 @@
 #!/bin/bash
 
+#
+# Change this as required to point at the root of ThorsAnvil code
+FPN=$(pwd)/$0
+ROOT=$(dirname $FPN)
+THORSANVIL_ROOT=$(dirname ${ROOT})
+
+pushd ${THORSANVIL_ROOT}
+git submodule init
+git submodule update
+popd
+
+
 install="sudo apt-get"
 
 host=`uname`
@@ -10,9 +22,7 @@ fi
 
 ${install} install wget
 
-ROOT=`pwd`
-
-
+pushd ${ROOT}
 echo "Un-archiving google test"
 GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
 if [[ ${GTEST_ARCHIEVE} == "" ]]; then
@@ -25,21 +35,23 @@ GTEST_ARCHIEVE_DIR=${GTEST_ARCHIEVE%.zip}
 if [[ ! -d ${GTEST_ARCHIEVE_DIR} ]]; then
     unzip ${GTEST_ARCHIEVE}
 fi
+popd
 
 echo "Building google test"
-cd ${GTEST_ARCHIEVE_DIR}
 GTEST_DIR=${ROOT}/${GTEST_ARCHIEVE_DIR}
+pushd ${GTEST_DIR}
 g++ -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
 g++ -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest_main.cc
 ar -rv libgtest.a gtest-all.o gtest_main.o
+popd
 
 echo "Installing google test"
-cd ../..
-pwd
+pushd ${THORSANVIL_ROOT}
 mkdir -p bin include include3rd lib
 rm -f lib/libgtest.*
 cp ${GTEST_DIR}/libgtest.a lib/
 rm -f include3rd/gtest
 ln -s ${GTEST_DIR}/include/gtest include3rd/gtest
+popd
 
 
