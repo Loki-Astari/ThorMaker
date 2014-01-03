@@ -119,7 +119,7 @@ INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head
 # On:		Full message all the time
 # Off:		Nice messages easy to read
 # NONE:		Turn of messages and build in parallel
-VERBOSE						?=	NONE
+VERBOSE						?=	Off
 #
 # Set to 03 for old C++
 CXXSTDVER					?=  11
@@ -413,10 +413,12 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 		echo $(GREEN_OK);								\
 		$(RM) makefile_tmp;								\
 	fi
+XVT:
+		 echo $(call colour_text, RED, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 
 $(TARGET_MODE)/%.o: %.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		 echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
+		echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		echo '$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
