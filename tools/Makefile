@@ -221,7 +221,7 @@ BUILD_EXTENSION_TYPE_profile	=	P
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install objectarch clean veryclean test coverage debug release profile header_only
+.PHONY:	all validate install objectarch clean veryclean test coverage debug release profile header_only install_dir
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
@@ -297,14 +297,17 @@ test:
 	@(! test -d test) || $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage coverage COVERAGE=$(COVERAGE)
 
 install_app_%:
+	@mkdir -p $(PREFIX_BIN)
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 
 install_lib_%:
+	@mkdir -p $(PREFIX_LIB)
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
 install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
+	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
 	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
 	@echo $(call subsection_title, Install Header $*)
 
