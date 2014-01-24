@@ -26,8 +26,8 @@ pushd ${ROOT}
 echo "Un-archiving google test"
 GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
 if [[ ${GTEST_ARCHIEVE} == "" ]]; then
-    echo "Retrieving: gtest-1.6.0"
-    wget http://googletest.googlecode.com/files/gtest-1.6.0.zip
+    echo "Retrieving: gtest-1.7.0"
+    wget http://googletest.googlecode.com/files/gtest-1.7.0.zip
     GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
 fi
 GTEST_ARCHIEVE_DIR=${GTEST_ARCHIEVE%.zip}
