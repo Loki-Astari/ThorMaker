@@ -58,6 +58,7 @@ GPERF			= gperf --ignore-case
 CP				= cp
 CXX				= $(CXX_$(TARGET_MODE))
 COV				= gcov$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
+MKTEMP			= $(MKTEMP_$(PLATFORM))
 	
 CXX_debug		= g++$(CXX_debug_$(PLATFORM)$(PLATFORMVER))
 CXX_release		= g++$(CXX_release_$(PLATFORM)$(PLATFORMVER))
@@ -89,6 +90,9 @@ CXX_debug_Linux2_6_32			= -4.6
 CXX_release_Linux2_6_32			= -4.6
 CXX_coverage_Linux2_6_32		= -4.6
 CXX_profile_Linux2_6_32			= -4.6
+
+MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
+MKTEMP_Linux					= mktemp -u
 
 
 #
@@ -423,7 +427,7 @@ $(TARGET_MODE)/%.o: %.cpp
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		echo '$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
-	@export tmpfile=$(shell mktemp -u);					\
+	@export tmpfile=$(shell $(MKTEMP));					\
 	$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
@@ -446,7 +450,7 @@ $(TARGET_MODE)/%.o: %.cpp
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		 echo '$(YACC) -o $@ -d $<' ;					\
 	fi
-	@export tmpfile=$(shell mktemp -u);					\
+	@export tmpfile=$(shell $(MKTEMP));					\
 	$(YACC) -o $@ -d $< 2>$${tmpfile};				    \
 	if [ $$? != 0 ];									\
 	then												\
@@ -492,7 +496,7 @@ $(TARGET_MODE)/%.o: %.cpp
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		echo '$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@'	;	\
 	fi
-	@export tmpfile=$(shell mktemp -u);					\
+	@export tmpfile=$(shell $(MKTEMP));					\
 	$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@ 2>$${tmpfile};				\
 	if [ $$? != 0 ];									\
 	then												\
