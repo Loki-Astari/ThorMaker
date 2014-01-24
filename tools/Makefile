@@ -284,7 +284,7 @@ clean: test_clean
 veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage profile
 test:
-	@-$(RM) -rf coverage/libobject.a coverage/*.gcov coverage/*.gcda test/coverage/unittest.app
+	@-$(RM) -rf coverage/ test/coverage/unittest.app
 	@echo $(call section_title,Building Objects for Testing and Coverage)
 	@$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
 	@echo $(call section_title,Building Unit Tests)
