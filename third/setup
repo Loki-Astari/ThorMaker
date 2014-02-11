@@ -2,8 +2,7 @@
 
 #
 # Change this as required to point at the root of ThorsAnvil code
-FPN=$(pwd)/$(basename $0)
-ROOT=$(dirname $FPN)
+ROOT=$(pwd)
 THORSANVIL_ROOT=$(dirname ${ROOT})
 
 pushd ${THORSANVIL_ROOT}
