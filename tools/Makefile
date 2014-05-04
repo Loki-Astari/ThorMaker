@@ -11,13 +11,27 @@
 
 #
 # A name with a *.app  extension is an executable			(the app will NOT be part of the final name)
+# A name with a *.dir  extension builds a subdirectory
+#
+# Build a library.
 # A name with a *.a    extension is a static library		(the lib prefix will automatically be added)
 # A name with a *.slib extension is a shared library		(the lib prefix will automatically be added. And platform specific suffix will replace slib)
-# A name with a *.dir  extension builds a subdirectory
 # A name with a *.head extension builds a header only library
 #
 #		Note: This will build a shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
+#		Note: You can build multiple *.dir or *.app targets.
+#				These will install an application in ${PREFIX_BIN}/<App-Name>
+#			  But you can only build **ONE** lib
+#			  A lib will consist of:
+#					1) All the header files *.h *.tpp (in the current directory)
+#					   Installed into ${PREFIX_INC}/<Lib-Name>/
+#					2) A lib with the appropriate extension.
+#					   Installed into ${PREFIX_LIB}/<Lib-Name><Type>.<Ext>
+#					   It will be built from all the source files in the current directory.
+#					   After removing any source files that match *.app target names.
+#					   i.e. If you have a TARGET=bob.app glib.slib
+#					   then glib.so will not include the source file bob.cpp
 #
 # Flags Help:
 #	CXXSTDVER=03					(set to 11 for newer C++)
@@ -112,13 +126,22 @@ GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubs
 
 GCOV_REPORT					= $(filter-out $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
 GCOV_ACTUAL					= $(filter $(GCOV_REPORT), $(wildcard coverage/*.gcov))
+LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
+							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
+							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))
+LIBBASENAME					= $(strip $(LIBBASENAME_ONE_OF))
 
 
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET)), $(patsubst %.app,  install_app_%, $(TARGET)))
-INSTALL_LIB					= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_lib_%, $(TARGET)))
+INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_shared_lib_%, $(TARGET)))
+INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET)), $(patsubst %.a,    install_static_lib_%, $(TARGET)))
+<<<<<<< HEAD
 INSTALL_HEADER_SLIB			= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head_slib_%, $(HEAD)))
 INSTALL_HEADER_HEAD			= $(if $(filter %.head, $(TARGET)), $(patsubst %, install_head_head_%, $(HEAD)))
 INSTALL_HEADER				= $(INSTALL_HEADER_SLIB) $(INSTALL_HEADER_HEAD)
+=======
+INSTALL_HEADER				= $(if $(LIBBASENAME), $(patsubst %, install_head_%, $(HEAD)))
+>>>>>>> Test static lib build
 
 #
 # Set to On to see debug output
@@ -235,10 +258,10 @@ BUILD_EXTENSION_TYPE_profile	=	P
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test try_install_head install_Dodebug install_Dorelease
-install_debug:	test try_install_head install_Dodebug
-install_release:test try_install_head install_Dorelease
-install_profile:     try_install_head install_Doprofile
+install:		test try_install_head try_install_Dodebug try_install_Dorelease
+install_debug:	test try_install_head try_install_Dodebug
+install_release:test try_install_head try_install_Dorelease
+install_profile:     try_install_head try_install_Doprofile
 header_only:	test try_install_head
 
 tools:
@@ -264,15 +287,17 @@ install_Doprofile:
 	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all
 	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doInstall
 
-doInstall:	try_install_app try_install_lib
+doInstall:	try_install_app try_install_shared_lib try_install_static_lib try_install_head
 
-try_install_app:	$(if (INSTALL_APP), install_app)
-try_install_lib:	$(if (INSTALL_LIB), install_lib)
-try_install_head:	$(if (INSTALL_HEADER), install_head)
+try_install_app:		$(if (INSTALL_APP), install_app)
+try_install_shared_lib:	$(if (INSTALL_SHARED_LIB), install_shared_lib)
+try_install_static_lib:	$(if (INSTALL_STATIC_LIB), install_static_lib)
+try_install_head:		$(if (INSTALL_HEADER), install_head)
 
-install_app:	Note_Start_Installing_Applications $(INSTALL_APP)	 Note_End_Installing_Applications
-install_lib:	Note_Start_Installing_Libraries    $(INSTALL_LIB)	 Note_End_Installing_Libraries
-install_head:	Note_Start_Installing_Headers	   $(INSTALL_HEADER) Note_End_Installing_Headers
+install_app:		Note_Start_Installing_Applications $(INSTALL_APP)			Note_End_Installing_Applications
+install_shared_lib:	Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)	Note_End_Installing_Libraries
+install_static_lib:	Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)	Note_End_Installing_Libraries
+install_head:		Note_Start_Installing_Headers	   $(INSTALL_HEADER)		Note_End_Installing_Headers
 
 Note_%:
 	@echo $(call section_title, $(subst _, ,$*))
@@ -310,15 +335,21 @@ install_app_%:
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 
-install_lib_%:
+install_shared_lib_%:
 	@mkdir -p $(PREFIX_LIB)
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
-install_head_slib_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
-	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
-	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
+install_static_lib_%:
+	@mkdir -p $(PREFIX_LIB)
+	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
+	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
+
+install_head_%: $(PREFIX_INC)/$(LIBBASENAME).Dir
+	@mkdir -p $(PREFIX_INC)/$(LIBBASENAME)/
+	@$(CP) $* $(PREFIX_INC)/$(LIBBASENAME)/
 	@echo $(call subsection_title, Install Header $*)
+
 install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET))).Dir
 	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET)))/
 	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET)))/
@@ -408,7 +439,8 @@ buildDir:	$(TARGET_MODE).Dir
 %.app:		buildDir $(TARGET_MODE)/%.app
 	@echo $(call subsection_title, Done Building $(TARGET_MODE)/$*)
 
-xxlib:		buildDir Note_Building_(TARGET_MODE)/lib%.$(SO) $(TARGET_MODE)/lib%.$(SO)
+%.a:		buildDir $(TARGET_MODE)/lib%.a
+	@echo $(call subsection_title, Done Building $(shell basename `pwd`) $(TARGET_MODE)/lib$*.a)
 
 %.slib:		buildDir $(TARGET_MODE)/lib%.$(SO)
 	@echo $(call subsection_title, Done Building $(shell basename `pwd`) $(TARGET_MODE)/lib$*.$(SO))
@@ -425,6 +457,23 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	then												\
 		echo $(RED_ERROR);								\
 		echo $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)); \
+		echo "==================================================="; \
+		cat makefile_tmp;								\
+		exit 1;											\
+	else 												\
+		echo $(GREEN_OK);								\
+		$(RM) makefile_tmp;								\
+	fi
+
+$(TARGET_MODE)/lib%.a:	$(OBJ)
+	@if ( test "$(VERBOSE)" = "On" ); then				\
+		 echo '$(AR) $(ARFLAGS) $@ $(OBJ)' ;			\
+	else echo $(call colour_text, GRAY, "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
+	@$(AR) $(ARFLAGS) $@ $(OBJ) 2>makefile_tmp;			\
+	if [ $$? != 0 ];									\
+	then												\
+		echo $(RED_ERROR);								\
+		echo $(AR) $(ARFLAGS) $@ $(OBJ);				\
 		echo "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
