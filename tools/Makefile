@@ -283,7 +283,7 @@ clean: test_clean
 veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage profile
 test:
-	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app
+	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcda
 	@echo $(call section_title,Building Objects for Testing and Coverage)
 	@$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
 	@echo $(call section_title,Building Unit Tests)
@@ -333,7 +333,9 @@ coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_R
 	 fi
 coverage/%.cpp.gcov: always
 	@echo "Generating Coverage for $*.cpp"
-	@if [ -e $*.cpp ]; then $(COV) --long-file-names --object-directory coverage $*.cpp 2>/dev/null	> coverage/$*.cpp.out ; fi;
+	@if [ -e $*.cpp ]; then		\
+		$(COV) -preserve-paths --object-directory coverage $*.cpp 2>tmp	> coverage/$*.cpp.out ;	\
+	fi;
 	@if [ -e $*.cpp*$*.tpp.gcov ]; then mv $*.cpp*$*.tpp.gcov coverage/$*.tpp.gcov; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
 	@$(RM) *.gcov
