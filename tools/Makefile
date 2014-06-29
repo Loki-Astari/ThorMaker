@@ -340,7 +340,7 @@ coverage/%.cpp.gcov: always
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		echo $(call colour_text, GRAY, "$(COV) coverage $*.cpp") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		echo '$(COV) -preserve-paths --object-directory coverage $*.cpp ;	\
+		echo '$(COV) -preserve-paths --object-directory coverage $*.cpp' ;	\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(COV) -preserve-paths --object-directory coverage $*.cpp 2>$${tmpfile}	> coverage/$*.cpp.out ;	\
