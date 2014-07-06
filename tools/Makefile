@@ -497,20 +497,24 @@ $(TARGET_MODE)/%.o: %.cpp
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		echo '$(LEX) -t $< > $@' ;						\
 	fi
-	@$(LEX) -t $< | sed -e 's/<stdout>/$*.lex.cpp/' -e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' -e 's/max_size )) < 0 )/max_size )) == std::size_t(-1) )/' > $@;	\
+	@export tmpfile=$(shell $(MKTEMP));					\
+	export errorFile=$(shell $(MKTEMP));				\
+	$(LEX) -t $< > $${tmpfile} 2> $${errorFile};		\
 	if [ $$? != 0 ];									\
 	then												\
 		echo "Failed in Lexer Generator";				\
 		echo $(RED_ERROR);								\
 		echo $(LEX) -t $< > $@;							\
 		echo "========================================";\
-		cat $@;											\
+		cat $${errorFile};								\
 		exit 1;											\
 	else 												\
+		cat $${tmpfile} | sed -e 's/<stdout>/$*.lex.cpp/' -e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' -e 's/max_size )) < 0 )/max_size )) == std::size_t(-1) )/' > $@;	\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
 			echo $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
 		fi;												\
 		echo $(GREEN_OK);								\
+		$(RM) $${tmpfile};								\
 	fi
 
 %.gperf.cpp: %.gperf
