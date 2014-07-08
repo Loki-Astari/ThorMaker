@@ -116,7 +116,9 @@ GCOV_ACTUAL					= $(filter $(GCOV_REPORT), $(wildcard coverage/*.gcov))
 
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET)), $(patsubst %.app,  install_app_%, $(TARGET)))
 INSTALL_LIB					= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_lib_%, $(TARGET)))
-INSTALL_HEADER				= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head_%, $(HEAD)))
+INSTALL_HEADER_SLIB			= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head_slib_%, $(HEAD)))
+INSTALL_HEADER_HEAD			= $(if $(filter %.head, $(TARGET)), $(patsubst %, install_head_head_%, $(HEAD)))
+INSTALL_HEADER				= $(INSTALL_HEADER_SLIB) $(INSTALL_HEADER_HEAD)
 
 #
 # Set to On to see debug output
@@ -313,9 +315,13 @@ install_lib_%:
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
-install_head_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
+install_head_slib_%: $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET))).Dir
 	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
 	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.slib, $(TARGET)))/
+	@echo $(call subsection_title, Install Header $*)
+install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET))).Dir
+	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET)))/
+	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET)))/
 	@echo $(call subsection_title, Install Header $*)
 
 test_%:
