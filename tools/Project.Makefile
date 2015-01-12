@@ -1,5 +1,6 @@
 
 -include $(THORSANVIL_ROOT)/Makefile.config
+-include $(THORSANVIL_ROOT)/build/tools/Colour.Makefile
 
 .PHONY:	all test clean install %.dir
 
@@ -24,5 +25,7 @@ profile:	$(SUB_PROJECTS)
 
 
 %.dir:
+	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Start")
 	$(MAKE) -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER)
+	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Finish")
 	
