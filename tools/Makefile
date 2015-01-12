@@ -386,7 +386,8 @@ coverage/%.cpp.gcov: always
 		echo '$(COV) --preserve-paths --object-directory coverage $*.cpp' ;	\
 	fi
 	@if [ -e $*.cpp ]; then												\
-		@export tmpfile=$(shell $(MKTEMP));					\
+		tmpfile=$(shell $(MKTEMP));					\
+		echo $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
 		$(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp 2>$${tmpfile}	> coverage/$*.cpp.out ;	\
 		if [ $$? != 0 ];									\
 		then												\
@@ -401,7 +402,7 @@ coverage/%.cpp.gcov: always
 			fi;												\
 			echo $(GREEN_OK);								\
 			$(RM) $${tmpfile};								\
-		fi
+		fi													\
 	fi
 	@echo "Done"
 	@if [ -e $*.cpp*$*.tpp.gcov ]; then mv $*.cpp*$*.tpp.gcov coverage/$*.tpp.gcov; fi;
