@@ -59,6 +59,8 @@
 #	FILE_WARNING_FLAGS
 #		Extra project specific warning flags
 #
+#	COVERAGE_REQUIRED defaults to 80%
+#		but if you want to reduce this you can set this in a specific project make file
 #
 
 -include $(THORSANVIL_ROOT)/Makefile.config
@@ -66,10 +68,13 @@ BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
 include $(BUILD_ROOT)/tools/Colour.Makefile
 include $(BUILD_ROOT)/tools/Platform.Makefile
 
+COVERAGE_REQUIRED	?= 80
+
 YACC			= bison
 LEX				= flex
 GPERF			= gperf --ignore-case
 CP				= cp
+
 CXX				= $(CXX_$(TARGET_MODE))
 COV				= gcov$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
 MKTEMP			= $(MKTEMP_$(PLATFORM))
@@ -82,6 +87,10 @@ CXX_profile		= g++$(CXX_profile_$(PLATFORM)$(PLATFORMVER))
 #
 # This is obviously not working
 # Need to look at this
+COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
+COV_LONG_FLAG_Linux		= --long-file-names
+COV_LONG_FLAG_Darwin	= -p 
+
 CXX_coverage_Darwin11_3_0		= -4.2
 CXX_profile_Darwin11_3_0		= -4.2
 
@@ -135,13 +144,7 @@ LIBBASENAME					= $(strip $(LIBBASENAME_ONE_OF))
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET)), $(patsubst %.app,  install_app_%, $(TARGET)))
 INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_shared_lib_%, $(TARGET)))
 INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET)), $(patsubst %.a,    install_static_lib_%, $(TARGET)))
-<<<<<<< HEAD
-INSTALL_HEADER_SLIB			= $(if $(filter %.slib, $(TARGET)), $(patsubst %, install_head_slib_%, $(HEAD)))
-INSTALL_HEADER_HEAD			= $(if $(filter %.head, $(TARGET)), $(patsubst %, install_head_head_%, $(HEAD)))
-INSTALL_HEADER				= $(INSTALL_HEADER_SLIB) $(INSTALL_HEADER_HEAD)
-=======
 INSTALL_HEADER				= $(if $(LIBBASENAME), $(patsubst %, install_head_%, $(HEAD)))
->>>>>>> Test static lib build
 
 #
 # Set to On to see debug output
@@ -258,10 +261,10 @@ BUILD_EXTENSION_TYPE_profile	=	P
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test try_install_head try_install_Dodebug try_install_Dorelease
-install_debug:	test try_install_head try_install_Dodebug
-install_release:test try_install_head try_install_Dorelease
-install_profile:     try_install_head try_install_Doprofile
+install:		test try_install_head install_Dodebug install_Dorelease
+install_debug:	test try_install_head install_Dodebug
+install_release:test try_install_head install_Dorelease
+install_profile:     try_install_head install_Doprofile
 header_only:	test try_install_head
 
 tools:
@@ -360,18 +363,21 @@ test_%:
 
 coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
-		 left=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;				\
-		 right=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;				\
-		 a=$${right};b=$${left};c=$$(($$a-$$b));d=$$(($$c*100));e=$$(($$d/$$a));		\
-		 res=`echo "$${left} > ($${right}  * 0.2)"  | bc`;				\
+		 linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
+		 linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
+		 linesTested=$$(($${linesTestable}-$${linesNotTested}));		\
+		 linesTested100=$$(($${linesTested}*100));						\
+		 coverage=$$(($${linesTested100}/$${linesTestable}));			\
+		 res=`echo "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
 		 if [ $${res} -ne 0 ]; then										\
-			echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${e}% does not exceed 80% of total);	\
+			echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total);	\
 			echo "Use: '$(MAKE) test VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) COVERAGE=On' to get details about coverage";		\
 			exit 1;														\
 		 else															\
 			echo $(GREEN_OK) Code Coverage Passed;						\
 		 fi																\
 	 fi
+
 coverage/%.cpp.gcov: always
 	@echo "Generating Coverage for $*.cpp"
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
@@ -379,22 +385,25 @@ coverage/%.cpp.gcov: always
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		echo '$(COV) --preserve-paths --object-directory coverage $*.cpp' ;	\
 	fi
-	@export tmpfile=$(shell $(MKTEMP));					\
-	$(COV) --preserve-paths --object-directory coverage $*.cpp 2>$${tmpfile}	> coverage/$*.cpp.out ;	\
-	if [ $$? != 0 ];									\
-	then												\
-		echo $(RED_ERROR);								\
-		echo $(COV) --preserve-paths --object-directory coverage $*.cpp ;	\
-		echo "========================================";\
-		cat $${tmpfile};								\
-		exit 1;											\
-	else 												\
-		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			echo $(call colour_text, GRAY, "$(COV) coverage $*.cpp") | awk '{printf "%-80s", $$0}' ; \
-		fi;												\
-		echo $(GREEN_OK);								\
-		$(RM) $${tmpfile};								\
+	@if [ -e $*.cpp ]; then												\
+		@export tmpfile=$(shell $(MKTEMP));					\
+		$(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp 2>$${tmpfile}	> coverage/$*.cpp.out ;	\
+		if [ $$? != 0 ];									\
+		then												\
+			echo $(RED_ERROR);								\
+			echo $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
+			echo "========================================";\
+			cat $${tmpfile};								\
+			exit 1;											\
+		else 												\
+			if ( test "$(VERBOSE)" = "NONE" ); then			\
+				echo $(call colour_text, GRAY, "$(COV) coverage $*.cpp") | awk '{printf "%-80s", $$0}' ; \
+			fi;												\
+			echo $(GREEN_OK);								\
+			$(RM) $${tmpfile};								\
+		fi
 	fi
+	@echo "Done"
 	@if [ -e $*.cpp*$*.tpp.gcov ]; then mv $*.cpp*$*.tpp.gcov coverage/$*.tpp.gcov; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
 	@$(RM) *.gcov
