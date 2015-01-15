@@ -19,7 +19,10 @@ if [[ "${host}" == "Darwin" ]]; then
 	install="brew"
 fi
 
-${install} install wget
+wget --version > /dev/null 2>&1 > /dev/null || { echo >&2 "wget required but not install. Will attempt to install."; exit 1; }
+if [[ $? == 1 ]]; then
+    ${install} install wget
+fi
 
 pushd ${ROOT}
 echo "Un-archiving google test"
