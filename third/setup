@@ -19,7 +19,7 @@ if [[ "${host}" == "Darwin" ]]; then
 	install="brew"
 fi
 
-wget --version > /dev/null 2>&1 > /dev/null || { echo >&2 "wget required but not install. Will attempt to install."; exit 1; }
+wget --version > /dev/null 2>&1 || { echo >&2 "wget required but not install. Will attempt to install."; exit 1; }
 if [[ $? == 1 ]]; then
     ${install} install wget
 fi
