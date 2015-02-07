@@ -15,7 +15,7 @@ AC_DEFUN([AX_FUNC_THORBUILD],
     git submodule init
     git submodule update
     pushd build/third
-    ./setup "$CXX" || echo "Failed to set up the test utilities" && exit 1
+    ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
     popd
 
 ])
