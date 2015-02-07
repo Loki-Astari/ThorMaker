@@ -250,6 +250,10 @@ BUILD_EXTENSION_TYPE_debug		=	D
 BUILD_EXTENSION_TYPE_coverage	=	D
 BUILD_EXTENSION_TYPE_profile	=	P
 
+INSTALL						= $(PREFIX)
+build:	INSTALL				= $(BUILD_ROOT)
+RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) | sed '-e s/ /:/')
+
 
 #
 # For reference the default rules are
@@ -261,11 +265,12 @@ BUILD_EXTENSION_TYPE_profile	=	P
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test try_install_head install_Dodebug install_Dorelease
-install_debug:	test try_install_head install_Dodebug
-install_release:test try_install_head install_Dorelease
-install_profile:     try_install_head install_Doprofile
-header_only:	test try_install_head
+install:		test install_Dohead install_Dodebug install_Dorelease
+install_debug:	test install_Dohead install_Dodebug
+install_release:test install_Dohead install_Dorelease
+install_profile:     install_Dohead install_Doprofile
+header_only:	test install_Dohead
+build:			test install_Dohead install_Dodebug install_Dorelease
 
 tools:
 	@echo "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
@@ -281,14 +286,16 @@ tools:
 
 	
 install_Dodebug:
-	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doInstall
 install_Dorelease:
-	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doInstall
 install_Doprofile:
-	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doInstall
+install_Dohead:
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile try_install_head
 
 doInstall:	try_install_app try_install_shared_lib try_install_static_lib try_install_head
 
@@ -325,7 +332,7 @@ test:
 	@(! test -d test) || $(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
 	@(! test -d test) || $(RM)    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
-	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app --gtest_filter=*
+	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH) test/coverage/unittest.app --gtest_filter=*
 	@echo
 	@echo
 	@echo $(call colour_text, GRAY, $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage report_coverage COVERAGE=$(COVERAGE))
