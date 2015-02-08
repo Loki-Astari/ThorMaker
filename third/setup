@@ -8,6 +8,10 @@ CXX=$1
 ROOT=$(pwd)
 THORSANVIL_ROOT=$(dirname ${ROOT})
 
+if [[ -e ${THORSANVIL_ROOT}/lib/libgtest.a ]]; then
+    exit 0
+fi
+
 echo "Un-archiving google test"
 GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
 if [[ ${GTEST_ARCHIEVE} == "" ]]; then
