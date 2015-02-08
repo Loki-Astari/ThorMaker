@@ -20,3 +20,51 @@ AC_DEFUN([AX_FUNC_THORBUILD],
 
 ])
 
+
+AC_DEFUN([AX_FUNC_USE_YAML],
+[
+    AC_ARG_WITH(
+        [yamlroot],
+        AS_HELP_STRING([--with-yamlroot=<location>], [Directory of YAML_ROOT])
+    )
+    AC_ARG_ENABLE(
+        [yaml],
+        AS_HELP_STRING([--disable-yaml], [Disable yaml serializsation])
+    )
+    AS_IF(
+        [test "x$enable_yaml" != "xno"],
+
+        ORIG_LDFLAGS="${LDFLAGS}"
+        if test "${with_yamlroot}" != ""; then
+            LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
+        fi
+
+        AC_CHECK_LIB(
+            [yaml],
+            [yaml_parser_initialize],
+            [
+                AC_DEFINE([HAVE_YAML], 1, [When on Yaml Serialization code will be compiled])
+                with_yamllib=-lyaml
+            ],
+            [AC_MSG_ERROR([
+ 
+Error: Could not find libyaml
+
+You can solve this by installing libyaml
+    see http://pyyaml.org/wiki/LibYAML
+
+Alternately specify install location with:
+    --with-yamlroot=<location of yaml installation>
+
+If you do not want to use yaml serialization then it
+can be disabled with:
+    --disable-yaml
+
+                ], [1])]
+        )
+
+        LDFLAGS="${ORIG_LDFLAGS}"
+    )
+])
+
+
