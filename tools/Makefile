@@ -34,7 +34,8 @@
 #					   then glib.so will not include the source file bob.cpp
 #
 # Flags Help:
-#	CXXSTDVER=03					(set to 11 for newer C++)
+#	CXXSTDVER=03/11/14/17			Should be set to the appropriate value:		Default: CXXSTDVER		=03
+#	CXX_STD_FLAG					Should be set to the appropriate value		Default: CXX_STD_FLAG	=-std=c++11
 #	VERBOSE=On						Turn on verbose mode
 #										This will print the full compile command rather than a summary
 # 
@@ -167,12 +168,6 @@ PARALLEL_NONE				= -j8
 # As long as the main code compiles without warnings
 
 
-#
-# ANSI (turn it off for C++11)
-THORSANVIL_ANSI_03			= -ansi
-THORSANVIL_ANSI				= $(THORSANVIL_ANSI_$(CXXSTDVER))
-
-
 ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS)  $(LANGUAGE_SPECIFIC_FLAGS)
 
 PLATFORM_SPECIFIC_FLAGS		=	$(PLATFORM_$(PLATFORM)_FLAGS)
@@ -192,8 +187,7 @@ COMPILER_gpp_4_7_FLAGS		= -Wno-unreachable-code
 # Bug in gcc
 # The macro __cplusplus is always 1 so you can detect the language version at the pre-processor level.
 # So we defined the flag THOR_USE_CPLUSPLUS11 to be used instead
-LANGUAGE_SPECIFIC_FLAGS		= $(LANGUAGE_SPECIFIC_$(CXXSTDVER)_FLAGS)
-LANGUAGE_SPECIFIC_11_FLAGS	= -DTHOR_USE_CPLUSPLUS11
+LANGUAGE_SPECIFIC_FLAGS		= -DTHOR_USE_CPLUSPLUS$(CXXSTDVER)
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
@@ -226,16 +220,8 @@ OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET)
 OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
-CXXSTDVER_FLAGS_03			=
-CXXSTDVER_FLAGS_11			=	$(CXXSTDVER_FLAGS_11_$(PLATFORM))
-CXXSTDVER_FLAGS_14			=	$(CXXSTDVER_FLAGS_14_$(PLATFORM))
-CXXSTDVER_FLAGS_11_Darwin	=	-std=c++11
-CXXSTDVER_FLAGS_14_Darwin	=	-std=c++1y
-CXXSTDVER_FLAGS_11_Linux	=	-std=c++0x
-CXXSTDVER_FLAGS_14_Linux	=	NotSupportedYet
-
 CC							=	$(CXX)
-CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) $(BOOST_FLAGS) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXXSTDVER_FLAGS_$(CXXSTDVER))
+CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) $(BOOST_FLAGS) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
 ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS) $(BOOST_LIBS)
 
 
