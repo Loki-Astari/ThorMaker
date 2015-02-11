@@ -34,7 +34,8 @@
 #					   then glib.so will not include the source file bob.cpp
 #
 # Flags Help:
-#	CXXSTDVER=03					(set to 11 for newer C++)
+#	CXXSTDVER=03/11/14/17			Should be set to the appropriate value:		Default: CXXSTDVER		=03
+#	CXX_STD_FLAG					Should be set to the appropriate value		Default: CXX_STD_FLAG	=-std=c++11
 #	VERBOSE=On						Turn on verbose mode
 #										This will print the full compile command rather than a summary
 # 
@@ -75,44 +76,16 @@ LEX				= flex
 GPERF			= gperf --ignore-case
 CP				= cp
 
-CXX				= $(CXX_$(TARGET_MODE))
-COV				= gcov$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
+CXX				?= g++
+COV				?= gcov
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 	
-CXX_debug		= g++$(CXX_debug_$(PLATFORM)$(PLATFORMVER))
-CXX_release		= g++$(CXX_release_$(PLATFORM)$(PLATFORMVER))
-CXX_coverage	= g++$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
-CXX_profile		= g++$(CXX_profile_$(PLATFORM)$(PLATFORMVER))
-
 #
 # This is obviously not working
 # Need to look at this
 COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
 COV_LONG_FLAG_Linux		= --long-file-names
 COV_LONG_FLAG_Darwin	= -p 
-
-CXX_coverage_Darwin11_3_0		= -4.2
-CXX_profile_Darwin11_3_0		= -4.2
-
-CXX_debug_Darwin12_2_1			= -4.7
-CXX_release_Darwin12_2_1		= -4.7
-CXX_coverage_Darwin12_2_1		= -4.7
-CXX_profile_Darwin12_2_1		= -4.7
-
-CXX_debug_Darwin12_3_0			= -4.7
-CXX_release_Darwin12_3_0		= -4.7
-CXX_coverage_Darwin12_3_0		= -4.7
-CXX_profile_Darwin12_3_0		= -4.7
-
-CXX_debug_Darwin12_4_0			= -4.7
-CXX_release_Darwin12_4_0		= -4.7
-CXX_coverage_Darwin12_4_0		= -4.7
-CXX_profile_Darwin12_4_0		= -4.7
-
-CXX_debug_Linux2_6_32			= -4.6
-CXX_release_Linux2_6_32			= -4.6
-CXX_coverage_Linux2_6_32		= -4.6
-CXX_profile_Linux2_6_32			= -4.6
 
 MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
 MKTEMP_Linux					= mktemp -u
@@ -167,12 +140,6 @@ PARALLEL_NONE				= -j8
 # As long as the main code compiles without warnings
 
 
-#
-# ANSI (turn it off for C++11)
-THORSANVIL_ANSI_03			= -ansi
-THORSANVIL_ANSI				= $(THORSANVIL_ANSI_$(CXXSTDVER))
-
-
 ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS)  $(LANGUAGE_SPECIFIC_FLAGS)
 
 PLATFORM_SPECIFIC_FLAGS		=	$(PLATFORM_$(PLATFORM)_FLAGS)
@@ -192,8 +159,7 @@ COMPILER_gpp_4_7_FLAGS		= -Wno-unreachable-code
 # Bug in gcc
 # The macro __cplusplus is always 1 so you can detect the language version at the pre-processor level.
 # So we defined the flag THOR_USE_CPLUSPLUS11 to be used instead
-LANGUAGE_SPECIFIC_FLAGS		= $(LANGUAGE_SPECIFIC_$(CXXSTDVER)_FLAGS)
-LANGUAGE_SPECIFIC_11_FLAGS	= -DTHOR_USE_CPLUSPLUS11
+LANGUAGE_SPECIFIC_FLAGS		= -DTHOR_USE_CPLUSPLUS$(CXXSTDVER)
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
@@ -226,16 +192,8 @@ OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET)
 OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
-CXXSTDVER_FLAGS_03			=
-CXXSTDVER_FLAGS_11			=	$(CXXSTDVER_FLAGS_11_$(PLATFORM))
-CXXSTDVER_FLAGS_14			=	$(CXXSTDVER_FLAGS_14_$(PLATFORM))
-CXXSTDVER_FLAGS_11_Darwin	=	-std=c++11
-CXXSTDVER_FLAGS_14_Darwin	=	-std=c++1y
-CXXSTDVER_FLAGS_11_Linux	=	-std=c++0x
-CXXSTDVER_FLAGS_14_Linux	=	NotSupportedYet
-
 CC							=	$(CXX)
-CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) $(BOOST_FLAGS) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXXSTDVER_FLAGS_$(CXXSTDVER))
+CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) $(BOOST_FLAGS) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
 ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS) $(BOOST_LIBS)
 
 
@@ -250,6 +208,10 @@ BUILD_EXTENSION_TYPE_debug		=	D
 BUILD_EXTENSION_TYPE_coverage	=	D
 BUILD_EXTENSION_TYPE_profile	=	P
 
+INSTALL						= $(PREFIX)
+build:	INSTALL				= $(BUILD_ROOT)
+RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) | sed '-e s/ /:/')
+
 
 #
 # For reference the default rules are
@@ -261,11 +223,12 @@ BUILD_EXTENSION_TYPE_profile	=	P
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test try_install_head install_Dodebug install_Dorelease
-install_debug:	test try_install_head install_Dodebug
-install_release:test try_install_head install_Dorelease
-install_profile:     try_install_head install_Doprofile
-header_only:	test try_install_head
+install:		test install_Dohead install_Dodebug install_Dorelease
+install_debug:	test install_Dohead install_Dodebug
+install_release:test install_Dohead install_Dorelease
+install_profile:     install_Dohead install_Doprofile
+header_only:	test install_Dohead
+build:			test install_Dohead install_Dodebug install_Dorelease
 
 tools:
 	@echo "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
@@ -281,14 +244,16 @@ tools:
 
 	
 install_Dodebug:
-	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doInstall
 install_Dorelease:
-	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doInstall
 install_Doprofile:
-	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all
-	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doInstall
+	$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile all
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doInstall
+install_Dohead:
+	$(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(INSTALL) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile try_install_head
 
 doInstall:	try_install_app try_install_shared_lib try_install_static_lib try_install_head
 
@@ -325,7 +290,7 @@ test:
 	@(! test -d test) || $(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
 	@(! test -d test) || $(RM)    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
-	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB) test/coverage/unittest.app --gtest_filter=*
+	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH) test/coverage/unittest.app --gtest_filter=*
 	@echo
 	@echo
 	@echo $(call colour_text, GRAY, $(MAKE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage report_coverage COVERAGE=$(COVERAGE))

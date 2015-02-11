@@ -1,0 +1,86 @@
+#
+#Command:
+#
+#    autoscan                                    => configure.ac
+#
+#    aclocal         configure.ac                => aclocal.m4  m4/
+#    autoheader      configure.ac                => config.h.in
+#
+#    autoconf        configure.ac,aclocal.m4     => configure
+#    configure                                   => config.status
+#    config.status   config.h.in                 => config.h
+#
+# Run all commands in the correct order:
+#
+autoreconf --install
+
+
+
+# Autoconf macros:
+#
+# Check for an application:
+# -------------------------
+# AC_CHECK_PROGS([TAR], [tar gtar], [:])
+# if test "$TAR" = :; then
+#     AC_MSG_ERROR([This package needs tar.])
+# fi
+
+
+#
+# Report Warning/Error
+# ------------
+# AC_MSG_WARN([ERROR-DESCRIPTION])
+# AC_MSG_ERROR([ERROR-DESCRIPTION], [EXIT-STATUS])
+#
+
+
+#
+# Add stuff to the config.h file
+# AC_DEFINE([VARIABLE], [VALUE], [DESCRIPTION])
+
+#
+# Add stuff to Makefile
+# AC_SUBST([VARIABLE], [VALUE])
+#	Replaces @VARIABLE@ with VALUE in a file X.in output to X
+
+
+#
+# Check for Library
+# AC_CHECK_LIB([LIBRARY], [FUNCT], [ACT-IF-FOUND], [ACT-IF-NOT])
+#
+#       ACT-IF-NOT:     Optional
+#       ACT-IF-FOUND:   If not specified.
+#                       default =>
+#                           AC_SUBST([LIBS], [-lLIBRARY $LIBS])
+#                           AC_DEFINE([HAVE_LIB_LIBRARY], [1])
+
+
+#
+# Check for header
+# AC_CHECK_HEADERS(HEADERS ...)
+#
+#   If the header exists
+#       AC_DEFINE([HAVE_HEADER_H], [1])¬
+
+
+#
+# Create new MACRO
+# AC_DEFUN([MACRO-NAME], [MACRO-BODY])
+
+
+#
+# Add arguments to configure
+# AC_ARG_ENABLE([flag], AS_HELP_STRING([--flag], [Message]), [action-if-present], [action-if-not-present])
+# AC_ARG_WITH([flag], AS_HELP_STRING([--flag], [Message]))
+# AC_ARG_VAR([var-name], [help-string])
+#
+# AS_HELP_STRING (left-hand-side, right-hand-side [indent-column = ‘26’], [wrap-column = ‘79’])
+
+#
+# Conditional
+# AS_IF([test "x$with_foo" != "xno"], [CHECK_FOR_FOO([have_foo=yes], [have_foo=no])], [have_foo=no])
+
+
+
+
+
