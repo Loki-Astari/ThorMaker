@@ -1,5 +1,5 @@
 
-AC_DEFUN([AX_FUNC_THOR_BUILD],
+AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
     AC_CHECK_PROGS([WGET], [wget], [:])
     if test "$WGET" = :; then
@@ -21,7 +21,7 @@ AC_DEFUN([AX_FUNC_THOR_BUILD],
 ])
 
 
-AC_DEFUN([AX_FUNC_THOR_USE_YAML],
+AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
     AC_ARG_WITH(
         [yamlroot],
@@ -68,7 +68,7 @@ can be disabled with:
 ])
 
 AC_DEFUN(
-    [AX_FUNC_THOR_LANG_FLAG],
+    [AX_THOR_FUNC_LANG_FLAG],
     [
         minLangFeature=$1
         AS_IF([test "$2" = ""], [maxLangFeature=17], [maxLangFeature=$2])
@@ -115,5 +115,47 @@ Error: Need C++${minLangFeature} but the compiler only supports ${CXXMaxLanguage
             )]
         )
     ]
+)
+AC_DEFUN([AX_THOR_PROG_COV],
+    [AS_IF(
+        [test "x${COV}x" = "xx"],
+        [AS_IF(
+            [test "${CXX}" = "g++"],
+            [AC_SUBST([COV],[gcov])],
+            [AS_IF(
+                [test "${CXX}" = "clang++"],
+                [AC_SUBST([COV],[llvm-cov])],
+                [AC_MSG_ERROR([
+
+Could not determine the coverage tool.
+
+For g++ we default to gcov
+For clang++ we default to llvm-cov
+
+The compiler currently defined is "${CXX}" and we do not know what coverage tool to use.
+
+One alternatives is to specify a know compiler before calling configure.
+
+    CXX=clang++ ./configure
+
+Another alternative is to explicitly specify the coverage tool to use.
+
+    COV=gcov ./confgiure
+
+                    ])
+                ]
+            )]
+        )]
+    )
+    ${COV} --version 2>&1 > /dev/null
+    AS_IF(
+        [test $? != 0],
+        [AC_MSG_ERROR([
+
+The coverage tool "${COV}" does not seem to be working.
+
+         ])
+        ]
+    )]
 )
 

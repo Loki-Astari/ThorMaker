@@ -76,44 +76,16 @@ LEX				= flex
 GPERF			= gperf --ignore-case
 CP				= cp
 
-CXX				= $(CXX_$(TARGET_MODE))
-COV				= gcov$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
+CXX				?= g++
+COV				?= gcov
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 	
-CXX_debug		= g++$(CXX_debug_$(PLATFORM)$(PLATFORMVER))
-CXX_release		= g++$(CXX_release_$(PLATFORM)$(PLATFORMVER))
-CXX_coverage	= g++$(CXX_coverage_$(PLATFORM)$(PLATFORMVER))
-CXX_profile		= g++$(CXX_profile_$(PLATFORM)$(PLATFORMVER))
-
 #
 # This is obviously not working
 # Need to look at this
 COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
 COV_LONG_FLAG_Linux		= --long-file-names
 COV_LONG_FLAG_Darwin	= -p 
-
-CXX_coverage_Darwin11_3_0		= -4.2
-CXX_profile_Darwin11_3_0		= -4.2
-
-CXX_debug_Darwin12_2_1			= -4.7
-CXX_release_Darwin12_2_1		= -4.7
-CXX_coverage_Darwin12_2_1		= -4.7
-CXX_profile_Darwin12_2_1		= -4.7
-
-CXX_debug_Darwin12_3_0			= -4.7
-CXX_release_Darwin12_3_0		= -4.7
-CXX_coverage_Darwin12_3_0		= -4.7
-CXX_profile_Darwin12_3_0		= -4.7
-
-CXX_debug_Darwin12_4_0			= -4.7
-CXX_release_Darwin12_4_0		= -4.7
-CXX_coverage_Darwin12_4_0		= -4.7
-CXX_profile_Darwin12_4_0		= -4.7
-
-CXX_debug_Linux2_6_32			= -4.6
-CXX_release_Linux2_6_32			= -4.6
-CXX_coverage_Linux2_6_32		= -4.6
-CXX_profile_Linux2_6_32			= -4.6
 
 MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
 MKTEMP_Linux					= mktemp -u
