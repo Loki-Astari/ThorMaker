@@ -370,7 +370,7 @@ coverage/%.cpp.gcov: always
 		fi													\
 	fi
 	@echo "Done"
-	@if [ -e $*.cpp*$*.tpp.gcov ]; then mv $*.cpp*$*.tpp.gcov coverage/$*.tpp.gcov; fi;
+	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
 	@$(RM) *.gcov
 coverage/%.tpp.gcov:
