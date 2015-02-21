@@ -175,19 +175,22 @@ AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
     AS_IF(
         [test "x$enable_binary" != "xno"],
         [
-            bswap64_function=""
+            networkbyteorderfunction=""
             AC_C_BIGENDIAN(
-                [bswap64_function="identity"],
+                [networkbyteorderfunction="identity"],
                 [
                     AS_IF(
                         [test "${with_thors_network_byte_order}" == "yes"],
-                        [bswap64_function="thorsNetworkByteOrder"],
-                        [AX_BSWAP64]
+                        [networkbyteorderfunction="thorsNetworkByteOrder"],
+                        [
+                            AX_BSWAP64
+                            networkbyteorderfunction = bswap64_function;
+                        ]
                     )
                 ]
             )
             AS_IF(
-                [test "x$bswap64_function" != "x"],
+                [test "x$networkbyteorderfunction" != "x"],
                 [
                     AC_DEFINE([NETWORK_BYTE_ORDER], 1, [We have functions to convert host to network byte order for 64/128 bit values])
                     AC_DEFINE_UNQUOTED([BSWAP64], [${bswap64_function}], [Name of the 64/128 bit endian swapping function])
@@ -221,7 +224,9 @@ NOTE:
     The configuration script could not find any of these semi standard formats.
 
     If you want to use a non standard technique (implemented by Loki) you must
-    explicitly ask for it with:
+    explicitly ask for it with (though it is tested as correct it will not be
+    faster than the semi standard ways as they rely on assembler while this code
+    is standard C++ only).
 
         --with-thors-network-byte-order
 
