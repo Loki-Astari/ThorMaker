@@ -29,7 +29,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_YAML],
     )
     AC_ARG_ENABLE(
         [yaml],
-        AS_HELP_STRING([--disable-yaml], [Disable yaml serializsation])
+        AS_HELP_STRING([--disable-yaml], [Disable yaml serialization])
     )
     AS_IF(
         [test "x$enable_yaml" != "xno"],
@@ -158,4 +158,77 @@ The coverage tool "${COV}" does not seem to be working.
         ]
     )]
 )
+
+dnl
+dnl
+
+AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
+[
+    AC_ARG_WITH(
+        [thors-network-byte-order],
+        AS_HELP_STRING([--with-thors-network-byte-order], [Use internal tools to convert 64/128 bit values to network byte order])
+    )
+    AC_ARG_ENABLE(
+        [binary],
+        AS_HELP_STRING([--disable-binary], [Disable binary serialization])
+    )
+    AS_IF(
+        [test "x$enable_binary" != "xno"],
+        [
+            bswap64_function=""
+            AC_C_BIGENDIAN(
+                [bswap64_function="identity"],
+                [
+                    AS_IF(
+                        [test "${with_thors_network_byte_order}" == "yes"],
+                        [bswap64_function="thorsNetworkByteOrder"],
+                        [AX_BSWAP64]
+                    )
+                ]
+            )
+            AS_IF(
+                [test "x$bswap64_function" != "x"],
+                [
+                    AC_DEFINE([NETWORK_BYTE_ORDER], 1, [We have functions to convert host to network byte order for 64/128 bit values])
+                    AC_DEFINE_UNQUOTED([BSWAP64], [${bswap64_function}], [Name of the 64/128 bit endian swapping function])
+                ],
+                [AC_MSG_ERROR([
+
+Error: Could not find a way to convert 64 bit values to big endian for transport
+
+You can ignore this error by disable binary serialization.
+
+If you do not want to use binary serialization then it
+can be disabled with:
+    --disable-binary
+
+Alternatively you can use some non standard functions implemented in ThorsSerializer
+    --with-thors-network-byte-order
+
+NOTE:
+    When using binary format we need a consistent representation.
+    Since the standard for 16/32 bit values is network byte order
+    I want to be consistent and do the same for 64/128 bit values.
+
+    There are standard libraries for 16/32 bit conversion between
+    host and network byte order
+    
+        htonl() ntohl()     # 32 bit
+        htons() ntohs()     # 16 bit
+
+    But there is no standard way for larger values.
+    So we use the configuration script to look for some semi-standard techniques
+    The configuration script could not find any of these semi standard formats.
+
+    If you want to use a non standard technique (implemented by Loki) you must
+    explicitly ask for it with:
+
+        --with-thors-network-byte-order
+
+                ])]
+            )
+        ]
+    )
+])
+
 
