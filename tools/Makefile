@@ -105,6 +105,8 @@ HEAD						= $(wildcard *.h *.tpp) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
+GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
+GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
 
 GCOV_REPORT					= $(filter-out $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
 GCOV_ACTUAL					= $(filter $(GCOV_REPORT), $(wildcard coverage/*.gcov))
@@ -179,7 +181,7 @@ BOOST_LIBS					=
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
 TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread
 TEST_FLAGS_on				=	-I..
-TEST_LIBS_on				=	-L../coverage -L$(THORSANVIL_ROOT)/build/lib -lobject -lgtest
+TEST_LIBS_on				=	-L../coverage -L$(THORSANVIL_ROOT)/build/lib $(GCOV_LIBOBJ_PASS) -lgtest
 
 
 OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_DISP)$(OPTIMIZER_FLAGS_HIDE)
@@ -218,7 +220,7 @@ RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) | sed '-e 
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install objectarch clean veryclean test coverage debug release profile header_only install_dir
+.PHONY:	all validate install objectarch gcovarch clean veryclean test coverage debug release profile header_only install_dir
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
@@ -272,9 +274,9 @@ Note_%:
 
 %.cpp:	%.h
 	
-objectarch:	buildDir $(GCOV_OBJ)
-	@if ( test "$(GCOV_OBJ)" != "" ); then $(AR) -rv $(TARGET_MODE)/libobject.a $(GCOV_OBJ) 2>/dev/null; fi
+objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
 	@echo $(call colour_text, BLUE, "Done")
+gcovarch:	$(GCOV_LIB)
 clean: test_clean
 	$(RM) $(OBJ) $(GCOV)  makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
@@ -284,10 +286,10 @@ veryclean: clean test_veryclean
 test:
 	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcda
 	@echo $(call section_title,Building Objects for Testing and Coverage)
-	@$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage objectarch
+	@$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage gcovarch
 	@echo $(call section_title,Building Unit Tests)
 	@(! test -d test) || touch test/unittest.cpp
-	@(! test -d test) || $(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)"
+	@(! test -d test) || $(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)"
 	@(! test -d test) || $(RM)    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
 	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH) test/coverage/unittest.app --gtest_filter=*
@@ -444,7 +446,7 @@ $(TARGET_MODE)/lib%.a:	$(OBJ)
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		 echo '$(AR) $(ARFLAGS) $@ $(OBJ)' ;			\
 	else echo $(call colour_text, GRAY, "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
-	@$(AR) $(ARFLAGS) $@ $(OBJ) 2>makefile_tmp;			\
+	@$(AR) $(ARFLAGS) $@ $(OBJ) > makefile_tmp 2>&1;	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
