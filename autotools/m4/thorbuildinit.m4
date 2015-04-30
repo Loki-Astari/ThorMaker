@@ -20,6 +20,24 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
 ])
 
+AC_DEFUN([AX_THOR_PROG_LEX],
+[
+    AC_PROG_LEX
+    if test "${LEX}" != "flex"; then
+        AC_MSG_ERROR([
+
+Error: This package uses flex (and is not compatible with lex).
+Please make sure flex is installed.
+
+If it is installed an autotools is picking the wrong lex you explicitly specify it via
+the environment variable LEX.
+
+Eg.
+    LEX=<path to flex> ./configure <other flags>
+
+    ])
+    fi
+])
 
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
@@ -67,6 +85,32 @@ can be disabled with:
     )
 ])
 
+AC_DEFUN(
+    [AX_THOR_FUNC_TEST_COMP],
+    [
+        AS_IF([test "$1" != ""],
+            [
+                AC_MSG_CHECKING([Checking Compiler Compatibility ${CXX} ${CXX_STD_FLAG}])
+                AC_LANG(C++)
+                CXXFLAGS_SAVE="${CXXFLAGS}"
+                AC_SUBST([CXXFLAGS], [${CXX_STD_FLAG}])
+                AC_COMPILE_IFELSE([AC_LANG_SOURCE([$1])],
+                [
+                    AC_MSG_RESULT([good])
+                ],
+                [
+                    AC_MSG_ERROR([
+
+Error: Your compiler does not seem to support the language features required.
+       Try updating your compiler to use a more recent version.
+
+       Compiler used: ${CXX} ${CXX_STD_FLAG}
+                    ])
+                ])
+                AC_SUBST([CXXFLAGS], [${CXXFLAGS_SAVE}])
+            ])
+    ]
+)
 AC_DEFUN(
     [AX_THOR_FUNC_LANG_FLAG],
     [
