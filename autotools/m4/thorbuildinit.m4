@@ -52,17 +52,19 @@ AC_DEFUN([AX_THOR_FUNC_USE_YAML],
     AS_IF(
         [test "x$enable_yaml" != "xno"],
 
-        ORIG_LDFLAGS="${LDFLAGS}"
-        if test "${with_yamlroot}" != ""; then
-            LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
+        if test "${with_yamlroot}" == ""; then
+            with_yamlroot="/usr/local"
         fi
+        ORIG_LDFLAGS="${LDFLAGS}"
+        LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
 
         AC_CHECK_LIB(
             [yaml],
             [yaml_parser_initialize],
             [
                 AC_DEFINE([HAVE_YAML], 1, [When on Yaml Serialization code will be compiled])
-                with_yamllib=-lyaml
+                AC_SUBST([yaml_ROOT_DIR], [$with_yamlroot])
+                AC_SUBST([yaml_ROOT_LIB], [yaml])
             ],
             [AC_MSG_ERROR([
  
