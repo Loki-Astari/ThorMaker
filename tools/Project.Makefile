@@ -18,7 +18,8 @@ BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
 PREFIX		?=$(BUILD_ROOT)
 
 
-all:		$(SUB_PROJECTS)
+all:
+	make prefix=$(BUILD_ROOT) build
 clean:		$(SUB_PROJECTS)
 veryclean:	$(SUB_PROJECTS)
 install:	$(SUB_PROJECTS)
