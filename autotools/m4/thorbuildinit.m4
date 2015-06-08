@@ -193,7 +193,7 @@ Another alternative is to explicitly specify the coverage tool to use.
             )]
         )]
     )
-    ${COV} --version 2>&1 > /dev/null
+    ${COV} --version 2>&1 | grep version > /dev/null
     AS_IF(
         [test $? != 0],
         [AC_MSG_ERROR([
