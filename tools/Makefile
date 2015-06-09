@@ -187,9 +187,7 @@ PLATFORM_Linux_FLAGS		=
 #
 # Having problems with unreachable code being reported in the system header files
 # Had to turn this on to make the code compile with no errors.
-COMPILER_SPECIFIC_FLAGS		= $(COMPILER_$(COMPILER_NAME)_$(COMPILER_VERSION)_FLAGS)
-COMPILER_gpp_4_4_FLAGS		= -Wno-unreachable-code
-COMPILER_gpp_4_7_FLAGS		= -Wno-unreachable-code
+COMPILER_SPECIFIC_FLAGS		= -Wno-unreachable-code
 
 
 #
