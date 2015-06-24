@@ -40,6 +40,8 @@
 #										This will print the full compile command rather than a summary
 # 
 # Flags For Specific files:
+#	NO_HEADER
+#		Prevents header files from being installed when building a library
 #	LDLIBS_EXTERN_BUILD
 #		This is a magic flag.
 #		If you define any any values in here they will cause several other flags to be added:
@@ -154,7 +156,7 @@ LIBBASENAME					= $(strip $(LIBBASENAME_ONE_OF))
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET)), $(patsubst %.app,  install_app_%, $(TARGET)))
 INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_shared_lib_%, $(TARGET)))
 INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET)), $(patsubst %.a,    install_static_lib_%, $(TARGET)))
-INSTALL_HEADER				= $(if $(LIBBASENAME), $(patsubst %, install_head_%, $(HEAD)))
+INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(HEAD))))
 
 #
 # Set to On to see debug output
