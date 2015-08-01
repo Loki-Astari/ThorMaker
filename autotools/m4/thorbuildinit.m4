@@ -87,6 +87,42 @@ can be disabled with:
     )
 ])
 
+AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
+[
+    AC_ARG_WITH(
+        [eventroot],
+        AS_HELP_STRING([--with-eventroot=<location>], [Directory of EVENT_ROOT])
+    )
+    if test "${with_eventroot}" == ""; then
+        with_eventroot="/usr/local"
+    fi
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="$LDFLAGS -L$with_eventroot/lib"
+
+    AC_CHECK_LIB(
+        [event],
+        [event_dispatch],
+        [
+            AC_DEFINE([HAVE_EVENT], 1, [We have found libevent library])
+            AC_SUBST([event_ROOT_DIR], [$with_eventroot])
+            AC_SUBST([event_ROOT_LIB], [event])
+        ],
+        [AC_MSG_ERROR([
+
+Error: Could not find libevent
+
+You can solve this by installing libevent
+see http://libevent.org/
+
+If libevent is not installed in the default location (/usr/local) then you will need to specify its location.
+--with-eventroot=<location of event installation>
+
+            ], [1])]
+    )
+
+    LDFLAGS="${ORIG_LDFLAGS}"
+])
+
 AC_DEFUN(
     [AX_THOR_FUNC_TEST_COMP],
     [
