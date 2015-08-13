@@ -13,7 +13,29 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AC_PROG_CXX
 
     git submodule init
-    git submodule update
+    AS_IF(
+        [git submodule update],
+        [],
+        [AC_MSG_ERROR([
+
+
+git submodule updated failed:
+
+Currently all Loki-Astari submodules are retrieved using ssh.
+If the above command failed it probably means that you have not registered your "public key" with github.com
+
+See this article on StackOverflow for simple instructions:
+http://stackoverflow.com/questions/25828483/github-permission-denied-publickey
+
+
+Once you have installed the keys you can restart the configuration with:
+git submodule update
+./configure <Same Flags You had before>
+
+        ])]
+    )
+
+
     pushd build/third
     ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
     popd
