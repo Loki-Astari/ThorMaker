@@ -3,3 +3,6 @@ include
 include3rd
 lib
 share
+autotools/m4/boost_base.m4
+autotools/m4/boost_co.m4
+autotools/m4/boost_sys.m4
