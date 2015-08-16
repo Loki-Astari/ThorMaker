@@ -12,6 +12,7 @@ veryclean:	ACTION=veryclean
 install:	ACTION=install
 profile:	ACTION=profile
 build:		ACTION=build
+lint:		ACTION=lint
 
 ACTION		?=all
 BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
@@ -24,7 +25,7 @@ veryclean:	$(SUB_PROJECTS)
 install:	$(SUB_PROJECTS)
 profile:	$(SUB_PROJECTS)
 build:		$(SUB_PROJECTS)
-
+lint:		check_lint $(SUB_PROJECTS)
 
 %.dir:
 	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Start")
@@ -35,4 +36,6 @@ build:		$(SUB_PROJECTS)
 		echo $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi
 	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Finish")
+
+include $(THORSANVIL_ROOT)/build/tools/lint.Makefile
 	

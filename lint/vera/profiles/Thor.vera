@@ -1,0 +1,71 @@
+
+rule=F001
+rule=F002
+
+rule=L001
+rule=L002
+
+#rule=L003
+#           No leading and trailing empty lines.
+
+rule=L004
+rule=L005
+rule=L006
+
+
+rule=T001
+rule=T002
+rule=T003
+rule=T004
+rule=T005
+rule=T006
+rule=T007
+rule=T008
+
+# rule=T009
+#       Comma not proceed by space.
+#       Comma followed by space
+#           Need an exception for initializer list.
+#           If the only thing proceeding the comma is white space
+rule=TA009
+
+rule=T010
+
+# rule=T011
+#       Need a more sophisticated {} rule
+#       This rule is:
+#           Either:
+#               1) Curly on same line  enum state {one, two};
+#               2) Curly in same column
+#                   enum state
+#                   {
+#                       one,
+#                       two
+#                   }
+rule=TA011
+
+# T012
+#       ! operator disallowed (Disable)
+
+# T013
+#       At least one comment in the file contains the word copyright.
+#       Long term goal.
+
+#rule=T014
+#rule=T015
+
+# T016
+#       Calls to min/max are not allowed in nice form.
+#       They must be mangeled to prevent abuse.
+#       Would prefer a rule that prevents macro min/max
+#rule=T017
+
+#rule=T018
+#       "Using namespace is not allowed in header file"
+#       Should extend to all files.
+#       Exception:
+#           using allowed if source file and the current pacage_name
+#rule=T019
+
+
+

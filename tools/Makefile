@@ -122,7 +122,7 @@ MKTEMP_Linux					= mktemp -u
 # Add Files(without extension) that you do not want coverage metrics for
 NOCOVERAGE		+= %.lex %.tab
 
-APP_SRC						= $(patsubst %.app,%.cpp,$(TARGET))
+APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET)))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
 LEX_SRC						= $(wildcard *.l)
 GPERF_SRC					= $(wildcard *.gperf)
@@ -253,7 +253,7 @@ RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) | sed '-e 
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install objectarch gcovarch clean veryclean test coverage debug release profile header_only install_dir
+.PHONY:	all validate install lint objectarch gcovarch clean veryclean test coverage debug release profile header_only install_dir
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
 	@echo $(call colour_text, BLUE, "Done")
@@ -266,6 +266,7 @@ install_release:test install_Dohead install_Dorelease
 install_profile:     install_Dohead install_Doprofile
 header_only:	test install_Dohead
 build:			test install_Dohead install_Dodebug install_Dorelease
+lint:			doLint
 
 tools:
 	@echo "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
@@ -617,6 +618,9 @@ PrintDebug:	Print_$(VERBOSE)
 Print_Off:
 Print_NONE:
 Print_On:
+	@echo "CPP_SRC:	 $(CPP_SRC)"
+	@echo "APP_SRC:	 $(APP_SRC)"
+	@echo "HEAD:	 $(HEAD)"
 	@echo "SRC:		 $(SRC)"
 	@echo "OBJ:		 $(OBJ)"
 	@echo "GCOV:	 $(GCOV)"
@@ -626,4 +630,6 @@ Print_On:
 .PHONY: always
 always:
 	@echo 
+
+include $(BUILD_ROOT)/tools/lint.Makefile
 

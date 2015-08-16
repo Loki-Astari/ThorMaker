@@ -1,0 +1,29 @@
+#!/bin/bash
+
+followsym() {
+    cd $(dirname -- $1)
+    base=$(basename -- $1)
+    if [[ $(ls -l -- ${base} | grep "^l") ]]; then
+        followsym $(ls -l -- ${base} | awk '{print $11}')
+    else
+        echo "$(pwd)/${base}"
+    fi
+}
+
+fullpath() {
+    fp=$(which $1)
+    followsym ${fp}   
+}
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+if [[ ! -e ${DIR}/init.done ]]; then
+
+    verabin=$(fullpath vera++)
+    vera=$(dirname $(dirname $verabin))
+    rules=$(find ${vera} -name rules)
+
+    ln -s ${rules}/* ${DIR}/rules/
+    touch ${DIR}/init.done
+fi
+
+
