@@ -394,6 +394,8 @@ coverage/%.cpp.gcov: always
 		tmpfile=$(shell $(MKTEMP));					\
 		echo $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
 		$(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp 2>$${tmpfile}	> coverage/$*.cpp.out ;	\
+		sed -i '' 's/#####\(.*\)}$$/    -\1}/' $*.cpp.gcov;\
+		sed -i '' 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $*.cpp.gcov;\
 		if [ $$? != 0 ];									\
 		then												\
 			echo $(RED_ERROR);								\
