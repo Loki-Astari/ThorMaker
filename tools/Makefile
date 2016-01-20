@@ -567,7 +567,7 @@ $(TARGET_MODE)/%.o: %.cpp
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	export errorFile=$(shell $(MKTEMP));				\
-	$(LEX) -t $< > $${tmpfile} 2> $${errorFile};		\
+	$(LEX) -t --c++ --header-file=$*.lex.h $< > $${tmpfile} 2> $${errorFile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo "Failed in Lexer Generator";				\
