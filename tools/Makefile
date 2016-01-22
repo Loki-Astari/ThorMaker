@@ -127,7 +127,9 @@ CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcar
 LEX_SRC						= $(wildcard *.l)
 GPERF_SRC					= $(wildcard *.gperf)
 YACC_SRC					= $(wildcard *.y)
-SRC							= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
+TMP_SRC						= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC))
+TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC))
+SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
 HEAD						= $(wildcard *.h *.tpp) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
@@ -310,11 +312,11 @@ objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
 	@echo $(call colour_text, BLUE, "Done")
 gcovarch:	$(GCOV_LIB)
 clean: test_clean
-	$(RM) $(OBJ) $(GCOV)  makefile_tmp
+	$(RM) $(OBJ) $(GCOV) $(TMP_SRC) $(TMP_HDR) makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET) $(patsubst %.app,%,$(filter %.app,$(TARGET))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET)))
 veryclean: clean test_veryclean
-	$(RM) -rf debug release coverage profile
+	$(RM) -rf debug release coverage profile $(TMP_SRC) $(TMP_HDR)
 test:
 	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcda
 	@echo $(call section_title,Building Objects for Testing and Coverage)
