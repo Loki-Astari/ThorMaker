@@ -105,6 +105,7 @@ CP				= cp
 
 CXX				?= g++
 COV				?= gcov
+VERA			?= vera++
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 	
 #
@@ -132,10 +133,17 @@ TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
 HEAD						= $(wildcard *.h *.tpp) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
+VERA_OBJ					= $(patsubst %,vera/%.vera, $(wildcard *.cpp) $(wildcard *.h) $(wildcard *.tpp))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
+VERA_RULES					=	L001
+VERA_RULES_ALL				=	DUMP	L001	L004	T001	T004	T007	T010	T013	T016	T019	\
+								F001	L002	L005	T002	T005	T008	T011	T014	T017	Z001	\
+								F002	L003	L006	T003	T006	T009	T012	T015	T018
+
+VERA_ARGS					= $(patsubst %, --rule %, $(VERA_RULES))
 
 NOTHING						:=
 SPACE						:=$(NOTHING) $(NOTHING)
@@ -317,7 +325,12 @@ clean: test_clean
 	$(RM) $(TARGET) $(patsubst %.app,%,$(filter %.app,$(TARGET))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET)))
 veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage profile $(TMP_SRC) $(TMP_HDR)
-test:
+test:	run_test vera
+vera:	vera.Dir vera_head vera_body
+vera_head:
+	@echo $(call section_title,Static Analysis)
+vera_body:	$(VERA_OBJ)
+run_test:
 	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcda
 	@echo $(call section_title,Building Objects for Testing and Coverage)
 	@$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
@@ -445,9 +458,11 @@ buildDir:	$(TARGET_MODE).Dir
 .PRECIOUS:	%.tab.cpp
 .PRECIOUS:	%.lex.cpp
 .PRECIOUS:	%.gperf.cpp
+.PRECIOUS:	%.vera
 
 
-.PHONY:	%.app %.slib %.head
+.PHONY:	%.app %.slib %.headu
+.PHONY:	run_test vera vera_head vera_body
 
 %.head:
 	@echo $(call subsection_title, Nothing to build for $*)
@@ -463,6 +478,22 @@ buildDir:	$(TARGET_MODE).Dir
 
 
 
+vera/%.vera:
+	@if ( test "$(VERBOSE)" = "On" ); then				\
+		 echo "$(VERA) --show-rule --error --std-report $@.report $*"; \
+	else echo $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi
+	@$(VIRA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*; \
+	if [ $$? != 0 ];									\
+	then												\
+		echo $(RED_ERROR);								\
+		echo "$(VIRA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*";	\
+		echo "==================================================="; \
+		cat $@.report;									\
+		exit 1;											\
+	else 												\
+		echo $(GREEN_OK);								\
+		$(RM) $@.report;								\
+	fi
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 	@if ( test "$(VERBOSE)" = "On" ); then \
