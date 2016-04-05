@@ -20,7 +20,7 @@ T008A:       Keywords should be followed by single space then open brace => ' (
                 if
 T008A:       Keywords should be followed by the open brace => '(
                 catch for switch while
- 
+T009:       Comma not proceeded by space but is followed by space
 
 
 
