@@ -27,6 +27,9 @@ T017:       Unnamed namespaces are not allowed in header files
 T018:       using namespace are not allowed in header files
 T019:       Control structures should have complete curly-braced block of code
 
+F001:       Files should not contain '\r'
+F002:       File names should be well formed.
+
 
 
 
