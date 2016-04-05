@@ -144,7 +144,7 @@ VERA_RULES_ALL				=	DUMP	L001	L004	T001	T004	T007	T010	T013	T016	T019	\
 								F001	L002	L005	T002	T005	T008	T011	T014	T017	Z001	\
 								F002	L003	L006	T003	T006	T009	T012	T015	T018
 
-VERA_ARGS					= $(patsubst %, --rule %, $(VERA_RULES)) $(patsubst %, --parameter %, $(VERA_PARAMS))
+VERA_ARGS					= --root $(THORSANVIL_ROOT)/build/vera $(patsubst %, --rule %, $(VERA_RULES)) $(patsubst %, --parameter %, $(VERA_PARAMS))
 
 NOTHING						:=
 SPACE						:=$(NOTHING) $(NOTHING)

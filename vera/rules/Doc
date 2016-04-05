@@ -1,0 +1,36 @@
+
+L001:       No trailing white space.
+L002:       Don't use tab characters.
+L004:       Lines' can't be too long.
+L005:       Can't be too many consecutive empty lines.
+L006:       Source file should not be to long.
+
+T001:       Single line comments should not have line continuation
+T002:       Reserved words should not be used as macros.
+T003:       Keywords should be followed by single space:
+                case class delete enum explicit extern goto new struct union using
+T004:       Keywords should be followed by colon:
+                default private protected public
+T005:       Keywords should be followed by semicolon:
+                break continue
+T006:       Keywords should be followed by semicolon or "single space"
+                return throw
+T007:       Semicolon should not be proceeded by space or comment
+T008A:       Keywords should be followed by single space then open brace => ' (
+                if
+T008A:       Keywords should be followed by the open brace => '(
+                catch for switch while
+ 
+
+
+
+
+
+
+
+Disable:
+
+L003:       No Leading or trailing blank lines.
+T008:       Keywords should be followed by single space then open brace => ' (
+                if catch for switch while
+

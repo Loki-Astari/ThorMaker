@@ -13,6 +13,7 @@ install:	ACTION=install
 profile:	ACTION=profile
 build:		ACTION=build
 lint:		ACTION=lint
+vera:		ACTION=vera
 
 ACTION		?=all
 BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
@@ -26,6 +27,7 @@ install:	$(SUB_PROJECTS)
 profile:	$(SUB_PROJECTS)
 build:		$(SUB_PROJECTS)
 lint:		check_lint $(SUB_PROJECTS)
+vera:		$(SUB_PROJECTS)
 
 %.dir:
 	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Start")
