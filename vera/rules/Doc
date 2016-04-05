@@ -20,7 +20,12 @@ T008A:       Keywords should be followed by single space then open brace => ' (
                 if
 T008A:       Keywords should be followed by the open brace => '(
                 catch for switch while
-T009:       Comma not proceeded by space but is followed by space
+T009A:      Comma is followed by space. Comma not proceeded by space (unless in the initializer list)
+T010:       Identifiers should not be composed of 'l' and 'O' characters only
+T016:       Calls to min/max should be protected against accidental macro substitution
+T017:       Unnamed namespaces are not allowed in header files
+T018:       using namespace are not allowed in header files
+T019:       Control structures should have complete curly-braced block of code
 
 
 
@@ -33,4 +38,8 @@ Disable:
 L003:       No Leading or trailing blank lines.
 T008:       Keywords should be followed by single space then open brace => ' (
                 if catch for switch while
-
+T009:       Comma not proceeded by space but is followed by space
+T012:       not should not be used in short form => !
+T013:       Each file has a copyright notice
+T014:       Source files should refer the Boost Software License
+T015:       Check URL are valid
