@@ -8,13 +8,13 @@ L006:       Source file should not be to long.
 T001:       Single line comments should not have line continuation
 T002:       Reserved words should not be used as macros.
 T003:       Keywords should be followed by single space:
-                case class delete enum explicit extern goto new struct union using
+                case class enum explicit extern goto new struct union using
 T004:       Keywords should be followed by colon:
                 default private protected public
 T005:       Keywords should be followed by semicolon:
                 break continue
 T006:       Keywords should be followed by semicolon or "single space"
-                return throw
+                return throw delete
 T007:       Semicolon should not be proceeded by space or comment
 T008A:       Keywords should be followed by single space then open brace => ' (
                 if

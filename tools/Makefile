@@ -125,6 +125,7 @@ NOCOVERAGE		+= %.lex %.tab
 
 APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET)))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
+CPP_HDR						= $(filter-out %.lex.h   %.tab.h   %.gperf.h             ,$(wildcard *.h))
 LEX_SRC						= $(wildcard *.l)
 GPERF_SRC					= $(wildcard *.gperf)
 YACC_SRC					= $(wildcard *.y)
@@ -133,7 +134,7 @@ TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
 HEAD						= $(wildcard *.h *.tpp) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
-VERA_OBJ					= $(patsubst %,vera/%.vera, $(wildcard *.cpp) $(wildcard *.h) $(wildcard *.tpp))
+VERA_OBJ					= $(patsubst %,vera/%.vera, $(CPP_SRC) $(APP_SRC) $(CPP_HDR) $(wildcard *.tpp))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)

@@ -8,16 +8,16 @@
 #   Take into account
 #       #if defined Value                   ignore pre-processor macro line
 #       #error AnyWord AnotherWord          ignore pre-processor macro line
-#       typedef Type Type;                  ignore typedef upto ';'
-#       template<Type TemplateType>         drop template or template< Stuff upto >
-#       long long objectName;               built in type behave like an extended identifer
+#       #define Word Word                   ignore pre-processor macro line
+#       typedef Type Type;                  ignore typedef up-to ';'
+#       template<Type TemplateType>         drop template or template< Stuff up-to '>'
+#       long long objectName;               built in type behave like an extended identifier
 #       Type  NameSpace::Class::object      fully qualified names are ignored.
 #                                           these probably belong to a package not owned by
 #                                           this project anyway.
 #
 
 # States:
-#   Ignore lines with pre-processor macros
 #
 #
 #
@@ -25,7 +25,7 @@
 #          |--------------------------------------------------------------
 #          |               |                      |                      |                           Not Greater(>)
 #          |          #if or #error            typedef               templatea     Less(<)              -------
-#          |               |                      |    -----             |    ----------------          |     |
+#          |          or #define                  |    -----             |    ----------------          |     |
 #          |              \/                     \/    |  Not ;         \/    |              \/        \/     |
 #          |        ##############         ##############  |      ##############             ##############   |
 #          |        # PreProc    #         # Typedef    #  |      # Template   # <|          # Template<  #   |
@@ -44,6 +44,10 @@
 #   or BuiltIn Type            |    |                  |                             |      |    |
 #          |         BuiltIn Type   |              Greater(>)                    Identifier |   Space
 #          |         or space  |    |                  |                             |      |    |
+#          |         or const  |    |                  |                             |      |    |
+#          |         or ref    |    |                  |                             |      |    |
+#          |         or pointer|    |                  |                             |      |    |
+#          |                   |    |                  |                             |      |    |
 #          |       ##############   |                  ##############           ##############   |
 #          -------># Found1     #<---                  # Found1<    #<---       # Found1::   #<---
 #                  ##############                      ##############   |       ##############
@@ -69,6 +73,9 @@ set builtInTypes {
     char
     float
     double
+    const
+    and
+    star
 }
 
 proc isBuiltInType {s} {
@@ -88,7 +95,7 @@ foreach f [getSourceFileNames] {
             set state "start"
         }
 
-        if {$tokenName == "pp_if" || $tokenName == "pp_error"} {
+        if {$tokenName == "pp_if" || $tokenName == "pp_error" || $tokenName == "pp_define"} {
             set pp_line $lineNumber
             #puts "$identifier: => PP Start"
         } elseif {$lineNumber == $pp_line} {
