@@ -24,7 +24,6 @@ T009A:      Comma is followed by space. Comma not proceeded by space (unless in 
 T010:       Identifiers should not be composed of 'l' and 'O' characters only
 T016:       Calls to min/max should be protected against accidental macro substitution
 T017:       Unnamed namespaces are not allowed in header files
-T018:       using namespace are not allowed in header files
 T019:       Control structures should have complete curly-braced block of code
 
 F001:       Files should not contain '\r'
@@ -47,3 +46,4 @@ T012:       not should not be used in short form => !
 T013:       Each file has a copyright notice
 T014:       Source files should refer the Boost Software License
 T015:       Check URL are valid
+T018:       using namespace are not allowed in header files
