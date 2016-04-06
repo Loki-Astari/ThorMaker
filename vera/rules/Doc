@@ -30,7 +30,8 @@ T019:       Control structures should have complete curly-braced block of code
 F001:       Files should not contain '\r'
 F002:       File names should be well formed.
 
-
+M001:       Make sure identifiers for objects have an initial lower case letter.
+M002:       Make sure user declared namespace/types/enum all use an initial upper case letter.
 
 
 
