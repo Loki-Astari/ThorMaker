@@ -1,7 +1,7 @@
 AC_DEFUN([AX_THOR_FUNC_USE_VERA],
 [
     AC_ARG_ENABLE(
-        [yaml],
+        [vera],
         AS_HELP_STRING([--disable-vera], [Disable vera. Disable Static analysis of source.])
     )
     AS_IF(
@@ -12,9 +12,6 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA],
         [
             AC_SUBST(VERA, [vera++])
             AC_CHECK_PROGS([TestVera], [vera++], [:])
-            echo
-            echo $TestVera
-            echo
             AS_IF(
                 [test "$TestVera" == ":"],
                 [
@@ -27,7 +24,7 @@ detected that "vera++" (the static analysis tool) is not currently installed.
 
 If you don't care about static analysis the feel free to disable this feature using the flag
 
-    --disable-yaml
+    --disable-vera
 
 Alternatively you can install vera++
 
