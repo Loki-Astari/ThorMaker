@@ -1,3 +1,15 @@
+AC_DEFUN([AX_THOR_FUNC_USE_INSTALL_LOCAL_VERA],
+[
+    AC_ARG_WITH(
+        [thor-build-local-vera],
+        AS_HELP_STRING([--with-thor-build-local-vera], [Usually used by travis to install vera++ for testing purposes]),
+        [
+            ./build/third/vera-install
+        ]
+    )
+])
+
+
 AC_DEFUN([AX_THOR_FUNC_USE_VERA],
 [
     AC_ARG_ENABLE(

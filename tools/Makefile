@@ -1,4 +1,4 @@
-
+export PATH
 #
 # Generic Makefile for all building.
 #
@@ -484,11 +484,11 @@ vera/%.vera:
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		 echo "$(VERA) --show-rule --error --std-report $@.report $*"; \
 	else echo $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi
-	@$(VIRA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*; \
+	@$(VERA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo "$(VIRA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*";	\
+		echo "$(VERA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*";	\
 		echo "==================================================="; \
 		cat $@.report;									\
 		exit 1;											\
