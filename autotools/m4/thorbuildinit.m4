@@ -16,18 +16,19 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA],
         [vera],
         AS_HELP_STRING([--disable-vera], [Disable vera. Disable Static analysis of source.])
     )
-    AS_IF(
-        [test "x$enable_vera" == "xno"],
-        [
-            AC_SUBST(VERA, ['echo "Disabled Static Analysis" ||'])
-        ],
-        [
-            AC_SUBST(VERA, [vera++])
-            AC_CHECK_PROGS([TestVera], [vera++], [:])
-            AS_IF(
-                [test "$TestVera" == ":"],
-                [
-                    AC_MSG_ERROR([
+    AS_IF([test "$with_thor-build-local-vera" == ""],
+        [AS_IF(
+            [test "x$enable_vera" == "xno"],
+            [
+                AC_SUBST(VERA, ['echo "Disabled Static Analysis" ||'])
+            ],
+            [
+                AC_SUBST(VERA, [vera++])
+                AC_CHECK_PROGS([TestVera], [vera++], [:])
+                AS_IF(
+                    [test "$TestVera" == ":"],
+                    [
+                        AC_MSG_ERROR([
 
 
 By default the build tools use vera++ for static analysis of C++ code to ensure the project
@@ -45,10 +46,12 @@ Alternatively you can install vera++
 Note: Pull requests that do not pass static analysis will be rejected.
 
 ])
-                ],
-                [
-                ]
-            )
+                    ],
+                    [
+                    ]
+                )
+            ]
+        )
         ]
     )
 ])
