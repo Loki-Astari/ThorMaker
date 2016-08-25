@@ -1,10 +1,55 @@
-AC_DEFUN([AX_THOR_FUNC_USE_INSTALL_LOCAL_VERA],
+AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION],
 [
     AC_ARG_WITH(
-        [thor-build-local-vera],
-        AS_HELP_STRING([--with-thor-build-local-vera], [Usually used by travis to install vera++ for testing purposes]),
+        [thor-build-on-travis],
+        AS_HELP_STRING([--with-thor-build-on-travis], [Used by travis to install and do some configuration])
+    )
+])
+AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
+[
+(
+    cd $1
+    AS_IF(
+        [test "${with_thor-build-on-travis}" == ""],
+        [],
         [
-            ./build/third/vera-install
+    mv .gitmodules gitmodules.old
+    sed -e 's#git@\([^:]*\):#https://\1/#' gitmodules.old > .gitmodules
+    rm gitmodules.old
+        ]
+    )
+    git submodule init
+    AS_IF(
+        [git submodule update],
+        [],
+        [AC_MSG_ERROR([
+
+git submodule updated failed:
+Currently all Loki-Astari submodules are retrieved using ssh.
+If the above command failed it probably means that you have not registered your "public key" with github.com
+
+See this article on StackOverflow for simple instructions:
+http://stackoverflow.com/questions/25828483/github-permission-denied-publickey
+
+
+Once you have installed the keys you can restart the configuration with:
+git submodule update
+./configure <Same Flags You had before>
+
+        ])]
+    )
+)
+])
+AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA],
+[
+    AS_IF(
+        [test "${with_thor-build-on-travis}" == ""],
+        [],
+        [
+(
+    ./build/third/vera-install
+)
+
         ]
     )
 ])
@@ -69,28 +114,10 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
     AC_PROG_CXX
 
-    git submodule init
-    AS_IF(
-        [git submodule update],
-        [],
-        [AC_MSG_ERROR([
-
-
-git submodule updated failed:
-
-Currently all Loki-Astari submodules are retrieved using ssh.
-If the above command failed it probably means that you have not registered your "public key" with github.com
-
-See this article on StackOverflow for simple instructions:
-http://stackoverflow.com/questions/25828483/github-permission-denied-publickey
-
-
-Once you have installed the keys you can restart the configuration with:
-git submodule update
-./configure <Same Flags You had before>
-
-        ])]
-    )
+    AX_THOR_BUILD_ON_TRAVIS_OPTION
+    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB(.)
+    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB(build)
+    AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA(build)
 
     AX_THOR_FUNC_USE_VERA
 

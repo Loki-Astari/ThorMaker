@@ -1,20 +1,11 @@
 #!/bin/bash
 
 CDIR=$(pwd)
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-cd ${DIR}
-
-if test ! -d vera ; then
-    git clone git@bitbucket.org:LokiAstari/vera.git
-fi
-
-cd  vera
-git submodule update --init --recursive
-git checkout production
+cd  build/vera-plusplus
 mkdir -p build
 cd build
-cmake .. -DVERA_LUA=OFF -DCMAKE_INSTALL_PREFIX=${CDIR}/build
+cmake .. -DVERA_LUA=OFF -DVERA_USE_SYSTEM_BOOST=ON -DCMAKE_INSTALL_PREFIX=${CDIR}/build
 make 
 make install
 

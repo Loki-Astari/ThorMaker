@@ -18,21 +18,8 @@ if [[ ! -e ../autotools/m4/boost_base.m4 ]]; then
     wget -O ../autotools/m4/boost_sys.m4  'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_system.m4'
 fi
 
-echo "Un-archiving google test"
-GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
-if [[ ${GTEST_ARCHIEVE} == "" ]]; then
-    echo "Retrieving: gtest-1.7.0"
-    wget http://googletest.googlecode.com/files/gtest-1.7.0.zip
-    GTEST_ARCHIEVE=`ls gtest-*.zip 2>/dev/null | tail -n 1`
-fi
-GTEST_ARCHIEVE_DIR=${GTEST_ARCHIEVE%.zip}
-
-if [[ ! -d ${GTEST_ARCHIEVE_DIR} ]]; then
-    unzip ${GTEST_ARCHIEVE}
-fi
-
-echo "Building google test"
-GTEST_DIR=${ROOT}/${GTEST_ARCHIEVE_DIR}
+GTEST_DIR_PATH=${ROOT}/../googletest/googletest/
+GTEST_DIR=$(cd "${GTEST_DIR_PATH}";pwd)
 pushd ${GTEST_DIR}
 ${CXX} -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
 ${CXX} -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest_main.cc
