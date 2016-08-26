@@ -138,13 +138,7 @@ GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
-VERA_RULES					?=	L001
-VERA_PARAMS					?=
-VERA_RULES_ALL				=	DUMP	L001	L004	T001	T004	T007	T010	T013	T016	T019	\
-								F001	L002	L005	T002	T005	T008	T011	T014	T017	Z001	\
-								F002	L003	L006	T003	T006	T009	T012	T015	T018
 
-VERA_ARGS					= --root $(THORSANVIL_ROOT)/build/vera $(patsubst %, --rule %, $(VERA_RULES)) $(patsubst %, --parameter %, $(VERA_PARAMS))
 
 NOTHING						:=
 SPACE						:=$(NOTHING) $(NOTHING)
@@ -483,11 +477,11 @@ vera/%.vera:
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		 echo "$(VERA) --show-rule --error --std-report $@.report $*"; \
 	else echo $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi
-	@$(VERA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*; \
+	@$(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo "$(VERA) $(VERA_ARGS) --show-rule --error --std-report $@.report $*";	\
+		echo "$(VERA) --profile thor --show-rule --error --std-report $@.report $*";	\
 		echo "==================================================="; \
 		cat $@.report;									\
 		exit 1;											\
