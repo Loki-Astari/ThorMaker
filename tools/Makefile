@@ -17,6 +17,12 @@
 # A name with a *.slib extension is a shared library		(the lib prefix will automatically be added. And platform specific suffix will replace slib)
 # A name with a *.head extension builds a header only library
 #
+# A name with a *.lib  extension is static or shared depending THOR_TARGETLIBS (this is usually defined by the configure script)
+#					   if THOR_TARGETLIBS is empty it defaults to shared.
+#					   for each value in THOR_TARGETLIBS it will add a version of the library to the target.
+#						TARGET=XXX.lib THOR_TARGETLIBS="slib a"
+#						NEW_TARGET=XXX.slib XXX.a
+#
 #		Note: This will build a shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
 #		Note: You can build multiple *.dir or *.app targets.
@@ -122,7 +128,12 @@ MKTEMP_Linux					= mktemp -u
 # Add Files(without extension) that you do not want coverage metrics for
 NOCOVERAGE		+= %.lex %.tab
 
-APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET)))
+THOR_TARGETLIBS				?= slib
+TARGET_GENERIC_LIB			= $(patsubst %.lib, %, $(filter %.lib, $(TARGET)))
+TARGET_GENERIC_EXPAND		= $(foreach exp, $(THOR_TARGETLIBS), $(foreach lib, $(TARGET_GENERIC_LIB), $(lib).$(exp)))
+TARGET_ALL					= $(filter-out %.lib, $(TARGET)) $(TARGET_GENERIC_EXPAND)
+
+APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET_ALL)))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
 CPP_HDR						= $(filter-out %.lex.h   %.tab.h   %.gperf.h             ,$(wildcard *.h))
 LEX_SRC						= $(wildcard *.l)
@@ -154,13 +165,14 @@ GCOV_REPORT					= $(filter-out $(foreach nocoverage,$(NOCOVERAGE),coverage/$(noc
 GCOV_ACTUAL					= $(filter $(GCOV_REPORT), $(wildcard coverage/*.gcov))
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
+						      $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
 							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))
 LIBBASENAME					= $(strip $(LIBBASENAME_ONE_OF))
 
 
-INSTALL_APP					= $(if $(filter %.app,  $(TARGET)), $(patsubst %.app,  install_app_%, $(TARGET)))
-INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET)), $(patsubst %.slib, install_shared_lib_%, $(TARGET)))
-INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET)), $(patsubst %.a,    install_static_lib_%, $(TARGET)))
+INSTALL_APP					= $(if $(filter %.app,  $(TARGET_ALL)), $(patsubst %.app,  install_app_%, $(TARGET_ALL)))
+INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET_ALL)), $(patsubst %.slib, install_shared_lib_%, $(TARGET_ALL)))
+INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET_ALL)), $(patsubst %.a,    install_static_lib_%, $(TARGET_ALL)))
 INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(HEAD))))
 
 #
@@ -256,7 +268,7 @@ RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) | sed '-e 
 
 .PHONY:	all validate install lint objectarch gcovarch clean veryclean test coverage debug release profile header_only install_dir
 
-all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET)
+all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 	@echo $(call colour_text, BLUE, "Done")
 validate:		test 
 install:		test
@@ -317,7 +329,7 @@ gcovarch:	$(GCOV_LIB)
 clean: test_clean
 	$(RM) $(OBJ) $(GCOV) $(TMP_SRC) $(TMP_HDR) makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
-	$(RM) $(TARGET) $(patsubst %.app,%,$(filter %.app,$(TARGET))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET)))
+	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
 veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage profile $(TMP_SRC) $(TMP_HDR)
 test:	run_test vera
@@ -364,9 +376,9 @@ install_head_%: $(PREFIX_INC)/$(LIBBASENAME).Dir
 	@$(CP) $* $(PREFIX_INC)/$(LIBBASENAME)/
 	@echo $(call subsection_title, Install Header $*)
 
-install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET))).Dir
-	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET)))/
-	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET)))/
+install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL))).Dir
+	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/
+	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/
 	@echo $(call subsection_title, Install Header $*)
 
 test_%:
@@ -450,6 +462,7 @@ buildDir:	$(TARGET_MODE).Dir
 .PRECIOUS:	$(OBJ)
 .PRECIOUS:	$(TARGET_MODE)/%.app
 .PRECIOUS:	$(TARGET_MODE)/lib%.$(SO)
+.PRECIOUS:  $(TARGET_MODE)/lib%.a
 .PRECIOUS:	%.tab.cpp
 .PRECIOUS:	%.lex.cpp
 .PRECIOUS:	%.gperf.cpp

@@ -1,3 +1,16 @@
+AC_DEFUN([AX_THOR_LIB_SELECT],
+[
+    THOR_TARGETLIBS=""
+    AS_IF(
+          [test "x$enable_shared" == "xyes"],
+          [THOR_TARGETLIBS+=" slib"]
+    )
+    AS_IF(
+          [test "x$enable_static" == "xyes"],
+          [THOR_TARGETLIBS+=" a"]
+    )
+    AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
+])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION],
 [
     AC_ARG_WITH(
