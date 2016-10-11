@@ -89,6 +89,8 @@ BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
 include $(BUILD_ROOT)/tools/Colour.Makefile
 include $(BUILD_ROOT)/tools/Platform.Makefile
 
+export PATH := $(BUILD_ROOT)/bin:$(PATH)
+
 PREFIX?=$(BUILD_ROOT)
 PREFIX_BIN?=$(BUILD_ROOT)/bin
 PREFIX_LIB?=$(BUILD_ROOT)/lib
