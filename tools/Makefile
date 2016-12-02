@@ -175,7 +175,7 @@ LIBBASENAME					= $(strip $(LIBBASENAME_ONE_OF))
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET_ALL)), $(patsubst %.app,  install_app_%, $(TARGET_ALL)))
 INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET_ALL)), $(patsubst %.slib, install_shared_lib_%, $(TARGET_ALL)))
 INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET_ALL)), $(patsubst %.a,    install_static_lib_%, $(TARGET_ALL)))
-INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(HEAD))))
+INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(subst /,_,$(HEAD)))))
 
 #
 # Set to On to see debug output
@@ -373,9 +373,9 @@ install_static_lib_%:
 	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 
-install_head_%: $(PREFIX_INC)/$(LIBBASENAME).Dir
-	@mkdir -p $(PREFIX_INC)/$(LIBBASENAME)/
-	@$(CP) $* $(PREFIX_INC)/$(LIBBASENAME)/
+install_head_%:
+	@mkdir -p $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst _,/,$*))/
+	@$(CP) $(subst _,/,$*) $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst _,/,$*))/
 	@echo $(call subsection_title, Install Header $*)
 
 install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL))).Dir
