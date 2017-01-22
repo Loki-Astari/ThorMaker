@@ -492,7 +492,7 @@ vera/%.vera:
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		 echo "$(VERA) --show-rule --error --std-report $@.report $*"; \
 	else echo $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi
-	@$(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
+	@PATH=${PATH}:$(PREFIX_BIN) $(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
