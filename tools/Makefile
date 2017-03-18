@@ -392,8 +392,14 @@ coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_R
 		 linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
 		 linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
 		 linesTested=$$(($${linesTestable}-$${linesNotTested}));		\
+		 echo "START";													\
 		 linesTested100=$$(($${linesTested}*100));						\
-		 coverage=$$(($${linesTested100}/$${linesTestable}));			\
+		 if [ $${linesTestable} == 0 ]; then							\
+			coverage=100;												\
+		 else															\
+		    coverage=$$(($${linesTested100}/$${linesTestable}));		\
+		 fi;															\
+		 echo "END;"													\
 		 res=`echo "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
 		 if [ $${res} -ne 0 ]; then										\
 			echo $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total);	\
