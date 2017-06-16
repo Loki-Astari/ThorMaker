@@ -259,9 +259,28 @@ Error: Your compiler does not seem to support the language features required.
             ])
     ]
 )
+
+AC_DEFUN(
+    [AX_THOR_TEST_CXX_FLAGS],
+    [
+
+AX_CHECK_COMPILE_FLAG(
+    [-Wno-unused-private-field],
+    [AC_SUBST([NO_UNUSED_PRIVATE_FIELD_TEST], [-Wno-unused-private-field])]
+)
+AX_CHECK_COMPILE_FLAG(
+    [-Wno-deprecated-register],
+    [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])]
+)
+
+
+    ]
+)
+
 AC_DEFUN(
     [AX_THOR_FUNC_LANG_FLAG],
     [
+        AX_THOR_TEST_CXX_FLAGS()
         minLangFeature=$1
         AS_IF([test "$2" = ""], [maxLangFeature=17], [maxLangFeature=$2])
         AS_IF([test $minLangFeature -gt $maxLangFeature], AC_MSG_ERROR([Invalid Language Value],[1]))

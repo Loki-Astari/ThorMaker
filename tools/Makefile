@@ -241,7 +241,7 @@ OPTIMIZER_LIBS				=	$(OPTIMIZER_LIBS_$(TARGET_MODE))
 OPTIMIZER_FLAGS_DISP_debug		=	-g
 OPTIMIZER_FLAGS_DISP_release	=	-O3
 OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET)  
-OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST -Wno-unused-private-field
+OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
 CC							=	$(CXX)
