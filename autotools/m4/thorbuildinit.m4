@@ -28,7 +28,6 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
         [
     mv .gitmodules gitmodules.old
     sed -e 's#git@\([^:]*\):#https://\1/#' gitmodules.old > .gitmodules
-    rm gitmodules.old
         ]
     )
     git submodule init
@@ -51,6 +50,7 @@ git submodule update
 
         ])]
     )
+    mv gitmodules.old .gitmodules
 )
 ])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA],
