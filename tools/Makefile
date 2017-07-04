@@ -146,7 +146,8 @@ TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
 HEAD						= $(wildcard *.h *.tpp) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
-VERA_OBJ					= $(patsubst %,vera/%.vera, $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
+VERA_SRC					= $(filter-out $(VERA_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
+VERA_OBJ					= $(patsubst %,vera/%.vera, $(VERA_SRC))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
@@ -674,6 +675,9 @@ Print_On:
 	@echo "GCOV:	 $(GCOV)"
 	@echo "GCOV_OBJ: $(GCOV_OBJ)"
 	@echo "GPERF_SRC:$(GPERF_SRC)"
+	@echo "VERA_IGNORE: $(VERA_IGNORE)"
+	@echo "VERA_SRC: $(VERA_SRC)"
+	@echo "VERA_OBJ: $(VERA_OBJ)"
 
 .PHONY: always
 always:
