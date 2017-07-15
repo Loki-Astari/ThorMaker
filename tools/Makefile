@@ -144,7 +144,7 @@ YACC_SRC					= $(wildcard *.y)
 TMP_SRC						= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC))
 TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC))
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
-HEAD						= $(wildcard *.h *.tpp) $(EXTRA_HEADERS)
+HEAD						= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp)) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					= $(filter-out $(VERA_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
 VERA_OBJ					= $(patsubst %,vera/%.vera, $(VERA_SRC))
@@ -176,7 +176,7 @@ LIBBASENAME					= $(strip $(LIBBASENAME_ONE_OF))
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET_ALL)), $(patsubst %.app,  install_app_%, $(TARGET_ALL)))
 INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET_ALL)), $(patsubst %.slib, install_shared_lib_%, $(TARGET_ALL)))
 INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET_ALL)), $(patsubst %.a,    install_static_lib_%, $(TARGET_ALL)))
-INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(subst /,_,$(HEAD)))))
+INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(subst /,-,$(HEAD)))))
 
 #
 # Set to On to see debug output
@@ -376,8 +376,8 @@ install_static_lib_%:
 	@echo $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 
 install_head_%:
-	@mkdir -p $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst _,/,$*))/
-	@$(CP) $(subst _,/,$*) $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst _,/,$*))/
+	@mkdir -p $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst -,/,$*))/
+	@$(CP) $(subst -,/,$*) $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst -,/,$*))/
 	@echo $(call subsection_title, Install Header $*)
 
 install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL))).Dir
