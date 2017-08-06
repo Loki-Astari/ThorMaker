@@ -245,6 +245,45 @@ If libevent is not installed in the default location (/usr/local) then you will 
 ])
 
 AC_DEFUN(
+    [AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION],
+    [
+        AC_LANG_PUSH([C++])
+        CXXFLAGS_SAVE=$CXXFLAGS
+        CXXFLAGS+=" -std=c++11 -Werror ${BOOST_CPPFLAGS}"
+
+        thor_boost_coroutine_versoin=no
+        AC_COMPILE_IFELSE(
+            [AC_LANG_SOURCE([[@%:@include <boost/coroutine/all.hpp>]])],
+            [thor_boost_coroutine_versoin=1]
+        )
+        AC_COMPILE_IFELSE(
+            [AC_LANG_SOURCE([[@%:@include <boost/coroutine2/all.hpp>]])],
+            [thor_boost_coroutine_versoin=2]
+        )
+        CXXFLAGS=$CXXFLAGS_SAVE
+        AC_LANG_POP([C++])
+
+        AS_IF([test "x${thor_boost_coroutine_versoin}" == "xno"],
+              [AC_MSG_ERROR([
+
+Error: Can not tell the type of the boost coroutine library.
+
+                            ])
+              ],
+              [
+                AS_IF([test "x${thor_boost_coroutine_versoin}" == "x1"],
+                      [AC_DEFINE([BOOST_COROUTINE_VERSION],[1],[Define which version of the boost co-routines we are using])],
+                      [
+                        AS_IF([test "x${thor_boost_coroutine_versoin}" == "x2"],
+                              [AC_DEFINE([BOOST_COROUTINE_VERSION],[2],[Define which version of the boost co-routines we are using])]
+                        )
+                      ]
+                )
+              ]
+        )
+    ]
+)
+AC_DEFUN(
     [AX_THOR_FUNC_TEST_COMP],
     [
         AS_IF([test "$1" != ""],
