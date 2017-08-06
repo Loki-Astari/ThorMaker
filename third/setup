@@ -13,9 +13,11 @@ if [[ -e ${THORSANVIL_ROOT}/lib/libgtest.a ]]; then
 fi
 
 if [[ ! -e ../autotools/m4/boost_base.m4 ]]; then
-    wget -O ../autotools/m4/boost_base.m4 'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_base.m4'
-    wget -O ../autotools/m4/boost_co.m4   'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_coroutine.m4'
-    wget -O ../autotools/m4/boost_sys.m4  'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_system.m4'
+    wget -O ../autotools/m4/boost_base.m4    'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_base.m4'
+    wget -O ../autotools/m4/boost_co.m4      'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_coroutine.m4'
+    wget -O ../autotools/m4/boost_sys.m4     'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_system.m4'
+    wget -O ../autotools/m4/boost_python.m4  'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_python.m4'
+    wget -O ../autotools/m4/python_devel.m4  'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_python_devel.m4'
 fi
 
 GTEST_DIR_PATH=${ROOT}/../googletest/googletest/
