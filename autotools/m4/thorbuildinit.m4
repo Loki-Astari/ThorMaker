@@ -108,11 +108,22 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
     AC_CHECK_PROGS([WGET], [wget], [:])
     if test "$WGET" = :; then
-        AC_MSG_ERROR([This package needs wget.])
+        AC_MSG_ERROR([The build tools needs wget. Please install it.])
     fi
     AC_CHECK_PROGS([UNZIP], [unzip], [:])
     if test "$UNZIP" = :; then
-        AC_MSG_ERROR([This package needs unzip.])
+        AC_MSG_ERROR([The build tools needs unzip. Please install it.])
+    fi
+    AC_CHECK_PROGS([CMAKE], [cmake], [:])
+    if test "$CMAKE" = :; then
+        AC_MSG_ERROR([The build tools needs cmake. Please install it.])
+    fi
+    AC_CHECK_LIB([libtcl],    [Tcl_Init], [], [AC_MSG_ERROR([The build tools needs libtcl. Please install it.])])
+    AC_CHECK_LIB([libtk],     [Tk_Init],  [], [AC_MSG_ERROR([The build tools needs libtk. Please install it.])])
+    AX_BOOST_BASE([1.54], [], [AC_MSG_ERROR([The build tools needs libboost. Please install it.])])
+    AX_BOOST_PYTHON
+    if test "x$BOOST_PYTHON_LIB" = "x"; then
+        AC_MSG_ERROR([The build tools needs boost-python. Please install it.])
     fi
 
     AC_PROG_CXX
