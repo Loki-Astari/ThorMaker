@@ -18,6 +18,17 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION],
         AS_HELP_STRING([--with-thor-build-on-travis], [Used by travis to install and do some configuration])
     )
 ])
+AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT],
+[
+    AS_IF(
+        [test "${with_thor-build-on-travis}" == ""],
+        [],
+        [
+            git submodule deinit --all
+            rm .git/modules/build/config
+        ]
+    )
+])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
 [
 (
@@ -129,6 +140,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AC_PROG_CXX
 
     AX_THOR_BUILD_ON_TRAVIS_OPTION
+    AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT
     AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB(.)
     AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB(build)
     AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA(build)
