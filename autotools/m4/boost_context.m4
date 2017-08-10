@@ -69,8 +69,8 @@ AC_DEFUN([AX_BOOST_CONTEXT],
 			CXXFLAGS_SAVE=$CXXFLAGS
 
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-				[[@%:@include <boost/context/all.hpp>]],
-				[[boost::context::detail::fcontext_t fc = boost::context::detail::make_fcontext(0, 0, 0);]])],
+				[[@%:@include <boost/context/all.hpp>]namespace boost{namespace context{namespace detail{}}}using namespace boost::context;using namespace boost::context::detail;],
+				[[auto fc = make_fcontext(0, 0, 0);]])],
 				ax_cv_boost_context=yes, ax_cv_boost_context=no)
 				CXXFLAGS=$CXXFLAGS_SAVE
 			AC_LANG_POP([C++])
