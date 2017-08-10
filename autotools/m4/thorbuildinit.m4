@@ -249,16 +249,30 @@ AC_DEFUN(
     [
         AC_LANG_PUSH([C++])
         CXXFLAGS_SAVE=$CXXFLAGS
-        CXXFLAGS+=" -std=c++11 -Werror ${BOOST_CPPFLAGS}"
+        CXXFLAGS+=" -std=c++11 ${BOOST_CPPFLAGS}"
 
         thor_boost_coroutine_versoin=no
+        AC_MSG_NOTICE([Checking Boost CoRoutine Version])
         AC_COMPILE_IFELSE(
             [AC_LANG_SOURCE([[@%:@include <boost/coroutine/all.hpp>]])],
-            [thor_boost_coroutine_versoin=1]
+            [
+                thor_boost_coroutine_versoin=1
+                AC_MSG_NOTICE([Checking Boost CoRoutine Version V1 OK])
+            ]
+        )
+        AC_COMPILE_IFELSE(
+            [AC_LANG_SOURCE([[@%:@include <boost/coroutine/all.hpp>]],[[ boost::context::asymmetric_coroutine<short>::pull_type x;]])],
+            [
+                thor_boost_coroutine_versoin=2
+                AC_MSG_NOTICE([Checking Boost CoRoutine Version V2 OK])
+            ]
         )
         AC_COMPILE_IFELSE(
             [AC_LANG_SOURCE([[@%:@include <boost/coroutine2/all.hpp>]])],
-            [thor_boost_coroutine_versoin=2]
+            [
+                thor_boost_coroutine_versoin=3
+                AC_MSG_NOTICE([Checking Boost CoRoutine Version V3 OK])
+            ]
         )
         CXXFLAGS=$CXXFLAGS_SAVE
         AC_LANG_POP([C++])
@@ -271,14 +285,8 @@ Error: Can not tell the type of the boost coroutine library.
                             ])
               ],
               [
-                AS_IF([test "x${thor_boost_coroutine_versoin}" == "x1"],
-                      [AC_DEFINE([BOOST_COROUTINE_VERSION],[1],[Define which version of the boost co-routines we are using])],
-                      [
-                        AS_IF([test "x${thor_boost_coroutine_versoin}" == "x2"],
-                              [AC_DEFINE([BOOST_COROUTINE_VERSION],[2],[Define which version of the boost co-routines we are using])]
-                        )
-                      ]
-                )
+	            AC_DEFINE_UNQUOTED([BOOST_COROUTINE_VERSION],[$thor_boost_coroutine_versoin],[Define which version of the boost co-routines we are using])
+                AC_SUBST([BOOST_COROUTINE_VERSION], [$thor_boost_coroutine_versoin])
               ]
         )
     ]

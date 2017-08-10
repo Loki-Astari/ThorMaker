@@ -14,7 +14,6 @@ fi
 
 if [[ ! -e ../autotools/m4/boost_base.m4 ]]; then
     wget -O ../autotools/m4/boost_base.m4    'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_base.m4'
-    wget -O ../autotools/m4/boost_co.m4      'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_coroutine.m4'
     wget -O ../autotools/m4/boost_sys.m4     'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_system.m4'
     wget -O ../autotools/m4/boost_python.m4  'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_python.m4'
     wget -O ../autotools/m4/boost_corout.m4  'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_boost_coroutine.m4'
@@ -22,7 +21,7 @@ if [[ ! -e ../autotools/m4/boost_base.m4 ]]; then
     wget -O ../autotools/m4/python_devel.m4  'http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_python_devel.m4'
 
     # Current version does not work with boost
-    sed -e 's/::fcontext_t\*/::detail::fcontext_t/' -e 's/make_fcontext/detail::make_fcontext/' boost_context.m4 > ../autotools/m4/boost_context.m4
+    sed -e 's/boost::.*::fcontext_t\*/auto/' -e 's/boost::.*::make_fcontext/make_fcontext/' -e 's/all.hpp>]]/all.hpp>]namespace boost{namespace context{namespace detail{}}}using namespace boost::context;using namespace boost::context::detail;]/' boost_context.m4 > ../autotools/m4/boost_context.m4
     rm boost_context.m4
 fi
 

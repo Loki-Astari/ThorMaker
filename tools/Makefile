@@ -163,6 +163,7 @@ LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);) 
 LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE)
 CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS)
+CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
 GCOV_REPORT					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
@@ -262,7 +263,7 @@ BUILD_EXTENSION_TYPE_debug		=	D
 BUILD_EXTENSION_TYPE_coverage	=	D
 BUILD_EXTENSION_TYPE_profile	=	P
 
-RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) | sed '-e s/ /:/')
+RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIME_SHARED_PATH_SET))| sed '-e s/ /:/')
 
 
 #
@@ -679,6 +680,10 @@ Print_On:
 	@echo "TEST_IGNORE: $(TEST_IGNORE)"
 	@echo "VERA_SRC: $(VERA_SRC)"
 	@echo "VERA_OBJ: $(VERA_OBJ)"
+	@echo "BOOST_CPPFLAGS: $(BOOST_CPPFLAGS)"
+	@echo "RUNTIME_PATH: $(RUNTIME_PATH)"
+	@echo "RUNTIME_SHARED_PATH_SET: $(RUNTIME_SHARED_PATH_SET)"
+	@echo "RUNTIME_SHARED_PATH_SET EXPAND: $($(RUNTIME_SHARED_PATH_SET))"
 
 .PHONY: always
 always:
