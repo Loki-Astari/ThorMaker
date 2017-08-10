@@ -66,16 +66,7 @@ git submodule update
 ])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA],
 [
-    AS_IF(
-        [test "${with_thor_build_on_travis}" == ""],
-        [],
-        [
-(
     ./build/third/vera-install
-)
-
-        ]
-    )
 ])
 
 
