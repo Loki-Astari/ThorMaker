@@ -21,7 +21,7 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION],
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT],
 [
     AS_IF(
-        [test "${with_thor-build-on-travis}" == ""],
+        [test "${with_thor_build_on_travis}" == ""],
         [],
         [
             git submodule deinit --all
@@ -34,7 +34,7 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
 (
     cd $1
     AS_IF(
-        [test "${with_thor-build-on-travis}" == ""],
+        [test "${with_thor_build_on_travis}" == ""],
         [],
         [
     mv .gitmodules gitmodules.old
@@ -67,7 +67,7 @@ git submodule update
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA],
 [
     AS_IF(
-        [test "${with_thor-build-on-travis}" == ""],
+        [test "${with_thor_build_on_travis}" == ""],
         [],
         [
 (
