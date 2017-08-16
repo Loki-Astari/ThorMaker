@@ -9,6 +9,11 @@ AC_DEFUN([AX_THOR_LIB_SELECT],
           [test "x$enable_static" == "xyes"],
           [THOR_TARGETLIBS+=" a"]
     )
+    AS_IF(
+          [test "x$THOR_TARGETLIBS" == "x"],
+          [THOR_TARGETLIBS="slib"]
+    )
+
     AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
 ])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION],
@@ -104,6 +109,7 @@ detected that "vera++" (the static analysis tool) is not currently installed.
         ]
     )
     AC_SUBST([VERA], [${VERA}])
+    AX_THOR_LIB_SELECT
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],

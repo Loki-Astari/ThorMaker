@@ -37,10 +37,6 @@ AX_THOR_PROG_COV
 
 # Add support for shared libraries.
 LT_INIT
-# Allow the configurations scripts to define --enabled-shared and --enable-static
-# These flags define the THOR_TARGETLIBS Makefile variable. If your Makefile contains
-# a target %.lib this affects which version of the library is build (by default shared only)
-AX_THOR_LIB_SELECT
 
 
 #
