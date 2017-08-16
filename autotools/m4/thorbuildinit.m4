@@ -28,10 +28,7 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT],
     AS_IF(
         [test "${with_thor_build_on_travis}" == ""],
         [],
-        [
-            git submodule deinit --all
-            rm .git/modules/build/config
-        ]
+        []
     )
 ])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
