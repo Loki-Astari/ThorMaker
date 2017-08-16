@@ -85,7 +85,6 @@
 #
 
 -include $(THORSANVIL_ROOT)/Makefile.config
--include $(THORSANVIL_ROOT)/Makefile.extra
 BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
 include $(BUILD_ROOT)/tools/Colour.Makefile
 include $(BUILD_ROOT)/tools/Platform.Makefile

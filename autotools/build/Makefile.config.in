@@ -20,5 +20,3 @@ bindir?=@bindir@
 libdir?=@libdir@
 includedir?=@includedir@
 
--include $(THORSANVIL_ROOT)/Makefile.config.local
-
