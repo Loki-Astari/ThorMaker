@@ -172,7 +172,7 @@ LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
 						      $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
 							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))
-LIBBASENAME					= $(strip $(LIBBASENAME_ONE_OF))
+LIBBASENAME					= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
 
 
 INSTALL_APP					= $(if $(filter %.app,  $(TARGET_ALL)), $(patsubst %.app,  install_app_%, $(TARGET_ALL)))
@@ -224,11 +224,13 @@ LANGUAGE_SPECIFIC_FLAGS		= -DTHOR_USE_CPLUSPLUS$(CXXSTDVER)
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
 WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Werror -Wunreachable-code -Wno-long-long
 
-
+THORSLINKDIRS				=	$(PREFIX_LIB) $(filter -L%, %, $(LDFLAGS)) ${libdir}
+findfullpath				=	$(firstword $(foreach dir, $(1), $(realpath $(dir)/$(2))))
 expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
+expandStatic				=	$(foreach lib, $(1), $(call findfullpath, $(THORSLINKDIRS),lib$(lib)$(BUILD_EXTENSION).a))
 expandFlag					=   $(foreach flag, $(1), $(flag))
 THORSANVIL_FLAGS			=	-I$(PREFIX_INC)
-THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS)) $(EX_LDLIBS)
+THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS)) $(call expandStatic,$(LINK_SLIBS)) $(EX_LDLIBS)
 
 
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
@@ -669,6 +671,8 @@ PrintDebug:	Print_$(VERBOSE)
 Print_Off:
 Print_NONE:
 Print_On:
+	@echo "TARGET:   $(TARGET)"
+	@echo "TARGET_ALL:$(TARGET_ALL)"
 	@echo "CPP_SRC:	 $(CPP_SRC)"
 	@echo "APP_SRC:	 $(APP_SRC)"
 	@echo "HEAD:	 $(HEAD)"
