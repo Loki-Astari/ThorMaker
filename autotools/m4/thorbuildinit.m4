@@ -190,7 +190,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
 [
     AC_SUBST(thors$1_ROOT_LIBDIR)
     AC_SUBST(thors$1_ROOT_INCDIR)
-    AC_SUBST(thors$1_ROOT_LIB)
+    AC_SUBST(HAVE_Thors$1)
     AC_ARG_WITH(
         [Thors$1root],
         AS_HELP_STRING([--with-Thors$1root=<location>], [Directory of Thors$1_ROOT])
@@ -216,7 +216,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
                 AC_DEFINE([HAVE_Thors$1], 1, [When on code that uses Thors$1 will be compiled.])
                 thors$1_ROOT_LIBDIR=-L${with_Thors$1root}/lib
                 thors$1_ROOT_INCDIR=-I${with_Thors$1root}/include
-                thors$1_ROOT_LIB=$3
+                HAVE_Thors$1=yes
             ],
             [AC_MSG_ERROR([
  
