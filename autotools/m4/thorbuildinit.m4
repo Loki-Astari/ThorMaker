@@ -185,6 +185,53 @@ Eg.
     fi
 ])
 
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_SQL],
+[
+    AC_ARG_WITH(
+        [thorssqlroot],
+        AS_HELP_STRING([--with-thorssqlroot=<location>], [Directory of THORSSQL_ROOT])
+    )
+    AC_ARG_ENABLE(
+        [thorssql],
+        AS_HELP_STRING([--disable-thorssql], [Don't use ThorsSQL. This means features that use ThorsSQL will be disabled.])
+    )
+    AS_IF(
+        [test "x$enable_thorssql" != "xno"],
+
+        if test "${with_thorssqlroot}" == ""; then
+            with_thorssqlroot="/usr/local"
+        fi
+        ORIG_LDFLAGS="${LDFLAGS}"
+        LDFLAGS="$LDFLAGS -L$with_thorssqlroot/lib"
+
+        AC_CHECK_LIB(
+            [thorssql],
+            [],
+            [
+                AC_DEFINE([HAVE_THORSSQL], 1, [When on code that uses ThorsSQL will be compiled.])
+                AC_SUBST([thorssql_ROOT_DIR], [$with_thorssqlroot])
+                AC_SUBST([thorssql_ROOT_LIB], [ThorSQL])
+            ],
+            [AC_MSG_ERROR([
+ 
+Error: Could not find libThorSQL
+
+You can solve this by installing libThorSQL
+    https://github.com/Loki-Astari/ThorsSQL
+
+Alternately specify install location with:
+    --with-thorssqlroot=<location of thorssql installation>
+
+If you do not want to use features that need ThorSQL then it
+can be disabled with:
+    --disable-thorssql
+
+                ], [1])]
+        )
+
+        LDFLAGS="${ORIG_LDFLAGS}"
+    )
+])
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
     AC_ARG_WITH(

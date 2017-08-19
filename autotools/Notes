@@ -136,31 +136,49 @@ GitIgnore
 
 }
 
+usage1 () {
+    echo "We were expecting this to be a git repository"
+    echo
+    echo "Create one with: "
+    echo "    git init"
+    exit
+}
+
+usage2 () {
+    echo "First time usage. Please provide the name of your package you want to build"
+    echo
+    echo "Exmaple:"
+    echo "    # This will set up a basic project for building the shared library BobsPastry.so"
+    echo "    ./Notes BobsPastry"
+    echo
+    echo "    # This will set up a project for building multiple shared library Bobs.so Pastry.so And.so Tarts.so"
+    echo "    ./Notes Bobs Pastry And Tarts"
+    echo
+    exit
+}
+
+checkForBuildTools () {
+
+    if [[ ! -e build/Notes ]]; then
+        echo "Installing ThorMaker"
+        git submodule init
+        git submodule add git@github.com:Loki-Astari/ThorMaker.git build
+    fi
+}
+
 echo "Starting Configuration"
 if [[ ! -e configure.ac ]]; then
 
     if [[ ! -e .git ]]; then
-        echo "We were expecting this to be a git repository"
-        echo
-        echo "Create one with: "
-        echo "    git init"
-        exit
+        usage1
     fi
     if [[ "$#" == "0" ]]; then
-        echo "First time usage. Please provide the name of your package you want to build"
-        echo
-        echo "Exmaple:"
-        echo "    ./Notes BobsPastry"
-        echo
-        echo "This will set up a basic project for building the shared library BobsPastry.so"
-        exit
+        usage2
     fi
     echo "Building Example Configuration"
     BaseName=$*
 
-    echo "Installing ThorMaker"
-    git submodule init
-    git submodule add git@github.com:Loki-Astari/ThorMaker.git build
+    checkForBuildTools
 
     echo "Creating Base Autotools Files"
     addConfigureAC ${BaseName}
