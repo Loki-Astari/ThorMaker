@@ -186,56 +186,61 @@ Eg.
     fi
 ])
 
-AC_DEFUN([AX_THOR_FUNC_USE_THORS_SQL],
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
 [
-    AC_SUBST([thorssql_ROOT_LIBDIR])
-    AC_SUBST([thorssql_ROOT_INCDIR])
-    AC_SUBST([thorssql_ROOT_LIB])
+    AC_SUBST(thors$1_ROOT_LIBDIR)
+    AC_SUBST(thors$1_ROOT_INCDIR)
+    AC_SUBST(thors$1_ROOT_LIB)
     AC_ARG_WITH(
-        [thorssqlroot],
-        AS_HELP_STRING([--with-thorssqlroot=<location>], [Directory of THORSSQL_ROOT])
+        [Thors$1root],
+        AS_HELP_STRING([--with-Thors$1root=<location>], [Directory of Thors$1_ROOT])
     )
     AC_ARG_ENABLE(
-        [thorssql],
-        AS_HELP_STRING([--disable-thorssql], [Don't use ThorsSQL. This means features that use ThorsSQL will be disabled.])
+        [Thors$1],
+        AS_HELP_STRING([--disable-Thors$1], [Don't use Thors$1. This means features that use Thors$1 will be disabled.])
     )
     AS_IF(
-        [test "x$enable_thorssql" != "xno"],
+        flag=enable_Thors$1
+        [test "x${!flag}" != "xno"],
 
-        if test "${with_thorssqlroot}" == ""; then
-            with_thorssqlroot="/usr/local"
+        if test "${with_Thors$1root}" == ""; then
+            declare with_Thors$1root="/usr/local"
         fi
         ORIG_LDFLAGS="${LDFLAGS}"
-        LDFLAGS="$LDFLAGS -L$with_thorssqlroot/lib"
+        LDFLAGS="$LDFLAGS -L${with_Thors$1root}/lib"
 
         AC_CHECK_LIB(
-            [ThorSQL17D],
-            [_ZN10ThorsAnvil3SQL10Connection11getCreatorsEv],
+            [$4],
+            [$5],
             [
-                AC_DEFINE([HAVE_THORSSQL], 1, [When on code that uses ThorsSQL will be compiled.])
-                thorssql_ROOT_LIBDIR=-L${with_thorssqlroot}/lib
-                thorssql_ROOT_INCDIR=-I${with_thorssqlroot}/include
-                thorssql_ROOT_LIB=ThorSQL
+                AC_DEFINE([HAVE_Thors$1], 1, [When on code that uses Thors$1 will be compiled.])
+                thors$1_ROOT_LIBDIR=-L${with_Thors$1root}/lib
+                thors$1_ROOT_INCDIR=-I${with_Thors$1root}/include
+                thors$1_ROOT_LIB=$3
             ],
             [AC_MSG_ERROR([
  
-Error: Could not find libThorSQL
+Error: Could not find lib$4
 
-You can solve this by installing libThorSQL
-    https://github.com/Loki-Astari/ThorsSQL
+You can solve this by installing lib$3
+    $6
 
 Alternately specify install location with:
-    --with-thorssqlroot=<location of thorssql installation>
+    --with-Thors$1root=<location of Thors$1 installation>
 
-If you do not want to use features that need ThorSQL then it
+If you do not want to use features that need Thor$1 then it
 can be disabled with:
-    --disable-thorssql
+    --disable-Thors$1
 
                 ], [1])]
         )
 
         LDFLAGS="${ORIG_LDFLAGS}"
     )
+])
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SQL],
+[
+    AX_THOR_FUNC_USE_THORS_LIB(SQL, $1, ThorSQL, [ThorSQL$1D], [_ZN10ThorsAnvil3SQL10Connection11getCreatorsEv], [https://github.com/Loki-Astari/ThorsSQL])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
