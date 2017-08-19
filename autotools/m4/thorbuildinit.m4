@@ -188,6 +188,9 @@ Eg.
 
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_SQL],
 [
+    AC_SUBST([thorssql_ROOT_LIBDIR])
+    AC_SUBST([thorssql_ROOT_INCDIR])
+    AC_SUBST([thorssql_ROOT_LIB])
     AC_ARG_WITH(
         [thorssqlroot],
         AS_HELP_STRING([--with-thorssqlroot=<location>], [Directory of THORSSQL_ROOT])
@@ -206,12 +209,13 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_SQL],
         LDFLAGS="$LDFLAGS -L$with_thorssqlroot/lib"
 
         AC_CHECK_LIB(
-            [thorssql],
-            [],
+            [ThorSQL17D],
+            [_ZN10ThorsAnvil3SQL10Connection11getCreatorsEv],
             [
                 AC_DEFINE([HAVE_THORSSQL], 1, [When on code that uses ThorsSQL will be compiled.])
-                AC_SUBST([thorssql_ROOT_DIR], [$with_thorssqlroot])
-                AC_SUBST([thorssql_ROOT_LIB], [ThorSQL])
+                thorssql_ROOT_LIBDIR=-L${with_thorssqlroot}/lib
+                thorssql_ROOT_INCDIR=-I${with_thorssqlroot}/include
+                thorssql_ROOT_LIB=ThorSQL
             ],
             [AC_MSG_ERROR([
  
