@@ -230,7 +230,7 @@ expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
 expandStatic				=	$(foreach lib, $(1), $(call findfullpath, $(THORSLINKDIRS),lib$(lib)$(BUILD_EXTENSION).a))
 expandFlag					=   $(foreach flag, $(1), $(flag))
 THORSANVIL_FLAGS			=	-I$(PREFIX_INC)
-THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS)) $(call expandStatic,$(LINK_SLIBS)) $(EX_LDLIBS)
+THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS)) $(THOR_STATIC_LOAD_FLAG) $(call expandStatic,$(LINK_SLIBS)) $(EX_LDLIBS) $(THOR_STATIC_NOLOAD_FLAG)
 
 
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
