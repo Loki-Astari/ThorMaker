@@ -50,22 +50,13 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT],
         []
     )
 ])
-AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
+AC_DEFUN([AX_THOR_BUILD_GIT_SUBMODULE_GET],
 [
-(
-    cd $1
+    git submodule init
     AS_IF(
-        [test "${with_thor_build_on_travis}" == ""],
+        [git submodule update],
         [],
-        [
-            mv .gitmodules gitmodules.old
-            sed -e 's#git@\([^:]*\):#https://\1/#' gitmodules.old > .gitmodules
-
-            git submodule init
-            AS_IF(
-                [git submodule update],
-                [],
-                [AC_MSG_ERROR([
+        [AC_MSG_ERROR([
 
 git submodule updated failed:
 Currently all Loki-Astari submodules are retrieved using ssh.
@@ -79,8 +70,27 @@ Once you have installed the keys you can restart the configuration with:
 git submodule update
 ./configure <Same Flags You had before>
 
-                ])]
-            )
+        ])]
+    )
+])
+AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
+[
+(
+    cd $1
+    AS_IF(
+        [test "${with_thor_build_on_travis}" == ""],
+        [
+
+            if [[ ! -e $2 ]]; then
+                AX_THOR_BUILD_GIT_SUBMODULE_GET
+            fi
+        ],
+        [
+            mv .gitmodules gitmodules.old
+            sed -e 's#git@\([^:]*\):#https://\1/#' gitmodules.old > .gitmodules
+
+            AX_THOR_BUILD_GIT_SUBMODULE_GET
+
             mv gitmodules.old .gitmodules
         ]
     )
@@ -155,8 +165,8 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
     AX_THOR_BUILD_ON_TRAVIS_OPTION
     AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT
-    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB(.)
-    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB(build)
+    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([.], [build/Notes])
+    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([build], [googletest/README.md])
     AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA(build)
 
     AX_THOR_FUNC_USE_VERA
