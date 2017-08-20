@@ -230,7 +230,8 @@ expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
 expandStatic				=	$(foreach lib, $(1), $(call findfullpath, $(THORSLINKDIRS),lib$(lib)$(BUILD_EXTENSION).a))
 expandFlag					=   $(foreach flag, $(1), $(flag))
 THORSANVIL_FLAGS			=	-I$(PREFIX_INC)
-THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS)) $(THOR_STATIC_LOAD_FLAG) $(call expandStatic,$(LINK_SLIBS)) $(EX_LDLIBS) $(THOR_STATIC_NOLOAD_FLAG)
+THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS))
+THORSANVIL_STATICLOADALL	=   $(if $(LINK_SLIBS), $(THOR_STATIC_LOAD_FLAG) $(call expandStatic,$(LINK_SLIBS)) $(THOR_STATIC_NOLOAD_FLAG))
 
 
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
@@ -551,9 +552,9 @@ $(TARGET_MODE)/lib%.a:	$(OBJ)
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		 echo '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS)' ; \
+		 echo '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
 	else echo $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; fi
-	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) 2>makefile_tmp; \
+	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
@@ -688,6 +689,10 @@ Print_On:
 	@echo "RUNTIME_PATH: $(RUNTIME_PATH)"
 	@echo "RUNTIME_SHARED_PATH_SET: $(RUNTIME_SHARED_PATH_SET)"
 	@echo "RUNTIME_SHARED_PATH_SET EXPAND: $($(RUNTIME_SHARED_PATH_SET))"
+	@echo "libdir:   $(libdir)"
+	@echo "libdir:   ${libdir}"
+	@echo "THORSLINKDIRS: $(THORSLINKDIRS)"
+	@echo "THORSANVIL_STATICLOADALL: $(THORSANVIL_STATICLOADALL)"
 
 .PHONY: always
 always:
