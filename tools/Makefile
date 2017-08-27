@@ -349,7 +349,8 @@ clean: test_clean
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
 veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage profile $(TMP_SRC) $(TMP_HDR)
-test:	unit_test static_test
+test:	pre_test unit_test static_test
+pre_test:	$(PRETEST)
 static_test: vera
 vera:	vera.Dir vera_head vera_body
 vera_head:
