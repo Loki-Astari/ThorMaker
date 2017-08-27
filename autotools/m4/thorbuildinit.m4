@@ -210,11 +210,18 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
         flag=enable_Thors$1
         [test "x${!flag}" != "xno"],
 
+        AC_MSG_NOTICE([Got HERE])
+        AC_MSG_NOTICE([Name: $1])
+        AC_MSG_NOTICE([With: ${with_Thors$1root}])
+
         if test "${with_Thors$1root}" == ""; then
             declare with_Thors$1root="/usr/local"
         fi
         ORIG_LDFLAGS="${LDFLAGS}"
         LDFLAGS="$LDFLAGS -L${with_Thors$1root}/lib"
+        AC_MSG_NOTICE([LDFLAGS: ${LDFLAGS}])
+        AC_MSG_NOTICE([LIB: $4])
+        AC_MSG_NOTICE([Meth: $5])
 
         AC_CHECK_LIB(
             [$4],
@@ -248,6 +255,10 @@ can be disabled with:
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SQL],
 [
     AX_THOR_FUNC_USE_THORS_LIB(SQL, $1, ThorSQL, [ThorSQL$1D], [_ZN10ThorsAnvil3SQL10Connection11getCreatorsEv], [https://github.com/Loki-Astari/ThorsSQL])
+])
+AC_DEFUN([AX_THOR_FUC_USE_THORS_LIB_SERIALIZE],
+[
+    AX_THOR_FUNC_USE_THORS_LIB(Serialize, $1, ThorSerialize, [ThorSerialize$1D], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv], [https://github.com/Loki-Astari/ThorsSerializer])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
