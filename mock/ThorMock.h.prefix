@@ -1,0 +1,22 @@
+#ifndef THORSANVIL_BUILDTOOLS_MOCK_MOCK_FUNCTION_H
+#define THORSANVIL_BUILDTOOLS_MOCK_MOCK_FUNCTION_H
+
+template<typename Func>
+struct MockOutFunction
+{
+    std::function<Func>     old;
+    std::function<Func>&    orig;
+    MockOutFunction(std::function<Func>& orig, std::function<Func>&& mock)
+        : old(std::move(mock))
+        , orig(orig)
+    {
+        swap(old, orig);
+    }
+    ~MockOutFunction()
+    {
+        swap(old, orig);
+    }
+};
+#define MOCK_SYS(func, lambda)      MockOutFunction<decltype(func)>  MockOutFunction ## func(ThorsAnvil::BuildTools::Mock::mock ## func, lambda)
+
+

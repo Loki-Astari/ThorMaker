@@ -1,0 +1,7 @@
+namespace ThorsAnvil
+{
+    namespace BuildTools
+    {
+        namespace Mock
+        {
+

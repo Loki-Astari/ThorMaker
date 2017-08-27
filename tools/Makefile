@@ -89,6 +89,8 @@ BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
 include $(BUILD_ROOT)/tools/Colour.Makefile
 include $(BUILD_ROOT)/tools/Platform.Makefile
 
+LOCAL_ROOT		?= $(shell pwd)
+
 export PATH := $(BUILD_ROOT)/bin:$(PATH)
 
 PREFIX?=$(BUILD_ROOT)
@@ -148,7 +150,7 @@ HEAD						= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp)) $(EXTRA_HEAD
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					= $(filter-out $(TEST_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
 VERA_OBJ					= $(patsubst %,vera/%.vera, $(VERA_SRC))
-GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ))
+GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
@@ -162,7 +164,7 @@ LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD), -l${lib})
 LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);) 
 LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE)
-CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS)
+CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
@@ -238,6 +240,8 @@ TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
 TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread
 TEST_FLAGS_on				=	-I..
 TEST_LIBS_on				=	-L../coverage -L$(THORSANVIL_ROOT)/build/lib $(GCOV_LIBOBJ_PASS) -lgtest
+TEST_PATH_coverage			=	-I$(LOCAL_ROOT)
+TEST_PATH					=	$(TEST_PATH_$(TARGET_MODE))
 
 
 OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_DISP)$(OPTIMIZER_FLAGS_HIDE)
@@ -246,7 +250,7 @@ OPTIMIZER_FLAGS_HIDE		=	$(OPTIMIZER_FLAGS_HIDE_$(TARGET_MODE))
 OPTIMIZER_LIBS				=	$(OPTIMIZER_LIBS_$(TARGET_MODE))
 OPTIMIZER_FLAGS_DISP_debug		=	-g
 OPTIMIZER_FLAGS_DISP_release	=	-O3
-OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET)  
+OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET) -DTHOR_COVERAGE 
 OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
@@ -254,7 +258,12 @@ CC							=	$(CXX)
 CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC3RD) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
 ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS)
 
-
+MOCK_HEADERS_coverage		=	-include coverage/MockHeaders.h
+MOCK_FILES_coverage			=	coverage/MockHeaders.h coverage/MockHeaders.cpp
+MOCK_OBJECT_coverage		=	coverage/MockHeaders.o
+MOCK_HEADERS				=	$(MOCK_HEADERS_$(TARGET_MODE))
+MOCK_FILES					=	$(MOCK_FILES_$(TARGET_MODE))
+MOCK_OBJECT					=	$(MOCK_OBJECT_$(TARGET_MODE))
 
 PREFIX						?=	$(BUILD_ROOT)
 PREFIX_BIN					?=	$(PREFIX)/bin
@@ -274,7 +283,7 @@ RUNTIME_PATH				= $(shell echo $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIM
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install lint objectarch gcovarch clean veryclean test coverage debug release profile header_only install_dir
+.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage debug release profile header_only install_dir
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 	@echo $(call colour_text, BLUE, "Done")
@@ -352,7 +361,7 @@ unit_test:
 	@$(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
 	@echo $(call section_title,Building Unit Tests)
 	@(! test -d test) || touch test/unittest.cpp
-	@(! test -d test) || $(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)"
+	@(! test -d test) || $(MAKE) $(PARALLEL) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)"
 	@(! test -d test) || $(RM)    test/unittest.cpp
 	@(! test -d test) || echo $(call section_title,Running Unit Tests)
 	@(! test -d test) || echo "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=*"
@@ -392,6 +401,57 @@ install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL))).D
 
 test_%:
 	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app $*; fi
+
+mock:	coverage.Dir $(MOCK_FILES)
+	pwd
+	echo "MOCKING: $(TARGET_MODE) $(MOCK_FILES)"
+
+.PHONY: test/Mock.def
+coverage/MockHeaders.h: test/Mock.def coverage.Dir
+	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix coverage/MockHeaders.h
+	@if [[ -e test/Mock.def ]]; then		\
+		perl -ne '/(#include .*)/ and print "$$1\n"' test/Mock.def >> coverage/MockHeaders.h; \
+	fi
+	@if [[ -e Mock.def ]]; then		\
+		perl -ne '/(#include .*)/ and print "$$1\n"' Mock.def >> coverage/MockHeaders.h; \
+	fi
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.preamb >> coverage/MockHeaders.h
+	@if [[ -e test/Mock.def ]]; then		\
+		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "extern std::function<decltype(::$$1)> mock$$1;\n"' test/Mock.def >> coverage/MockHeaders.h; \
+	fi
+	@if [[ -e Mock.def ]]; then		\
+		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "extern std::function<decltype(::$$1)> mock$$1;\n"' Mock.def >> coverage/MockHeaders.h; \
+	fi
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.median >> coverage/MockHeaders.h
+	@if [[ -e test/Mock.def ]]; then		\
+		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#define $$1 ThorsAnvil::BuildTools::Mock::mock$$1\n"' test/Mock.def >> coverage/MockHeaders.h; \
+	fi
+	@if [[ -e Mock.def ]]; then		\
+		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#define $$1 ThorsAnvil::BuildTools::Mock::mock$$1\n"' Mock.def >> coverage/MockHeaders.h; \
+	fi
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
+
+coverage/ThorMock.h: test/Mock.def coverage.Dir
+	@cp $(THORSANVIL_ROOT)/build/mock/ThorMock.h.prefix coverage/ThorMock.h
+	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.preamb >> coverage/ThorMock.h
+	@if [[ -e Mock.def ]]; then		\
+		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' Mock.def >> coverage/ThorMock.h; \
+	fi
+	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.median >> coverage/ThorMock.h
+	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.suffix >> coverage/ThorMock.h
+
+coverage/MockHeaders.cpp:: test/Mock.def coverage/MockHeaders.h coverage.Dir
+	@pwd
+	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.preamb >> coverage/MockHeaders.cpp
+	@if [[ -e test/Mock.def ]]; then		\
+		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' test/Mock.def >> coverage/MockHeaders.cpp; \
+	fi
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.median >> coverage/MockHeaders.cpp
+	@if [[ -e test/Mock.def ]]; then		\
+		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "std::function<decltype(::$$1)> mock$$1 = $$1;\n"' test/Mock.def >> coverage/MockHeaders.cpp; \
+	fi
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
 
 coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
@@ -533,11 +593,11 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 		$(RM) makefile_tmp;								\
 	fi
 
-$(TARGET_MODE)/lib%.a:	$(OBJ)
+$(TARGET_MODE)/lib%.a:	$(OBJ) $(MOCK_OBJECT)
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		 echo '$(AR) $(ARFLAGS) $@ $(OBJ)' ;			\
 	else echo $(call colour_text, GRAY, "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
-	@$(AR) $(ARFLAGS) $@ $(OBJ) > makefile_tmp 2>&1;	\
+	@$(AR) $(ARFLAGS) $@ $(OBJ) $(MOCK_OBJECT) > makefile_tmp 2>&1;	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
@@ -567,24 +627,24 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 		$(RM) makefile_tmp;								\
 	fi
 
-$(TARGET_MODE)/%.o: %.cpp
+$(TARGET_MODE)/%.o: %.cpp coverage/MockHeaders.h coverage/ThorMock.h
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
+		echo $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		echo '$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS))' ;		\
+		echo '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		echo $(RED_ERROR);								\
-		echo $(CXX) -c $^ -o $@ $(CPPFLAGS) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS));\
+		echo $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		echo "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			echo $(call colour_text, GRAY, "$(CXX) -c $^ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
+			echo $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 		fi;												\
 		echo $(GREEN_OK);								\
 		$(RM) $${tmpfile};								\

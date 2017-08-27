@@ -1,0 +1,14 @@
+/*
+ * This is a generated file do not edit.
+ * See ThorBuilder for details
+ *
+ */
+
+
+#ifndef THORSANVIL_BUILD_TOOLS_MOCK_H
+#define THORSANVIL_BUILD_TOOLS_MOCK_H
+
+#include <functional>
+
+#define THORMKADDR(x)   x
+
