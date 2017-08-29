@@ -254,7 +254,7 @@ can be disabled with:
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SQL],
 [
-    AX_THOR_FUNC_USE_THORS_LIB(SQL, $1, ThorSQL, [ThorSQL$1D], [_ZGVZN10ThorsAnvil3SQL10Connection11getCreatorsEvE8creators], [https://github.com/Loki-Astari/ThorsSQL])
+    AX_THOR_FUNC_USE_THORS_LIB(SQL, $1, ThorSQL, [ThorSQL$1D], [_ZN10ThorsAnvil3SQL3Lib15ConnectionProxyD2Ev], [https://github.com/Loki-Astari/ThorsSQL])
 ])
 AC_DEFUN([AX_THOR_FUC_USE_THORS_LIB_SERIALIZE],
 [
