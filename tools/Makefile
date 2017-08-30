@@ -431,6 +431,9 @@ coverage/MockHeaders.h: test/Mock.def coverage.Dir
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#define $$1 ThorsAnvil::BuildTools::Mock::mock$$1\n"' Mock.def >> coverage/MockHeaders.h; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
+	echo;echo;echo;echo "DUMP HEADER"
+	cat coverage/MockHeaders.h
+	echo;echo;echo;echo "DUMP HEADER"
 
 coverage/ThorMock.h: test/Mock.def coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/ThorMock.h.prefix coverage/ThorMock.h
@@ -453,6 +456,9 @@ coverage/MockHeaders.cpp:: test/Mock.def coverage/MockHeaders.h coverage.Dir
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "std::function<decltype(::$$1)> mock$$1 = $$1;\n"' test/Mock.def >> coverage/MockHeaders.cpp; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
+	echo;echo;echo;echo "DUMP HEADER"
+	cat coverage/MockHeaders.cpp
+	echo;echo;echo;echo "DUMP HEADER"
 
 coverage:	$(GCOV_REPORT) $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
