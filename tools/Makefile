@@ -410,24 +410,24 @@ mock:	coverage.Dir $(MOCK_FILES)
 .PHONY: test/Mock.def
 coverage/MockHeaders.h: test/Mock.def coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix coverage/MockHeaders.h
-	@if [[ -e test/Mock.def ]]; then		\
+	@if [ -e test/Mock.def ]; then		\
 		perl -ne '/(#include .*)/ and print "$$1\n"' test/Mock.def >> coverage/MockHeaders.h; \
 	fi
-	@if [[ -e Mock.def ]]; then		\
+	@if [ -e Mock.def ]; then		\
 		perl -ne '/(#include .*)/ and print "$$1\n"' Mock.def >> coverage/MockHeaders.h; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.preamb >> coverage/MockHeaders.h
-	@if [[ -e test/Mock.def ]]; then		\
+	@if [ -e test/Mock.def ]; then		\
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "extern std::function<decltype(::$$1)> mock$$1;\n"' test/Mock.def >> coverage/MockHeaders.h; \
 	fi
-	@if [[ -e Mock.def ]]; then		\
+	@if [ -e Mock.def ]; then		\
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "extern std::function<decltype(::$$1)> mock$$1;\n"' Mock.def >> coverage/MockHeaders.h; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.median >> coverage/MockHeaders.h
-	@if [[ -e test/Mock.def ]]; then		\
+	@if [ -e test/Mock.def ]; then		\
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#define $$1 ThorsAnvil::BuildTools::Mock::mock$$1\n"' test/Mock.def >> coverage/MockHeaders.h; \
 	fi
-	@if [[ -e Mock.def ]]; then		\
+	@if [ -e Mock.def ]; then		\
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#define $$1 ThorsAnvil::BuildTools::Mock::mock$$1\n"' Mock.def >> coverage/MockHeaders.h; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
@@ -435,7 +435,7 @@ coverage/MockHeaders.h: test/Mock.def coverage.Dir
 coverage/ThorMock.h: test/Mock.def coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/ThorMock.h.prefix coverage/ThorMock.h
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.preamb >> coverage/ThorMock.h
-	@if [[ -e Mock.def ]]; then		\
+	@if [ -e Mock.def ]; then		\
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' Mock.def >> coverage/ThorMock.h; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.median >> coverage/ThorMock.h
@@ -445,11 +445,11 @@ coverage/MockHeaders.cpp:: test/Mock.def coverage/MockHeaders.h coverage.Dir
 	@pwd
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.preamb >> coverage/MockHeaders.cpp
-	@if [[ -e test/Mock.def ]]; then		\
+	@if [ -e test/Mock.def ]; then		\
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' test/Mock.def >> coverage/MockHeaders.cpp; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.median >> coverage/MockHeaders.cpp
-	@if [[ -e test/Mock.def ]]; then		\
+	@if [ -e test/Mock.def ]; then		\
 		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "std::function<decltype(::$$1)> mock$$1 = $$1;\n"' test/Mock.def >> coverage/MockHeaders.cpp; \
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
