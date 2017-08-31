@@ -10,5 +10,3 @@
 
 #include <functional>
 
-#define THORMKADDR(x)   x
-

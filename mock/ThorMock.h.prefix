@@ -1,6 +1,8 @@
 #ifndef THORSANVIL_BUILDTOOLS_MOCK_MOCK_FUNCTION_H
 #define THORSANVIL_BUILDTOOLS_MOCK_MOCK_FUNCTION_H
 
+#include "coverage/MockHeaders.h"
+
 template<typename Func>
 struct MockOutFunction
 {
@@ -17,6 +19,9 @@ struct MockOutFunction
         swap(old, orig);
     }
 };
-#define MOCK_SYS(func, lambda)      MockOutFunction<decltype(func)>  MockOutFunction ## func(ThorsAnvil::BuildTools::Mock::mock ## func, lambda)
+
+using ThorsAnvil::BuildTools::Mock::RemoveNoExceptType;
+
+#define MOCK_SYS(func, lambda)      MockOutFunction<RemoveNoExceptType<decltype(func)>>  MockOutFunction ## func(ThorsAnvil::BuildTools::Mock::mock ## func, lambda)
 
 

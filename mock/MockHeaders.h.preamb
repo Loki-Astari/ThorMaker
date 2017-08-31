@@ -6,4 +6,18 @@ namespace ThorsAnvil
         namespace Mock
         {
 
+template <typename T>
+struct RemoveNoExcept
+{
+    using Type = T;
+};
+
+template <typename R, typename ...P>
+struct RemoveNoExcept<R(P...) noexcept>
+{
+    using Type = R(P...);
+};
+
+template <typename T>
+using RemoveNoExceptType = typename RemoveNoExcept<T>::Type;
 
