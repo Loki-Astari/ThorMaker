@@ -1,7 +1,7 @@
 #
 # Generic Makefile for all building.
 #
-
+SHELL=/bin/bash
 #
 # To use set the variable TARGET
 # Then include this file.
