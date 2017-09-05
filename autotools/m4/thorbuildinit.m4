@@ -6,7 +6,7 @@ AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
     )
     AX_CHECK_LINK_FLAG(
         [-Wl,-noall_load],
-        [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[-Wl,-noall_load])]
+        [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[])]
     )
     AX_CHECK_LINK_FLAG(
         [-Wl,--whole-archive -Wl,--no-whole-archive],
