@@ -33,9 +33,9 @@ section_title					= $(call colour_text, BLUE, $(1))
 subsection_title				= $(call colour_text, CYAN, "  $(1)")
 
 
-toInt							= $(shell echo "$(1)" | awk -F. '{print $$1+0}')
+toInt							= $(shell $(ECHO) "$(1)" | awk -F. '{print $$1+0}')
 getPercentColour				= $(call colour_text, $(call GOOD_COLOUR_TEST, $(call toInt,$(1))), $(call toInt, $(1)))
 
-GOOD_COLOUR_TEST				= $(shell if [ $(1) -ge 95 ]; then echo "GREEN"; else if [ $(1) -ge 75 ]; then echo "YELLOW"; else if [ $(1) -ge 50 ]; then echo "PURPLE"; else echo "RED"; fi fi fi)
-GOOD_COLOUR_TEST1				= if [ $(1) -ge 95 ]; then echo "GREEN"; else if [ $(1) -ge 75 ]; then echo "YELLOW"; else if [ $(1) -ge 50 ]; then echo "PURPLE"; else echo "RED"; fi fi fi
+GOOD_COLOUR_TEST				= $(shell if [ $(1) -ge 95 ]; then $(ECHO) "GREEN"; else if [ $(1) -ge 75 ]; then $(ECHO) "YELLOW"; else if [ $(1) -ge 50 ]; then $(ECHO) "PURPLE"; else $(ECHO) "RED"; fi fi fi)
+GOOD_COLOUR_TEST1				= if [ $(1) -ge 95 ]; then $(ECHO) "GREEN"; else if [ $(1) -ge 75 ]; then $(ECHO) "YELLOW"; else if [ $(1) -ge 50 ]; then $(ECHO) "PURPLE"; else $(ECHO) "RED"; fi fi fi
 

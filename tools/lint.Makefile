@@ -6,31 +6,31 @@ doLint:	check_lint lintExecute
 check_lint:
 	@vera++ --help > /dev/null 2>&1;														\
 	if test $$? -ne 0; then																	\
-		echo;echo;echo;																		\
-		echo "You need to install *vera++ and cppcheck";									\
-		echo "The configuration does not check for these";									\
-		echo "as linting is optional";														\
-		echo;echo;echo;																		\
+		$(ECHO);$(ECHO);$(ECHO);															\
+		$(ECHO) "You need to install *vera++ and cppcheck";									\
+		$(ECHO) "The configuration does not check for these";								\
+		$(ECHO) "as linting is optional";													\
+		$(ECHO);$(ECHO);$(ECHO);															\
 		exit 1;																				\
 	fi
 	@cppcheck --help > /dev/null 2>&1;														\
 	if test $$? -ne 0; then																	\
-		echo;echo;echo;																		\
-		echo "You need to install vera++ and *cppcheck";									\
-		echo "The configuration does not check for these";									\
-		echo "as linting is optional";														\
-		echo;echo;echo;																		\
+		$(ECHO);$(ECHO);$(ECHO);															\
+		$(ECHO) "You need to install vera++ and *cppcheck";									\
+		$(ECHO) "The configuration does not check for these";								\
+		$(ECHO) "as linting is optional";													\
+		$(ECHO);$(ECHO);$(ECHO);															\
 		exit 1;																				\
 	fi
 	@$(THORSANVIL_ROOT)/build/lint/vera/init
 
 lintExecute:	$(CPP_SRC) $(APP_SRC) $(HEAD)
 	@if test "$?" != ""; then																\
-		echo "cppcheck $?";																	\
+		$(ECHO) "cppcheck $?";																\
 		cppcheck $?;																		\
 	fi
 	@if test "$?" != ""; then																\
-		echo "vera++ --root $(THORSANVIL_ROOT)/build/lint/vera --profile Thor.vera $?";		\
+		$(ECHO) "vera++ --root $(THORSANVIL_ROOT)/build/lint/vera --profile Thor.vera $?";	\
 		vera++ --root $(THORSANVIL_ROOT)/build/lint/vera --profile Thor.vera $?;			\
 	fi
 

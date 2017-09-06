@@ -5,6 +5,7 @@ PLATFORMVER					= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
 SO							= $(SHARD_LIB_EXTENSOION_$(PLATFORM))
 SONAME						= $(SHARD_LIB_NAME_FLAG_$(PLATFORM))
 SHARED_LIB_FLAG				= $(SHARED_LIB_FLAG_$(PLATFORM))
+ECHO						= $(ECHO_$(PLATFORM))
 
 #
 COMPILER_NAME				= $(basename $(basename $(basename $(subst -,.,$(subst +,p,$(CXX))))))
@@ -13,6 +14,9 @@ COMPILER_VERSION			= $(COMPILER_CXX_$(COMPILER_NAME)_VERSION)
 # If we add different compilers we can expand this with how they fetch their version
 # Currently we only use gcc so we have the technique for getting the gcc version
 COMPILER_CXX_gpp_VERSION	= $(subst .,_,$(basename $(shell $(CXX) -dumpversion)))
+
+ECHO_Darwin					= echo -e
+ECHO_Linux					= echo -e
 
 SHARD_LIB_EXTENSOION_Darwin	= dylib
 SHARD_LIB_EXTENSOION_Linux	= so
