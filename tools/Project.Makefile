@@ -14,6 +14,7 @@ profile:	ACTION=profile
 build:		ACTION=build
 lint:		ACTION=lint
 vera:		ACTION=vera
+doc:		ACTION=doc
 
 ACTION		?=all
 BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
@@ -28,6 +29,7 @@ profile:	$(SUB_PROJECTS)
 build:		$(SUB_PROJECTS)
 lint:		check_lint $(SUB_PROJECTS)
 vera:		$(SUB_PROJECTS)
+doc:		$(SUB_PROJECTS)
 
 %.dir:
 	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Start")

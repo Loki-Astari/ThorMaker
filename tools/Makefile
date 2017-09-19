@@ -117,6 +117,7 @@ CXX				?= g++
 COV				?= gcov
 VERA			?= vera++
 MKTEMP			= $(MKTEMP_$(PLATFORM))
+DOC_TOOL		= $(BUILD_ROOT)/doc/docTool 
 	
 #
 # This is obviously not working
@@ -155,6 +156,10 @@ GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
+DOC_DIR						= $(THORSANVIL_ROOT)/doc/
+DOC_BASE					= $(basename $(firstword $(TARGET)))
+DOC							= $(DOC_DIR)/$(DOC_BASE).md
+DOC_OBJ						= $(patsubst %.cpp, document/%.doc, $(CPP_SRC))
 
 
 NOTHING						:=
@@ -298,6 +303,15 @@ install_profile:     install_Dohead install_Doprofile
 header_only:	test install_Dohead
 build:			test install_Dohead install_Dodebug install_Dorelease
 lint:			doLint
+doc:			$(DOC)
+
+$(DOC_DIR)/%.md: $(DOC_DIR).Dir document.Dir $(DOC_OBJ)
+	$(DOC_TOOL) Service $(DOC_BASE) $(DOC_OBJ) > $@
+	cat $(DOC_OBJ) >> $@
+
+document/%.doc: %.h %.cpp
+	$(DOC_TOOL) Section $(DOC_BASE) $* > $@
+
 
 tools:
 	@$(ECHO) "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
@@ -765,6 +779,8 @@ Print_On:
 	@$(ECHO) "libdir:   ${libdir}"
 	@$(ECHO) "THORSLINKDIRS: $(THORSLINKDIRS)"
 	@$(ECHO) "THORSANVIL_STATICLOADALL: $(THORSANVIL_STATICLOADALL)"
+	@$(ECHO) "DOC: $(DOC)"
+	@$(ECHO) "DOC_OBJ: $(DOC_OBJ)"
 	@echo "ECHO: $(ECHO)"
 
 .PHONY: always
