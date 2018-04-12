@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Usage
+# functionInfo <file> <function>
+#
+# Gets the function info from a file:
+# This is a comma separated list of values
+#
+#   Meaning                 Example
+#   Return Type             char const*
+#   Function Info           noexcept
+#   Function Arguments      std::string str
+#
+# Example:
+#   std::string doMyWork(int value, char const* info, std::string const& trip) const noexcept
+#
+# This function will return:
+#   std::string, const noexcept, int value, char const* info, std::string const& trip
+#
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;description="";}
+/^\/\/ /    {
+                if (FOUND == 1)
+                {
+                    if (description == "") {
+                        description=" |\n";
+                    }
+                    description = sprintf("%s        %s\n",description,substr($0,4));
+                    next;
+                }
+            }
+/template/  {next}
+            {
+                if (FOUND == 1 )
+                {
+                    matchTypeNameString=sprintf("[^ ]* %s\\(", Name);
+                    st=match($0, matchTypeNameString);
+                    if (st != 0) {
+                        printf("%s", description);
+                        exit;
+                    }
+                }
+                FOUND=0;
+                description = 0;
+            }
+/@function/ {FOUND=1;}
+AWK_PROGRAM
+)
+
+awk -v Name=$2 "${program}" $1

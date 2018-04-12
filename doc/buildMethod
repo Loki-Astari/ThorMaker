@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# Usage:
+# buildMethod <base> <file> <type> <class> <method>
+
+# Builds the YAML file for documenting a method in a class.
+#   Class is annotated with "// @class" just above its declaration.
+#   Any methods in the class that you want to document are annotated with "// @method"
+#
+#   This looks at the file <file> (retrieved from the command line) and works on the named
+#   class <class> (retrieved from the command line) and gets the <method>
+#
+#   Note: Method is an index
+#
+#   base is the namespace name (compounded together without ::) to allow us to generate unique file names.
+#
+#   This uses:
+#       methodInfo:     to get info about a method
+#
+#   Appends the files:
+#       cat docs/package
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+
+base=$1
+file=$2
+type=$3
+class=$4
+method=$5
+
+methodData=$( ${DIR}/methodInfo ${file} ${type} ${class} ${method} )
+descriptionAll=$( ${DIR}/methodDesc ${file} ${type} ${class} ${method} )
+description=$( echo "${descriptionAll}" | grep -v '^-- ' )
+IFS=','
+methodInfo=( ${methodData} )
+IFS=' '
+len=${#methodInfo[@]}
+paramList=''
+if [[ ${len} > 3 ]]; then
+    loop=3
+    while [[ ${loop} < ${len} ]]; do
+        paramList="${paramList}, ${methodInfo[loop]}"
+        loop=$(( ${loop} + 1 ))
+    done
+    paramList=${paramList:1}
+fi
+IFS=','
+paramArray=( ${paramList} )
+IFS=' '
+
+returnDesc=$( echo ${descriptionAll} | grep '^-- ' | grep return | cut -f3- -d" " | xargs )
+
+returnType=${methodInfo[1]}
+returnType=${returnType/@/,}
+
+cat - <<METHOD_DOC_HEAD
+---
+layout: method
+generate: false
+methodInfo:
+    parent: ${class}
+    name: ${methodInfo[0]}
+    mark: ${methodInfo[2]}
+    description: ${description}
+    return:
+        type: '${returnType}'
+        description: '${returnDesc}'
+METHOD_DOC_HEAD
+
+if [[ ${#paramArray[@]} == 0 ]]; then
+    cat - <<METHOD_DOC_HEAD_PARAM_EMPTY
+    parameters: []
+METHOD_DOC_HEAD_PARAM_EMPTY
+else
+    cat - <<METHOD_DOC_HEAD_PARAM
+    parameters:
+METHOD_DOC_HEAD_PARAM
+fi
+
+for loop in "${paramArray[@]}"; do
+
+    defaultValue=${loop#*=}
+    if [[ ${defaultValue} == ${loop} ]]; then
+        defaultValue=''
+    fi
+    args=${loop%=*}
+    varName=$( echo ${args} | awk '{print $NF}' )
+    typeData=${args%${varName}*}
+    typeInfo=$(echo "${typeData}" | xargs)
+
+    paramDesc=$( echo "${descriptionAll}" | grep '^-- ' | grep ${varName} | cut -f3- -d" " | xargs )
+
+cat - <<METHOD_DOC_PARAM
+        - name: ${varName}
+          type: '${typeInfo}'
+          default: ${defaultValue}
+          description: '${paramDesc}'
+METHOD_DOC_PARAM
+done
+
+cat - <<METHOD_DOC_TAIL
+---
+METHOD_DOC_TAIL
+
+if [[ -e docs/${file%.*}.${class}.${methodInfo[0]} ]]; then
+    cat docs/${file%.*}.${class}.${methodInfo[0]}
+fi
+

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Usage
+# classInfo <file> <class>
+#
+# Gets the class info from a file:
+#   Name of a parent class (if any)
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;}
+/template/  {next}
+/^\/\/ /    {if (FOUND == 1){next;}}
+/struct/    {
+                sub(":", "", $2);
+                if (FOUND == 1 && $2 == Name && $3 == "public")
+                {
+                    sub(/<.*>/, "", $4);
+                    printf("%s ", $4);
+                }
+                FOUND=0;
+            }
+/class/     {
+                sub(":", "", $2);
+                if (FOUND == 1 && $2 == Name && $3 == "public")
+                {
+                    sub(/<.*>/, "", $4);
+                    printf("%s ", $4);
+                }
+                FOUND=0;
+            }
+/@class/    {FOUND=1;}
+AWK_PROGRAM
+)
+
+awk -v Name=$2 "${program}" $1

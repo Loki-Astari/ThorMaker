@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Usage
+# methodList <file> <type> <class>
+#
+# Get a list of methods in <file> that belong to <class>
+#   The class must be annotated with @class
+#   The methods must be annotated with @method
+#
+#   type:
+#       method      retrieve public methods (that are not virtual)
+#       protected   retrieve protected methods (that are not virtual)
+#       virtual     retrieve virtual methods
+#
+#   Methods are printed as
+#       <Index Of Method>.<English Name of Method>
+#
+#       The index can be used with methodInfo to get details about the method.
+#       The English name can be used for printing.
+#
+#       Usually the English and code name are the same.
+#       But for constructor/assignment operators we use these terms.
+#
+
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;VIRTUAL=0;State=0;Count=0}
+/^\/\/ /    {if (FOUND == 1){next;}}
+/\/\/ /     {if (FOUND == 3){next;}}
+/template/  {next;}
+/virtual/   {if (FOUND == 3) {VIRTUAL=1;}}
+            {
+                if (FOUND == 3)
+                {
+                    if ((type == "methods" && State == 2 && VIRTUAL == 0) || (type == "virtual" && VIRTUAL == 1) || (type == "protected" && State == 1 && VIRTUAL == 0))
+                    {
+                        split($0, data, "\(");
+                        st=match($0, " [^ ]*\\(");
+                        name=substr(data[1], st + 1);
+                        Count += 1;
+                        printf("%d.", Count);
+                        moveTest = sprintf("%s&&", class);
+                        copyTest = sprintf("%s const&", class);
+                        if ( name == class) {
+                            if (match($0, "\\(\\)") != 0) {
+                                printf("Default-");
+                            }
+                            else if (match($0, moveTest) != 0) {
+                                printf("Move-");
+                            }
+                            else if (match($0, copyTest) != 0) {
+                                printf("Copy-");
+                            }
+                            printf("Constructor ");
+                        }
+                        else if (name == "operator=") {
+                            if (match($0, moveTest) != 0) {
+                                printf("Move-");
+                            }
+                            else if (match($0, copyTest) != 0) {
+                                printf("Copy-");
+                            }
+                            printf("Assignment ");
+                        }
+                        else {
+                            printf("%s ", name);
+                        }
+                    }
+                    FOUND=2;
+                }
+            }
+/@method/   {
+                if (FOUND == 2)
+                {
+                    FOUND=3;
+                }
+            }
+/public:/   {if (FOUND == 2) {State=2;}}
+/protected:/{if (FOUND == 2) {State=1;}}
+/private:/  {if (FOUND == 2) {State=0;}}
+            {VIRTUAL=0;}
+/class/     {gsub(/:/, "", $2);}
+/class/     {if (FOUND == 1 && $2 == class) {State=0;FOUND=2}}
+/struct/    {if (FOUND == 1 && $2 == class) {State=2;FOUND=2}}
+/^};/       {FOUND=0;}
+/@class/    {FOUND=1;}
+AWK_PROGRAM
+)
+
+awk -v type=$2 -v class=$3 "${program}" $1

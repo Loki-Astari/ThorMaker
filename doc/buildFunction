@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Usage:
+# buildFunction <base> <file> <funct>
+
+# Builds the YAML file for documenting a function.
+#   Class is annotated with "// @function" just above its declaration.
+#
+#   This looks at the file <file> (retrieved from the command line) and works on the named
+#   function <function> (retrieved from the command line)
+#
+#   base is the namespace name (compounded together without ::) to allow us to generate unique file names.
+#
+#   This uses:
+#
+#   Appends the files:
+#       docs/${file}.${funct}
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+namespace=$(grep 'using namespace' * 2> /dev/null| awk '{print $3}' | head -1 | sed -e 's/;//' )
+
+base=$1
+file=$2
+funct=$3
+children=()
+
+description=$( ${DIR}/functionDesc $2 $3 )
+
+cat - << CLASS_DOC_HEAD
+---
+layout: type
+generate: false
+typeInfo:
+    namespace: ${namespace}
+    header:    ${base}/${file}
+    function:  ${funct}
+    description: ${description}
+CLASS_DOC_HEAD
+
+if (( ${#children[@]} == 0 )); then
+    cat - <<CLASS_DOC_CHILD_EMPTY
+children: []
+CLASS_DOC_CHILD_EMPTY
+else
+    cat - <<CLASS_DOC_CHILD
+children:
+CLASS_DOC_CHILD
+fi
+
+for doc in "${children[@]}"; do
+    cat - <<CLASS_DOC_CHILD_LIST
+    - name: ${doc#*.}
+      value: ${base}.${class}.${doc}.md
+CLASS_DOC_CHILD_LIST
+done
+cat - <<CLASS_DOC_TERM
+---
+CLASS_DOC_TERM
+
+if [[ -e docs/${file}.${funct} ]]; then
+    cat docs/${file}.${funct}
+fi
+
+

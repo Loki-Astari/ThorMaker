@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Usage
+# classDesc <file> <class>
+#
+# Gets the class description
+#   Name of a parent class (if any)
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;description="";}
+/template/  {next}
+/^\/\/ /    {
+                if (FOUND == 1)
+                {
+                    if (description == "") {
+                        description=" |\n";
+                    }
+                    description = sprintf("%s        %s\n",description,substr($0,4));
+                    next;
+                }
+            }
+/struct/    {
+                sub(":", "", $2);
+                if (FOUND == 1 && $2 == Name)
+                {
+                    printf("%s", description);
+                    exit;
+                }
+                description="";
+                FOUND=0;
+            }
+/class/     {
+                sub(":", "", $2);
+                if (FOUND == 1 && $2 == Name)
+                {
+                    printf("%s", description);
+                    exit;
+                }
+                description="";
+                FOUND=0;
+            }
+/@class/    {FOUND=1;}
+AWK_PROGRAM
+)
+
+awk -v Name=$2 "${program}" $1

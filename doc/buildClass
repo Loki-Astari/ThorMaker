@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# Usage:
+# buildClass <base> <file> <class>
+
+# Builds the YAML file for documenting a class.
+#   Class is annotated with "// @class" just above its declaration.
+#   Any methods in the class that you want to document are annotated with "// @method"
+#
+#   This looks at the file <file> (retrieved from the command line) and works on the named
+#   class <class> (retrieved from the command line)
+#
+#   base is the namespace name (compounded together without ::) to allow us to generate unique file names.
+#
+#   This uses:
+#       classInfo:      to get info about the class
+#       methodList:     to get a list of methods for the class.
+#       methodInfo:     to get info about a method
+#
+#   Appends the files:
+#       docs/${file}.${class}
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+namespace=$(grep 'using namespace' * 2> /dev/null| awk '{print $3}' | head -1 | sed -e 's/;//' )
+
+base=$1
+file=$2
+class=$3
+classInfo=( $(${DIR}/classInfo ${file} ${class}) )
+description=$( ${DIR}/classDesc ${file} ${class} )
+
+cat - << CLASS_DOC_HEAD
+---
+layout: class
+generate: false
+typeInfo:
+    namespace: ${namespace}
+    header:    ${base}/${file}
+    classname: ${class}
+    parent:    ${classInfo[0]}
+    description: ${description}
+CLASS_DOC_HEAD
+
+children=()
+for type in methods protected virtual; do
+
+    methods=$( ${DIR}/methodList ${file} ${type} ${class} )
+
+if [[ ${methods} == "" ]]; then
+    cat - << CLASS_DOC_METHOD_HEAD_EMPTY
+    ${type}: []
+CLASS_DOC_METHOD_HEAD_EMPTY
+else
+    cat - << CLASS_DOC_METHOD_HEAD
+    ${type}:
+CLASS_DOC_METHOD_HEAD
+fi
+    count=0
+    for methodAndName in $( echo ${methods} | xargs); do
+        count=$(( ${count} + 1 ))
+
+        method=${methodAndName#*.}
+        name=${methodAndName%.*}
+
+        children+=( ${type}.${methodAndName} )
+        methodData=$( ${DIR}/methodInfo ${file} ${type} ${class} ${name} ${count} | xargs)
+
+        IFS=','
+        methodInfo=( ${methodData} )
+        IFS=' '
+        len=${#methodInfo[@]}
+        paramList=''
+        if (( ${len} != 3 )); then
+            loop=3
+            while [[ ${loop} < ${len} ]]; do
+                paramList="${paramList}, '${methodInfo[loop]}'"
+                loop=$(( ${loop} + 1 ))
+            done
+            paramList=${paramList:1}
+        fi
+        returnType=${methodInfo[1]}
+        returnType=${returnType/@/,}
+        cat - << CLASS_DOC_METHOD
+        - return: '${returnType}'
+          name: ${method}
+          param: [ ${paramList} ]
+          mark: ${methodInfo[2]}
+CLASS_DOC_METHOD
+
+    done
+done
+
+if (( ${#children[@]} == 0 )); then
+    cat - <<CLASS_DOC_CHILDREN_EMPTY
+children: []
+CLASS_DOC_CHILDREN_EMPTY
+else
+    cat - <<CLASS_DOC_CHILDREN
+children:
+CLASS_DOC_CHILDREN
+fi
+
+for doc in "${children[@]}"; do
+    type=${doc%%.*}
+    methodName=${doc#*.}
+    method=${methodName#*.}
+    name=${methodName%.*}
+
+    cat - <<CLASS_DOC_CHILD_LIST
+    - name: ${method}
+      value: ${base}.${class}.${type}.${name}.md
+CLASS_DOC_CHILD_LIST
+done
+cat - <<CLASS_DOC_TERM
+---
+CLASS_DOC_TERM
+
+if [[ -e docs/${file%.*}.${class} ]]; then
+    cat docs/${file%.*}.${class}
+fi
+
+

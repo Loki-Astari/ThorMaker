@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Usage
+# classList <file>
+#
+# Get a list of class in <file> that have a prefix @class
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;}
+/^\/\/ /    {if (FOUND == 1){next;}}
+/struct/    {
+                if (FOUND == 1)
+                {
+                    sub(":", "", $2);
+                    printf("%s ", $2);
+                    FOUND=0;
+                }
+            }
+/class/     {
+                if (FOUND == 1)
+                {
+                    sub(":", "", $2);
+                    printf("%s ", $2);
+                    FOUND=0;
+                }
+            }
+/@class/    {FOUND=1;}
+AWK_PROGRAM
+)
+
+awk "${program}" $1

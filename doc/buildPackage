@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# Usage:
+# buildPacjage <base>
+
+# Builds the YAML file for documenting a package
+#   Class is annotated with "// @class" just above its declaration.
+#   Any methods in the class that you want to document are annotated with "// @method"
+#   Any functions are annotated with "// @function"
+#
+#   base is the namespace name (compounded together without ::) to allow us to generate unique file names.
+#
+#   This uses:
+#       functionList:   to get a list of top level functions
+#       classList:      to get a list of class.
+#       functionInfo:   to get info about a function
+#       classInfo:      to get info about a class
+#
+#   Appends the files:
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+base=$1
+namespace=$(grep 'using namespace' * 2> /dev/null| awk '{print $3}' | head -1 | sed -e 's/;//' )
+files=$( ${DIR}/findMarksFiles function class )
+shift 1
+children=()
+
+cat - <<PACKAGE_DOC_HEAD
+---
+layout: package
+generate: false
+nameSpace:  ${namespace}
+headers:
+    base: ${base}
+PACKAGE_DOC_HEAD
+
+if [[ ${files} == "" ]]; then
+    cat - <<PACKAGE_DOC_FILES_EMPTY
+    files: []
+PACKAGE_DOC_FILES_EMPTY
+else
+    cat - <<PACKAGE_DOC_FILES_STUFF
+    files:
+PACKAGE_DOC_FILES_STUFF
+fi
+
+for file in ${files}; do
+    baseName=${file%.*}
+    functionList=( $(${DIR}/functionList ${file}) )
+    classList=( $(${DIR}/classList ${file}) )
+    cat - <<PACKAGE_DOC_FILE
+        - name:   ${file}
+PACKAGE_DOC_FILE
+
+    if [[ ${#functionList[@]} == 0 ]]; then
+        cat - <<PACKAGE_DOC_FILE_FUNC_HEAD_EMPTY
+          functions: []
+PACKAGE_DOC_FILE_FUNC_HEAD_EMPTY
+    else
+        cat - <<PACKAGE_DOC_FILE_FUNC_HEAD
+          functions:
+PACKAGE_DOC_FILE_FUNC_HEAD
+        for func in "${functionList[@]}"; do
+            children+=("${baseName}.${func}")
+            functionData=$(${DIR}/functionInfo ${file} ${func})
+            IFS=','
+            functionInfo=( ${functionData} )
+            IFS=' '
+            len=${#functionInfo[@]}
+            paramList=''
+            if (( ${len} != 1 )); then
+                loop=1
+                while [[ ${loop} < ${len} ]]; do
+                    paramList="${paramList}, ${functionInfo[loop]}"
+                    loop=$(( ${loop} + 1 ))
+                done
+                paramList=${paramList:1}
+            fi
+            cat - <<PACKAGE_DOC_FILE_FUNC
+            - return: ${functionInfo[0]}
+              name:   ${func}
+              param:  [ ${paramList} ]
+PACKAGE_DOC_FILE_FUNC
+        done
+    fi
+    if [[ ${#classList[@]} == 0 ]]; then
+        cat - <<PACKAGE_DOC_FILE_CLASS_HEAD_EMPTY
+          classes: []
+PACKAGE_DOC_FILE_CLASS_HEAD_EMPTY
+    else
+        cat - <<PACKAGE_DOC_FILE_CLASS_HEAD
+          classes:
+PACKAGE_DOC_FILE_CLASS_HEAD
+        for class in "${classList[@]}"; do
+            children+=("${baseName}.${class}")
+            classInfo=( $(${DIR}/classInfo ${file} ${class}) )
+            cat - <<PACKAGE_DOC_FILE_CLASS
+            - name:   ${class}
+              parent: ${classInfo[0]}
+PACKAGE_DOC_FILE_CLASS
+        done
+    fi
+done
+
+if [[ ${#children[@]} == 0 ]]; then
+    cat - <<PACKAGE_DOC_CHILDREN_EMPTY
+children: []
+PACKAGE_DOC_CHILDREN_EMPTY
+else
+    cat - <<PACKAGE_DOC_CHILDREN
+children:
+PACKAGE_DOC_CHILDREN
+fi
+
+for doc in "${children[@]}"; do
+    cat - <<PACKAGE_DOC_CHILD_LIST
+    - name: ${doc#*.}
+      value: ${base}.${doc}.md
+PACKAGE_DOC_CHILD_LIST
+done
+cat - <<PACKAGE_DOC_TERM
+---
+PACKAGE_DOC_TERM
+
+if [[ -e docs/package ]]; then
+    cat docs/package
+fi
+

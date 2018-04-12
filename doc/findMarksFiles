@@ -1,0 +1,11 @@
+#!/bin/bash
+echo "$(date) findMarksFiles $*" >> ~/tlog
+
+allFiles=''
+for type in "$@"; do
+    files=$(grep "// @${type}" * 2> /dev/null | awk -F: '{print $1}')
+    allFiles="${allFiles} ${files}"
+done
+
+allFiles=$(echo ${allFiles} | tr ' ' '\n' | sort | uniq )
+echo ${allFiles}

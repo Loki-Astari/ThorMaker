@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Usage
+# functionList <file>
+#
+# Get a list of functions in <file> that have a prefix @function
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;}
+/^\/\/ /    {if (FOUND == 1){next;}}
+/template/  {next;}
+            {
+                if (FOUND == 1)
+                {
+                    split($0, data, "\(");
+                    st=match($0, " [^ ]*\\(");
+                    printf("%s ", substr(data[1], st));
+                    FOUND=0;
+                }
+            }
+/@function/ {FOUND=1}
+AWK_PROGRAM
+)
+
+awk "${program}" $1

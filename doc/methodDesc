@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Usage
+# methodInfo <file> <type> <class> <index>
+#
+# Gets the class.method  info from a file:
+# This is a comma separated list of values
+#
+#   Meaning                 Example
+#   Return Type             char const*
+#   Function Info           noexcept
+#   Function Arguments      std::string str
+#
+# Example:
+#   std::string Class::doMyWork(int value, char const* info, std::string const& trip) const noexcept
+#
+# This method will return:
+#   std::string, const noexcept, int value, char const* info, std::string const& trip
+#
+
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;VIRTUAL=0;State=0;Count=0;description="";}
+/^\/\/ /    {if (FOUND == 1){next;}}
+/\/\/ @param /{
+                if (FOUND == 3)
+                {
+                    st = match($0, "// ");
+                    description = sprintf("%s-- %s\n", description, substr($0, st + 10));
+                    next
+                }
+            }
+/\/\/ @return /{
+                if (FOUND == 3)
+                {
+                    st = match($0, "// ");
+                    description = sprintf("%s-- %s\n", description, substr($0, st + 4));
+                    next
+                }
+            }
+/\/\/ /     {
+                if (FOUND == 3)
+                {
+                    if (description == "") {
+                        description=" |\n";
+                    }
+                    st = match($0, "// ");
+                    description = sprintf("%s        %s\n",description,substr($0, st + 3));
+                    next;
+                }
+            }
+/template/  {next;}
+/virtual/   {if (FOUND == 3) {VIRTUAL=1;}}
+            {
+                if (FOUND == 3)
+                {
+                    if ((type == "methods" && State == 2 && VIRTUAL == 0) || (type == "virtual" && VIRTUAL == 1) || (type == "protected" && State == 1 && VIRTUAL == 0))
+                    {
+                        Count++;
+                        if (Count == methodIndex)
+                        {
+                            printf("%s", description);
+                            exit
+                        }
+                    }
+                    FOUND=2;
+                    description="";
+                }
+            }
+/@method/   {
+                if (FOUND == 2)
+                {
+                    FOUND=3;
+                }
+            }
+/public:/   {if (FOUND == 2) {State=2;}}
+/protected:/{if (FOUND == 2) {State=1;}}
+/private:/  {if (FOUND == 2) {State=0;}}
+            {VIRTUAL=0;}
+/class/     {gsub(/:/, "", $2);}
+/class/     {if (FOUND == 1 && $2 == class) {State=0;FOUND=2}}
+/struct/    {if (FOUND == 1 && $2 == class) {State=2;FOUND=2}}
+/^};/       {FOUND=0;}
+/@class/    {FOUND=1;}
+AWK_PROGRAM
+)
+
+awk -v type=$2 -v class=$3 -v methodIndex=$4 "${program}" $1

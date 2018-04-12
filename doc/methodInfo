@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# Usage
+# methodInfo <file> <type> <class> <index>
+#
+# Gets the class.method  info from a file:
+# This is a comma separated list of values
+#
+#   Meaning                 Example
+#   Return Type             char const*
+#   Function Info           noexcept
+#   Function Arguments      std::string str
+#
+# Example:
+#   std::string Class::doMyWork(int value, char const* info, std::string const& trip) const noexcept
+#
+# This method will return:
+#   std::string, const noexcept, int value, char const* info, std::string const& trip
+#
+
+
+
+program=$(cat - <<'AWK_PROGRAM'
+BEGIN       {FOUND=0;VIRTUAL=0;State=0;Count=0}
+/^\/\/ /    {if (FOUND == 1){next;}}
+/\/\/ /     {if (FOUND == 3){next;}}
+/template/  {next;}
+/virtual/   {if (FOUND == 3) {VIRTUAL=1;}}
+            {
+                if (FOUND == 3)
+                {
+                    if ((type == "methods" && State == 2 && VIRTUAL == 0) || (type == "virtual" && VIRTUAL == 1) || (type == "protected" && State == 1 && VIRTUAL == 0))
+                    {
+                        Count++;
+                        if (Count == methodIndex)
+                        {
+                            split($0, data, "\(");
+                            st=match($0, " [^ ]*\\(");
+                            name=substr(data[1], st + 1);
+
+                            returnType="";
+                            matchTypeNameString=sprintf("([^ ]*, )*[^ ]* *%s\\(", name);
+                            st=match($0, matchTypeNameString);
+                            if (st != 0) {
+                                matchNameString=sprintf(" %s\\(", name);
+                                ed=match($0, matchNameString);
+                                returnType=substr($0, st , (ed - st));
+                                sub(",", "@", returnType)
+                            }
+
+                            st = match($0, "\\(");
+                            ed = match($0, "\\)($|[^>])");
+                            if (ed != 0 ) {
+                                param = substr($0, st + 1, (ed - st - 1))
+                                mark = substr($0, ed + 1)
+                            }
+                            else {
+                                param = substr($0, st + 1);
+                                while ((getline tmp) > 0) {
+                                    ed = match(tmp, "\\)[^>]");
+                                    if (ed == 0 ) {
+                                        param = sprintf("%s %s", param, tmp);
+                                    }
+                                    else {
+                                        param = sprintf("%s %s", param, substr(tmp, 0, ed - 1));
+                                        mark = substr(tmp, ed + 1);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            sub("^ *", "", param);
+                            sub(" *$", "", param);
+                            if (param != "") {
+                                param = sprintf(", %s", param);
+                            }
+                            sub("^ *", "", mark);
+                            sub("[ ;]*$", "", mark);
+                            sub("{.*", "", mark);
+
+                            # printf("From: %s\nResult: >%s<\nMark: >%s<\nParam: >%s<\n\n\n\n\n", $0, returnType, mark, param);
+
+                            printf("%s, %s, %s%s\n", name, returnType, mark, param);
+                            exit
+                        }
+                    }
+                    FOUND=2;
+                }
+            }
+/@method/   {
+                if (FOUND == 2)
+                {
+                    FOUND=3;
+                }
+            }
+/public:/   {if (FOUND == 2) {State=2;}}
+/protected:/{if (FOUND == 2) {State=1;}}
+/private:/  {if (FOUND == 2) {State=0;}}
+            {VIRTUAL=0;}
+/class/     {gsub(/:/, "", $2);}
+/class/     {if (FOUND == 1 && $2 == class) {State=0;FOUND=2}}
+/struct/    {if (FOUND == 1 && $2 == class) {State=2;FOUND=2}}
+/^};/       {FOUND=0;}
+/@class/    {FOUND=1;}
+AWK_PROGRAM
+)
+
+awk -v type=$2 -v class=$3 -v methodIndex=$4 "${program}" $1
