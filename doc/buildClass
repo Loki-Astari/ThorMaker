@@ -64,7 +64,7 @@ fi
         method=${methodAndName#*.}
         name=${methodAndName%.*}
 
-        children+=( ${type}.${methodAndName} )
+        children+=( ${file%.*}.${type}.${methodAndName} )
         methodData=$( ${DIR}/methodInfo ${file} ${type} ${class} ${name} ${count} | xargs)
 
         IFS=','
@@ -103,14 +103,17 @@ CLASS_DOC_CHILDREN
 fi
 
 for doc in "${children[@]}"; do
-    type=${doc%%.*}
-    methodName=${doc#*.}
+
+    file=${doc%%.*}
+    notFile=${doc#*.}
+    type=${notFile%%.*}
+    methodName=${notFile#*.}
     method=${methodName#*.}
     name=${methodName%.*}
 
     cat - <<CLASS_DOC_CHILD_LIST
     - name: ${method}
-      value: ${base}.${class}.${type}.${name}.md
+      value: ${base}.${file}.${class}.${type}.${name}.${method}.md
 CLASS_DOC_CHILD_LIST
 done
 cat - <<CLASS_DOC_TERM

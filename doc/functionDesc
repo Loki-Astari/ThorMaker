@@ -43,7 +43,7 @@ BEGIN       {FOUND=0;description="";}
                     }
                 }
                 FOUND=0;
-                description = 0;
+                description = "";
             }
 /@function/ {FOUND=1;}
 AWK_PROGRAM

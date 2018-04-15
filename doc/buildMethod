@@ -51,9 +51,15 @@ paramArray=( ${paramList} )
 IFS=' '
 
 returnDesc=$( echo ${descriptionAll} | grep '^-- ' | grep return | cut -f3- -d" " | xargs )
+if [[ "${returnDesc}" != "" ]]; then
+    returnDesc="'${returnDesc}'"
+fi
 
 returnType=${methodInfo[1]}
-returnType=${returnType/@/,}
+returnType=$( echo ${returnType/@/,} | xargs )
+if [[ "${returnType}" != "" ]]; then
+    returnType="'${returnType}'"
+fi
 
 cat - <<METHOD_DOC_HEAD
 ---
@@ -65,8 +71,8 @@ methodInfo:
     mark: ${methodInfo[2]}
     description: ${description}
     return:
-        type: '${returnType}'
-        description: '${returnDesc}'
+        type: ${returnType}
+        description: ${returnDesc}
 METHOD_DOC_HEAD
 
 if [[ ${#paramArray[@]} == 0 ]]; then
@@ -89,14 +95,20 @@ for loop in "${paramArray[@]}"; do
     varName=$( echo ${args} | awk '{print $NF}' )
     typeData=${args%${varName}*}
     typeInfo=$(echo "${typeData}" | xargs)
+    if [[ "${typeInfo}" != "" ]]; then
+        typeInfo="'${typeInfo}'"
+    fi
 
     paramDesc=$( echo "${descriptionAll}" | grep '^-- ' | grep ${varName} | cut -f3- -d" " | xargs )
+    if [[ "${paramDesc}" != "" ]]; then
+        paramDesc="'${paramDesc}'"
+    fi
 
 cat - <<METHOD_DOC_PARAM
         - name: ${varName}
-          type: '${typeInfo}'
+          type: ${typeInfo}
           default: ${defaultValue}
-          description: '${paramDesc}'
+          description: ${paramDesc}
 METHOD_DOC_PARAM
 done
 

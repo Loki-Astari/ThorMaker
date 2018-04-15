@@ -30,7 +30,7 @@ description=$( ${DIR}/functionDesc $2 $3 )
 
 cat - << CLASS_DOC_HEAD
 ---
-layout: type
+layout: function
 generate: false
 typeInfo:
     namespace: ${namespace}
