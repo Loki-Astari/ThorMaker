@@ -444,6 +444,7 @@ $(BASE)/coverage/MockHeaders.cpp:: $(BASE)/coverage/MockHeaders.h | $(BASE)/cove
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> $(BASE)/coverage/MockHeaders.cpp
 
 coverage:	$(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
+	@$(RM) *.gcov
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
 		 linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
 		 linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
@@ -496,7 +497,6 @@ coverage/%.cpp.gcov: always
 	@$(ECHO) "Done"
 	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
-	@$(RM) *.gcov
 coverage/%.tpp.gcov:
 	@$(ECHO) Do Nothing
 report_coverage: report_coverage_$(COVERAGE)
