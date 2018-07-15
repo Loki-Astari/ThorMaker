@@ -95,7 +95,12 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
 ])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA],
 [
-    ./build/third/vera-install
+    AS_IF(
+        [test "x$enable_vera" != "xno"],
+        [
+            ./build/third/vera-install
+        ]
+    )
 ])
 
 
@@ -138,6 +143,8 @@ detected that "vera++" (the static analysis tool) is not currently installed.
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
+    AX_THOR_FUNC_USE_VERA
+
     AC_CHECK_PROGS([WGET], [wget], [:])
     if test "$WGET" = :; then
         AC_MSG_ERROR([The build tools needs wget. Please install it.])
@@ -146,27 +153,31 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     if test "$UNZIP" = :; then
         AC_MSG_ERROR([The build tools needs unzip. Please install it.])
     fi
-    AC_CHECK_PROGS([CMAKE], [cmake], [:])
-    if test "$CMAKE" = :; then
-        AC_MSG_ERROR([The build tools needs cmake. Please install it.])
-    fi
-    AC_CHECK_LIB([tcl],    [Tcl_Init], [], [AC_MSG_ERROR([The build tools needs libtcl. Please install it.])])
-    AC_CHECK_LIB([tk],     [Tk_Init],  [], [AC_MSG_ERROR([The build tools needs libtk. Please install it.])])
-    AX_BOOST_BASE([1.54], [], [AC_MSG_ERROR([The build tools needs libboost. Please install it.])])
-    AX_BOOST_PYTHON
-    if test "x$BOOST_PYTHON_LIB" = "x"; then
-        AC_MSG_ERROR([The build tools needs boost-python. Please install it.])
-    fi
+    AS_IF(
+        [test "x${enable_vera}" != "xno"],
+        [
+            AC_CHECK_PROGS([CMAKE], [cmake], [:])
+            if test "$CMAKE" = :; then
+                AC_MSG_ERROR([The build tools needs cmake. Please install it.])
+            fi
+            AC_CHECK_LIB([tcl],    [Tcl_Init], [], [AC_MSG_ERROR([The build tools needs libtcl. Please install it.])])
+            AC_CHECK_LIB([tk],     [Tk_Init],  [], [AC_MSG_ERROR([The build tools needs libtk. Please install it.])])
+            AX_BOOST_BASE([1.54], [], [AC_MSG_ERROR([The build tools needs libboost. Please install it.])])
+            AX_BOOST_PYTHON
+            if test "x$BOOST_PYTHON_LIB" = "x"; then
+                AC_MSG_ERROR([The build tools needs boost-python. Please install it.])
+            fi
+        ]
+    )
 
     AC_PROG_CXX
+
 
     AX_THOR_BUILD_ON_TRAVIS_OPTION
     AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT
     AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([.], [build/Notes])
     AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([build], [googletest/README.md])
     AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA(build)
-
-    AX_THOR_FUNC_USE_VERA
 
     pushd build/third
     ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
