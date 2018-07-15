@@ -145,10 +145,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
     AX_THOR_FUNC_USE_VERA
 
-    AC_CHECK_PROGS([WGET], [wget], [:])
-    if test "$WGET" = :; then
-        AC_MSG_ERROR([The build tools needs wget. Please install it.])
-    fi
     AC_CHECK_PROGS([UNZIP], [unzip], [:])
     if test "$UNZIP" = :; then
         AC_MSG_ERROR([The build tools needs unzip. Please install it.])

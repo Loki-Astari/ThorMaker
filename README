@@ -20,6 +20,7 @@ Generic build files.
                         2) Builds Unit-Tests
                         3) Runs   Unit-Tests
                         4) Generate code-coverage information
+                        5) Runs code style checker
 
                         Note: if any numbered stage fails the processes stops
                               If average code coverage does not exceed 80% it is a failure.
@@ -38,9 +39,13 @@ Generic build files.
 
         the "./setup":
             1) creates bin lib include include3rd
-            2) installs wget
-            3) uses wget to get gtest  (google's test framework)
-            4) install(s) gtest
+            2) install(s) gtest
+            3) installs locally vera++  (unless configure is run with --disable-vera)
+                a) Needs the following libs installed to build vera
+                    i  ) libboost
+                    ii ) libboost-python
+                    iii) tcl/tk
+                    iv ) cmake
 
     Simplified Makefile
     ===================
