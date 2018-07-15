@@ -294,9 +294,9 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 	@$(ECHO) $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test man
+install:		test
 	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  installAction
-installAction:	Print_On install_Dohead install_Dodebug install_Dorelease
+installAction:	Print_On install_Dohead install_Dodebug install_Dorelease man
 install_debug:	test install_Dohead install_Dodebug
 install_release:test install_Dohead install_Dorelease
 install_profile:     install_Dohead install_Doprofile
