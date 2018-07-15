@@ -98,12 +98,14 @@ PREFIX?=$(BUILD_ROOT)
 PREFIX_BIN?=$(BUILD_ROOT)/bin
 PREFIX_LIB?=$(BUILD_ROOT)/lib
 PREFIX_INC?=$(BUILD_ROOT)/include
+PREFIX_MAN?=$(BUILD_ROOT)/share/man
 
 ifeq ($(INSTALL_ACTIVE),YES)
 PREFIX=${prefix}
 PREFIX_BIN=${bindir}
 PREFIX_LIB=${libdir}
 PREFIX_INC=${includedir}
+PREFIX_MAN=${mandir}
 endif
 
 COVERAGE_REQUIRED	?= 80
@@ -155,6 +157,9 @@ GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
 GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
+MAN_SRC						= $(wildcard man/man*/*)
+MAN_DIR						= $(patsubst man/%, $(PREFIX_MAN)/%.Dir, $(sort $(dir $(MAN_SRC))))
+MAN_PAGE					= $(patsubst man/%, $(PREFIX_MAN)/%.man, $(MAN_SRC))
 
 
 NOTHING						:=
@@ -289,7 +294,7 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 	@$(ECHO) $(call colour_text, BLUE, "Done")
 validate:		test 
-install:		test
+install:		test man
 	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  installAction
 installAction:	Print_On install_Dohead install_Dodebug install_Dorelease
 install_debug:	test install_Dohead install_Dodebug
@@ -350,6 +355,9 @@ clean: test_clean
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
 veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage profile $(TMP_SRC) $(TMP_HDR)
+man:		$(MAN_PAGE)
+$(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
+	cp man/$* $(PREFIX_MAN)/$*
 test:	pre_test unit_test static_test
 pre_test:	$(PRETEST)
 static_test: vera
@@ -765,6 +773,9 @@ Print_On:
 	@$(ECHO) "libdir:   ${libdir}"
 	@$(ECHO) "THORSLINKDIRS: $(THORSLINKDIRS)"
 	@$(ECHO) "THORSANVIL_STATICLOADALL: $(THORSANVIL_STATICLOADALL)"
+	@$(ECHO) "MAN_SRC:	$(MAN_SRC)"
+	@$(ECHO) "MAN_DIR:	$(MAN_DIR)"
+	@$(ECHO) "MAN_PAGE:	$(MAN_PAGE)"
 	@echo "ECHO: $(ECHO)"
 
 .PHONY: always

@@ -38,7 +38,7 @@ popd
 
 echo "Installing google test"
 pushd ${THORSANVIL_ROOT}
-mkdir -p bin include include3rd lib
+mkdir -p bin include include3rd lib share/man
 rm -f lib/libgtest.*
 cp ${GTEST_DIR}/libgtest.a lib/
 rm -f include3rd/gtest
