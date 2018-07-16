@@ -143,8 +143,6 @@ detected that "vera++" (the static analysis tool) is not currently installed.
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
-    AX_THOR_FUNC_USE_VERA
-
     AC_CHECK_PROGS([UNZIP], [unzip], [:])
     if test "$UNZIP" = :; then
         AC_MSG_ERROR([The build tools needs unzip. Please install it.])
@@ -174,6 +172,8 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([.], [build/Notes])
     AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([build], [googletest/README.md])
     AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA(build)
+
+    AX_THOR_FUNC_USE_VERA
 
     pushd build/third
     ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
