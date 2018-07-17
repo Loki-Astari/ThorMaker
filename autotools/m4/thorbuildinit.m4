@@ -32,32 +32,6 @@ AC_DEFUN([AX_THOR_LIB_SELECT],
 
     AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
 ])
-AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION],
-[
-    AC_ARG_WITH(
-        [thor-build-on-travis],
-        AS_HELP_STRING([--with-thor-build-on-travis], [Used by travis to install and do some configuration])
-    )
-])
-AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT],
-[
-    AS_IF(
-        [test "${with_thor_build_on_travis}" == ""],
-        [],
-        []
-    )
-])
-AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA],
-[
-    AS_IF(
-        [test "x$enable_vera" != "xno"],
-        [
-            ./build/third/vera-install
-        ]
-    )
-])
-
-
 AC_DEFUN([AX_THOR_FUNC_USE_VERA],
 [
     AC_ARG_ENABLE(
@@ -73,6 +47,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA],
         ],
         [
             VERA='vera++';
+            ./build/third/vera-install
             AC_CHECK_PROGS([TestVera], [vera++], [:], ${PATH}:./build/bin)
             AS_IF(
                 [test "$TestVera" == ":"],
@@ -121,10 +96,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AC_PROG_CXX
 
 
-    AX_THOR_BUILD_ON_TRAVIS_OPTION
-    AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT
     git submodule update --init --recursive
-    AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA(build)
 
     AX_THOR_FUNC_USE_VERA
 
