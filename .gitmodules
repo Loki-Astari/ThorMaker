@@ -4,4 +4,4 @@
     ignore = dirty
 [submodule "vera-plusplus"]
 	path = vera-plusplus
-	url = git@github.com:Loki-Astari/vera-plusplus.git
+	url = https://@github.com/Loki-Astari/vera-plusplus.git

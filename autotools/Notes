@@ -162,7 +162,7 @@ checkForBuildTools () {
     if [[ ! -e build/Notes ]]; then
         echo "Installing ThorMaker"
         git submodule init
-        git submodule add git@github.com:Loki-Astari/ThorMaker.git build
+        git submodule add https://github.com/Loki-Astari/ThorMaker.git build
     fi
 }
 

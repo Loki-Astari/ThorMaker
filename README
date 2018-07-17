@@ -33,7 +33,7 @@ Generic build files.
 
     SetUp
     =====
-        git clone git@github.com:Loki-Astari/ThorMaker.git build
+        git clone https://github.com/Loki-Astari/ThorMaker.git build
         cd third
         ./setup
 

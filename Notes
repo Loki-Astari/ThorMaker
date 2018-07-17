@@ -39,10 +39,10 @@ Rather then re-write and copy build files from project to project, I have my own
 ##SetUp
 
 ####In one line:
-        git clone git@github.com:Loki-Astari/ThorMaker.git build;cd build/third;./setup;cd ../..
+        git clone https://github.com/Loki-Astari/ThorMaker.git build;cd build/third;./setup;cd ../..
 
 ####Details:
-        git clone git@github.com:Loki-Astari/ThorMaker.git build
+        git clone https://github.com/Loki-Astari/ThorMaker.git build
         cd build/third
         ./setup
 

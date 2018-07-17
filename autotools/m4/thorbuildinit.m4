@@ -47,52 +47,6 @@ AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT],
         []
     )
 ])
-AC_DEFUN([AX_THOR_BUILD_GIT_SUBMODULE_GET],
-[
-    git submodule init
-    AS_IF(
-        [git submodule update],
-        [],
-        [AC_MSG_ERROR([
-
-git submodule updated failed:
-Currently all Loki-Astari submodules are retrieved using ssh.
-If the above command failed it probably means that you have not registered your "public key" with github.com
-
-See this article on StackOverflow for simple instructions:
-http://stackoverflow.com/questions/25828483/github-permission-denied-publickey
-
-
-Once you have installed the keys you can restart the configuration with:
-git submodule update
-./configure <Same Flags You had before>
-
-        ])]
-    )
-])
-AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB],
-[
-(
-    cd $1
-    AS_IF(
-        [test "${with_thor_build_on_travis}" == ""],
-        [
-
-            if [[ ! -e $2 ]]; then
-                AX_THOR_BUILD_GIT_SUBMODULE_GET
-            fi
-        ],
-        [
-            mv .gitmodules gitmodules.old
-            sed -e 's#git@\([^:]*\):#https://\1/#' gitmodules.old > .gitmodules
-
-            AX_THOR_BUILD_GIT_SUBMODULE_GET
-
-            mv gitmodules.old .gitmodules
-        ]
-    )
-)
-])
 AC_DEFUN([AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA],
 [
     AS_IF(
@@ -169,8 +123,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
     AX_THOR_BUILD_ON_TRAVIS_OPTION
     AX_THOR_BUILD_ON_TRAVIS_OPTION_DEINIT
-    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([.], [build/Notes])
-    AX_THOR_BUILD_ON_TRAVIS_OPTION_UPDATE_SUB([build], [googletest/README.md])
+    git submodule update --init --recursive
     AX_THOR_BUILD_ON_TRAVIS_OPTION_BUILD_VERA(build)
 
     AX_THOR_FUNC_USE_VERA
