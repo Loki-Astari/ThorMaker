@@ -505,7 +505,7 @@ coverage/%.cpp.gcov: always
 	@$(ECHO) "Done"
 	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
-coverage/%.tpp.gcov:
+coverage/%.tpp.gcov: coverage/%.cpp.gcov
 	@$(ECHO) Do Nothing
 report_coverage: report_coverage_$(COVERAGE)
 report_coverage_%.cpp:	coverage/%.cpp.gcov
@@ -514,8 +514,8 @@ report_coverage_%.cpp:	coverage/%.cpp.gcov
 	@if [ "$(COVERAGE)" = "$*.cpp" ]; then cat coverage/$*.cpp.gcov ; fi;
 report_coverage_%.tpp:	coverage/%.tpp.gcov
 	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
-	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.tpp.gcov ; fi
-	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat coverage/$*.tpp.gcov ; fi
+	@if [ "$(COVERAGE)" = "On" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
+	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 	
 debug:
 	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	INSTALL_ACTIVE=$(INSTALL_ACTIVE) all
@@ -537,6 +537,8 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 .PRECIOUS:	%.tab.cpp
 .PRECIOUS:	%.lex.cpp
 .PRECIOUS:	%.gperf.cpp
+.PRECIOUS:	%.cpp.gcov
+.PRECIOUS:	%.tpp.gcov
 .PRECIOUS:	%.vera
 
 
