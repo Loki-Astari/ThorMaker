@@ -474,19 +474,21 @@ coverage:	$(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
 	 fi
 
 coverage/%.cpp.gcov: always
-	@$(ECHO) "Generating Coverage for $*.cpp"
-	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.cpp") | awk '{printf "%-80s", $$0}' ; \
-	elif ( test "$(VERBOSE)" = "On" ); then				\
+	@if ( test "$(VERBOSE)" = "On" ); then					\
+		$(ECHO) "Generating Coverage for $*.cpp";			\
 		$(ECHO) '$(COV) --preserve-paths --object-directory coverage $*.cpp' ;	\
 	fi
-	@if [ -e $*.cpp ]; then												\
-		tmpfile=$(shell $(MKTEMP));					\
+	@if [ -e $*.cpp ]; then									\
+		tmpfile=$(shell $(MKTEMP));							\
 		tmpSed=$(shell $(MKTEMP));							\
-		$(ECHO) $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
+		if ( test "$(VERBOSE)" = "On" ); then				\
+			$(ECHO) $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
+		fi;													\
 		$(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp 2>$${tmpfile}	> coverage/$*.cpp.out ;	\
-		sed 's/#####\(.*\)}$$/    -\1}/' $*.cpp.gcov > $${tmpSed};\
-		sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > $*.cpp.gcov;\
+		if [[ -e $*.cpp.gcov ]]; then						\
+			sed 's/#####\(.*\)}$$/    -\1}/' $*.cpp.gcov > $${tmpSed};\
+			sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > $*.cpp.gcov;\
+		fi;													\
 		if [ $$? != 0 ];									\
 		then												\
 			$(ECHO) $(RED_ERROR);								\
@@ -495,18 +497,22 @@ coverage/%.cpp.gcov: always
 			cat $${tmpfile};								\
 			exit 1;											\
 		else 												\
-			if ( test "$(VERBOSE)" = "NONE" ); then			\
+			if ( test "$(VERBOSE)" = "On" ); then			\
 				$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.cpp") | awk '{printf "%-80s", $$0}' ; \
+				$(ECHO) $(GREEN_OK);						\
 			fi;												\
-			$(ECHO) $(GREEN_OK);								\
 			$(RM) $${tmpfile};								\
 		fi													\
 	fi
-	@$(ECHO) "Done"
+	@if ( test "$(VERBOSE)" = "On" ); then					\
+		$(ECHO) "Done";										\
+	fi
 	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
 coverage/%.tpp.gcov: coverage/%.cpp.gcov
-	@$(ECHO) Do Nothing
+	@if ( test "$(VERBOSE)" = "On" ); then				\
+		$(ECHO) Do Nothing;								\
+	fi
 report_coverage: report_coverage_$(COVERAGE)
 report_coverage_%.cpp:	coverage/%.cpp.gcov
 	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
