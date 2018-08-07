@@ -7,6 +7,7 @@
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
 
 all:		ACTION=build
+test:		ACTION=test
 clean:		ACTION=clean
 veryclean:	ACTION=veryclean
 install:	ACTION=install
@@ -22,6 +23,7 @@ PREFIX		?=$(BUILD_ROOT)
 
 
 all:		$(SUB_PROJECTS)
+test:		$(SUB_PROJECTS)
 clean:		$(SUB_PROJECTS)
 veryclean:	$(SUB_PROJECTS)
 install:	$(SUB_PROJECTS)
