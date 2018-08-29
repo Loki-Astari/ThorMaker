@@ -117,7 +117,7 @@ CP				= cp
 
 CXX				?= g++
 COV				?= gcov
-VERA			?= vera++
+VERA			?= $(if $(VERATOOL), $(VERATOOL), vera++)
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 	
 #

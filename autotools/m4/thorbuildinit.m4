@@ -39,14 +39,14 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA],
         AS_HELP_STRING([--disable-vera], [Disable vera. Disable Static analysis of source.])
     )
 
-    VERA="";
+    VERATOOL="";
     AS_IF(
         [test "x$enable_vera" == "xno"],
         [
-            VERA='echo "Disabled Static Analysis" ||';
+            VERATOOL='echo "Disabled Static Analysis" ||';
         ],
         [
-            VERA='vera++';
+            VERATOOL='vera++';
             ./build/third/vera-install
             AC_CHECK_PROGS([TestVera], [vera++], [:], ${PATH}:./build/bin)
             AS_IF(
@@ -66,7 +66,7 @@ detected that "vera++" (the static analysis tool) is not currently installed.
             )
         ]
     )
-    AC_SUBST([VERA], [${VERA}])
+    AC_SUBST([VERATOOL], [${VERATOOL}])
     AX_THOR_LIB_SELECT
 ])
 

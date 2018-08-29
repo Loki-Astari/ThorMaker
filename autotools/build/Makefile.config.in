@@ -12,7 +12,7 @@ THOR_TARGETLIBS=@THOR_TARGETLIBS@
 yaml_ROOT_DIR=@yaml_ROOT_DIR@
 yaml_ROOT_LIB=@yaml_ROOT_LIB@
 
-VERA=@VERA@
+VERATOOL=@VERATOOL@
 
 prefix?=@prefix@
 exec_prefix?=@exec_prefix@
