@@ -37,13 +37,13 @@ vera:		$(SUB_PROJECTS)
 doc:		$(SUB_PROJECTS)
 
 %.dir:
-	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Start")
+	@echo $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
 	@if test -d $*; then														\
 		$(MAKE) -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		echo $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi
-	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Finish")
+	@echo $(call colour_text, LIGHT_PURPLE, "Building Dir $* Finish")
 
 include $(THORSANVIL_ROOT)/build/tools/lint.Makefile
 	

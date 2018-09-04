@@ -183,9 +183,9 @@ LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 LIBBASENAME					= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
 
 
-INSTALL_APP					= $(if $(filter %.app,  $(TARGET_ALL)), $(patsubst %.app,  install_app_%, $(TARGET_ALL)))
-INSTALL_SHARED_LIB			= $(if $(filter %.slib, $(TARGET_ALL)), $(patsubst %.slib, install_shared_lib_%, $(TARGET_ALL)))
-INSTALL_STATIC_LIB			= $(if $(filter %.a,    $(TARGET_ALL)), $(patsubst %.a,    install_static_lib_%, $(TARGET_ALL)))
+INSTALL_APP					= $(patsubst %.app,  install_app_%, $(filter %.app,  $(TARGET_ALL)))
+INSTALL_SHARED_LIB			= $(patsubst %.slib, install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
+INSTALL_STATIC_LIB			= $(patsubst %.a,    install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
 INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(subst /,-,$(HEAD)))))
 
 #
@@ -329,7 +329,7 @@ install_Doprofile:
 install_Dohead:
 	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) try_install_head
 
-doInstall:	try_install_app try_install_shared_lib try_install_static_lib try_install_head
+doInstall:	try_install_app try_install_shared_lib try_install_static_lib
 
 try_install_app:		$(if (INSTALL_APP), install_app)
 try_install_shared_lib:	$(if (INSTALL_SHARED_LIB), install_shared_lib)
@@ -784,6 +784,11 @@ Print_On:
 	@$(ECHO) "MAN_SRC:	$(MAN_SRC)"
 	@$(ECHO) "MAN_DIR:	$(MAN_DIR)"
 	@$(ECHO) "MAN_PAGE:	$(MAN_PAGE)"
+	@$(ECHO) "TARGET_ALL:         $(TARGET_ALL)"
+	@$(ECHO) "INSTALL_APP:        $(INSTALL_APP)"
+	@$(ECHO) "INSTALL_SHARED_LIB: $(INSTALL_SHARED_LIB)"
+	@$(ECHO) "INSTALL_STATIC_LIB: $(INSTALL_STATIC_LIB)"
+	@$(ECHO) "INSTALL_HEADER:     $(INSTALL_HEADER)"
 	@echo "ECHO: $(ECHO)"
 
 .PHONY: always
