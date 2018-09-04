@@ -202,7 +202,7 @@ CXXSTDVER					?=  11
 TARGET_MODE					?=	debug
 COVERAGE_TARGET				?= COVERAGE_$(notdir $(shell pwd))
 PARALLEL					= $(PARALLEL_$(VERBOSE))
-PARALLEL_NONE				= -j8
+PARALLEL_NONE				= 
 
 #
 # Warning flags turned off for test suite.
