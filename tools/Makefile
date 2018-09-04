@@ -200,7 +200,7 @@ CXXSTDVER					?=  11
 #
 # By default build debug when in a directory
 TARGET_MODE					?=	debug
-COVERAGE_TARGET				?= COVERAGE_$(notdir $(shell pwd))
+COVERAGE_TARGET				?= COVERAGE_$(subst -,,$(notdir $(shell pwd)))
 PARALLEL					= $(PARALLEL_$(VERBOSE))
 PARALLEL_NONE				= 
 
