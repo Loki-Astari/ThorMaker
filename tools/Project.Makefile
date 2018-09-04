@@ -4,6 +4,9 @@
 
 .PHONY:	all test clean install %.dir
 
+MAKE	= make --silent
+
+
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
 
 all:		ACTION=build
@@ -36,7 +39,6 @@ doc:		$(SUB_PROJECTS)
 %.dir:
 	@echo $(call colour_text, LIGHT_PURPLE, "Buiding $* Start")
 	@if test -d $*; then														\
-		echo $(MAKE) -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);	\
 		$(MAKE) -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		echo $(call colour_text, RED, "Sub Project $* non local ignoring");		\

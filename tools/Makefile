@@ -413,7 +413,6 @@ test_%:
 	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile BASE=.. THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app $*; fi
 
 mock:	coverage.Dir $(MOCK_FILES)
-	pwd
 	$(ECHO) "MOCKING: $(TARGET_MODE) $(MOCK_FILES)"
 
 $(BASE)/coverage/Mock.built:
@@ -439,7 +438,6 @@ $(BASE)/coverage/ThorMock.h: $(BASE)/coverage/MockHeaders.h | $(BASE)/coverage.D
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.suffix >> $(BASE)/coverage/ThorMock.h
 
 $(BASE)/coverage/MockHeaders.cpp:: $(BASE)/coverage/MockHeaders.h | $(BASE)/coverage.Dir
-	@pwd
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix $(BASE)/coverage/MockHeaders.cpp
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.preamb >> $(BASE)/coverage/MockHeaders.cpp
 	@if [ -e $(BASE)/test/Mock.def ]; then		\
@@ -566,20 +564,22 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 
 
 vera/%.vera:
-	@if ( test "$(VERBOSE)" = "On" ); then				\
-		 $(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*"; \
-	else $(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi
-	@PATH=${PATH}:$(PREFIX_BIN) $(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
-	if [ $$? != 0 ];									\
-	then												\
-		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) "$(VERA) --profile thor --show-rule --error --std-report $@.report $*";	\
-		$(ECHO) "==================================================="; \
-		cat $@.report;									\
-		exit 1;											\
-	else 												\
-		$(ECHO) $(GREEN_OK);							\
-		$(RM) $@.report;								\
+	@if [ "$(VERA)" != "true" ]; then					\
+		if ( test "$(VERBOSE)" = "On" ); then				\
+			 $(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*"; \
+		else $(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi; \
+		PATH=${PATH}:$(PREFIX_BIN) $(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
+		if [ $$? != 0 ];									\
+		then												\
+			$(ECHO) $(RED_ERROR);							\
+			$(ECHO) "$(VERA) --profile thor --show-rule --error --std-report $@.report $*";	\
+			$(ECHO) "==================================================="; \
+			cat $@.report;									\
+			exit 1;											\
+		else 												\
+			$(ECHO) $(GREEN_OK);							\
+			$(RM) $@.report;								\
+		fi;													\
 	fi
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
