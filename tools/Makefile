@@ -119,6 +119,7 @@ CXX				?= g++
 COV				?= gcov
 VERA			?= $(if $(VERATOOL), $(VERATOOL), vera++)
 MKTEMP			= $(MKTEMP_$(PLATFORM))
+MAKE			= make --silent
 	
 #
 # This is obviously not working
@@ -331,10 +332,10 @@ install_Dohead:
 
 doInstall:	try_install_app try_install_shared_lib try_install_static_lib
 
-try_install_app:		$(if (INSTALL_APP), install_app)
-try_install_shared_lib:	$(if (INSTALL_SHARED_LIB), install_shared_lib)
-try_install_static_lib:	$(if (INSTALL_STATIC_LIB), install_static_lib)
-try_install_head:		$(if (INSTALL_HEADER), install_head)
+try_install_app:		$(if $(INSTALL_APP), install_app)
+try_install_shared_lib:	$(if $(INSTALL_SHARED_LIB), install_shared_lib)
+try_install_static_lib:	$(if $(INSTALL_STATIC_LIB), install_static_lib)
+try_install_head:		$(if $(INSTALL_HEADER), install_head)
 
 install_app:		Note_Start_Installing_Applications $(INSTALL_APP)			Note_End_Installing_Applications
 install_shared_lib:	Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)	Note_End_Installing_Libraries
@@ -370,19 +371,19 @@ unit_test:
 	@$(ECHO) $(call section_title,Building Objects for Testing and Coverage)
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
 	@$(ECHO) $(call section_title,Building Unit Tests)
-	@(! test -d test) || touch test/unittest.cpp
-	@(! test -d test) || $(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)"
-	@(! test -d test) || $(RM)    test/unittest.cpp
-	@(! test -d test) || $(ECHO) $(call section_title,Running Unit Tests)
-	@(! test -d test) || $(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=*"
-	@(! test -d test) || $(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=* ||\
-							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1)
-	@$(ECHO)
-	@$(ECHO)
-	@$(ECHO) $(call colour_text, GRAY, $(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) report_coverage COVERAGE=$(COVERAGE))
-	@$(ECHO)
-	@$(ECHO)
-	@(! test -d test) || $(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE)
+	@if ( test -d test ); then								\
+		touch test/unittest.cpp;							\
+		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
+		$(RM)    test/unittest.cpp;							\
+		$(ECHO) $(call section_title,Running Unit Tests);	\
+		$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=*";	\
+		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=* ||	\
+							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1);	\
+		if [[ "$(VERBOSE)" == "On" ]]; then					\
+			$(ECHO) $(call colour_text, GRAY, $(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) report_coverage COVERAGE=$(COVERAGE));	\
+		fi;													\
+		$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE);	\
+	fi
 
 install_app_%:
 	@mkdir -p $(PREFIX_BIN)
