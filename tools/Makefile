@@ -120,6 +120,8 @@ COV				?= gcov
 VERA			?= $(if $(VERATOOL), $(VERATOOL), vera++)
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 MAKE			= make --silent
+
+TESTNAME		= *
 	
 #
 # This is obviously not working
@@ -377,7 +379,7 @@ unit_test:
 		$(RM)    test/unittest.cpp;							\
 		$(ECHO) $(call section_title,Running Unit Tests);	\
 		$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=*";	\
-		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=* ||	\
+		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME) ||	\
 							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1);	\
 		if [[ "$(VERBOSE)" == "On" ]]; then					\
 			$(ECHO) $(call colour_text, GRAY, $(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) report_coverage COVERAGE=$(COVERAGE));	\
@@ -790,6 +792,7 @@ Print_On:
 	@$(ECHO) "INSTALL_SHARED_LIB: $(INSTALL_SHARED_LIB)"
 	@$(ECHO) "INSTALL_STATIC_LIB: $(INSTALL_STATIC_LIB)"
 	@$(ECHO) "INSTALL_HEADER:     $(INSTALL_HEADER)"
+	@$(ECHO) "TESTNAME:           $(TESTNAME)"
 	@echo "ECHO: $(ECHO)"
 
 .PHONY: always
