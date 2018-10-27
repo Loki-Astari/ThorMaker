@@ -121,7 +121,7 @@ VERA			?= $(if $(VERATOOL), $(VERATOOL), vera++)
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 MAKE			= make --silent
 
-TESTNAME		= *
+TESTNAME		?= *
 	
 #
 # This is obviously not working
@@ -363,7 +363,10 @@ $(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
 	cp man/$* $(PREFIX_MAN)/$*
 test:	pre_test unit_test static_test
 pre_test:	$(PRETEST)
-static_test: vera
+static_test:
+	@if [[ "$(TESTNAME)" == "*" ]]; then	\
+		make vera;						\
+	fi
 vera:	vera.Dir vera_head vera_body
 vera_head:
 	@$(ECHO) $(call section_title,Static Analysis)
@@ -378,13 +381,15 @@ unit_test:
 		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
 		$(RM)    test/unittest.cpp;							\
 		$(ECHO) $(call section_title,Running Unit Tests);	\
-		$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=*";	\
+		$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME)";	\
 		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME) ||	\
 							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1);	\
 		if [[ "$(VERBOSE)" == "On" ]]; then					\
 			$(ECHO) $(call colour_text, GRAY, $(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) report_coverage COVERAGE=$(COVERAGE));	\
 		fi;													\
-		$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE);	\
+		if [[ "$(TESTNAME)" == "*" ]]; then					\
+			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE);	\
+		fi													\
 	fi
 
 install_app_%:
