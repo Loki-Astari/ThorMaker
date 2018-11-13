@@ -5,7 +5,9 @@ DOC_METHOD_TOOL				= $(BUILD_ROOT)/doc/buildMethod
 DOC_FUNCTION_TOOL			= $(BUILD_ROOT)/doc/buildFunction
 DOC_CLASS_LIST_TOOL			= $(BUILD_ROOT)/doc/classList
 DOC_METHOD_LIST_TOOL		= $(BUILD_ROOT)/doc/methodList
-DOC_DIR						= $(THORSANVIL_ROOT)/docSource/source
+
+DOC_SOURCE					?= docSource/source
+DOC_DIR						= $(THORSANVIL_ROOT)/$(DOC_SOURCE)
 
 DOC_DEST					= $(DOC_DIR)/$(1)/$(2).md
 
@@ -38,19 +40,19 @@ DOC_METHOD_METHOD			= $(call DOC_F4_OF_4,$(1))
 
 doc: $(DOC_FILES)
 
-$(DOC_DIR)/package/%.md: $(DOC_CLASS_FILES) $(wildcard docs/package1)
+$(DOC_DIR)/package/%.md: $(DOC_DIR)/package.Dir $(DOC_CLASS_FILES) $(wildcard docs/package1)
 	@echo "Building Package $* Document"
 	@$(DOC_PACKAGE_TOOL) $* $(DOC_CLASS_FILES) > $@
 
-$(DOC_DIR)/class/$(DOC_BASE).%.md: $(DOC_CLASS_FILES) $(wildcard docs/%)
+$(DOC_DIR)/class/$(DOC_BASE).%.md: $(DOC_DIR)/class.Dir $(DOC_CLASS_FILES) $(wildcard docs/%)
 	@echo "Building Class $* Document"
 	@$(DOC_CLASS_TOOL) $(DOC_BASE) $(basename $*).h $(subst .,,$(suffix $*)) > $@
 
-$(DOC_DIR)/function/$(DOC_BASE).%.md: $(DOC_CLASS_FILES) $(wildcard docs/%)
+$(DOC_DIR)/function/$(DOC_BASE).%.md: $(DOC_DIR)/function.Dir $(DOC_CLASS_FILES) $(wildcard docs/%)
 	@echo "Building Function $* Documentation"
 	@$(DOC_FUNCTION_TOOL) $(DOC_BASE) $(basename $*).h $(subst .,,$(suffix $*)) > $@
 
-$(DOC_DIR)/method/$(DOC_BASE).%.md: $(DOC_METHOD_FILES) $(wildcard docs/%)
+$(DOC_DIR)/method/$(DOC_BASE).%.md: $(DOC_DIR)/method.Dir $(DOC_METHOD_FILES) $(wildcard docs/%)
 	@echo "Building Method $* Document"
 	@$(DOC_METHOD_TOOL) $(DOC_BASE) $(call DOC_METHOD_SOURCE,$*).h $(call DOC_METHOD_TYPE,$*) $(call DOC_METHOD_CLASS,$*) $(call DOC_METHOD_METHOD,$*) > $@
 
