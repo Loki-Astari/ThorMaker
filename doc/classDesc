@@ -22,6 +22,8 @@ BEGIN       {FOUND=0;description="";}
             }
 /struct/    {
                 sub(":", "", $2);
+                sub("<", "_", $2);
+                sub(">", "", $2);
                 if (FOUND == 1 && $2 == Name)
                 {
                     printf("%s", description);
@@ -32,6 +34,8 @@ BEGIN       {FOUND=0;description="";}
             }
 /class/     {
                 sub(":", "", $2);
+                sub("<", "_", $2);
+                sub(">", "", $2);
                 if (FOUND == 1 && $2 == Name)
                 {
                     printf("%s", description);

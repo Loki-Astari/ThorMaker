@@ -40,6 +40,8 @@ BEGIN       {FOUND=0;}
 
                         sub("^ *", "", param);
                         sub(" *$", "", param);
+                        sub("<", "_", param);
+                        sub(">", "", param);
                         if ( param != "")
                         {
                             printf(", %s ", param);

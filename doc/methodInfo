@@ -97,8 +97,9 @@ BEGIN       {FOUND=0;VIRTUAL=0;State=0;Count=0}
 /protected:/{if (FOUND == 2) {State=1;}}
 /private:/  {if (FOUND == 2) {State=0;}}
             {VIRTUAL=0;}
-/class/     {gsub(/:/, "", $2);}
+/class/     {gsub(/:/, "", $2);gsub("<", "_", $2);gsub(">", "", $2);}
 /class/     {if (FOUND == 1 && $2 == class) {State=0;FOUND=2}}
+/struct/    {gsub(/:/, "", $2);gsub("<", "_", $2);gsub(">", "", $2);}
 /struct/    {if (FOUND == 1 && $2 == class) {State=2;FOUND=2}}
 /^};/       {FOUND=0;}
 /@class/    {FOUND=1;}

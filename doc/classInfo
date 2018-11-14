@@ -13,18 +13,20 @@ BEGIN       {FOUND=0;}
 /^\/\/ /    {if (FOUND == 1){next;}}
 /struct/    {
                 sub(":", "", $2);
+                sub("<", "_", $2);
+                sub(">", "", $2);
                 if (FOUND == 1 && $2 == Name && $3 == "public")
                 {
-                    sub(/<.*>/, "", $4);
                     printf("%s ", $4);
                 }
                 FOUND=0;
             }
 /class/     {
                 sub(":", "", $2);
+                sub("<", "_", $2);
+                sub(">", "", $2);
                 if (FOUND == 1 && $2 == Name && $3 == "public")
                 {
-                    sub(/<.*>/, "", $4);
                     printf("%s ", $4);
                 }
                 FOUND=0;

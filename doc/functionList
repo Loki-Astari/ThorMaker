@@ -15,6 +15,8 @@ BEGIN       {FOUND=0;}
                 {
                     split($0, data, "\(");
                     st=match($0, " [^ ]*\\(");
+                    sub("<", "_", st);
+                    sub(">", "", st);
                     printf("%s ", substr(data[1], st));
                     FOUND=0;
                 }

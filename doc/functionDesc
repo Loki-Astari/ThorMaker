@@ -35,6 +35,8 @@ BEGIN       {FOUND=0;description="";}
             {
                 if (FOUND == 1 )
                 {
+                    sub("<", "_", $0);
+                    sub(">", "", $0);
                     matchTypeNameString=sprintf("[^ ]* %s\\(", Name);
                     st=match($0, matchTypeNameString);
                     if (st != 0) {

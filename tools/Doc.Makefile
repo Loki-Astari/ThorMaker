@@ -40,6 +40,14 @@ DOC_METHOD_METHOD			= $(call DOC_F4_OF_4,$(1))
 
 doc: $(DOC_FILES)
 
+docprint:
+	@echo "DOC_FILES		$(DOC_FILES)"
+	@echo "DOC_PACKAGE		$(DOC_PACKAGE)"
+	@echo "DOC_CLASSES		$(DOC_CLASSES)"
+	@echo "DOC_METHODS		$(DOC_METHODS)"
+	@echo "DOC_CLASS_FILES	$(DOC_CLASS_FILES)"
+	@echo "DOC_METHOD_FILES	$(DOC_METHOD_FILES)"
+
 $(DOC_DIR)/package/%.md: $(DOC_DIR)/package.Dir $(DOC_CLASS_FILES) $(wildcard docs/package1)
 	@echo "Building Package $* Document"
 	@$(DOC_PACKAGE_TOOL) $* $(DOC_CLASS_FILES) > $@
