@@ -1,3 +1,135 @@
+#
+# These tools are used to build *.md files for documentation.
+# It is designed to work with `andvari` and the theme andvari-theme-documentation
+#
+#	andvari:						https://github.com/Loki-Astari/andvari
+#	andvari-theme-documentation:	https://github.com/Loki-Astari/andvari-theme-documentation
+#
+# How to set up your project to use these tools:
+#	Prerequisite:
+#		Your project is built with ThorMaker (this package).
+#		You have "andvari" installed locally
+#	
+#	> andvari init docSource --dest docs -t "My Project" -d "Some Text" --themeRepo git@github.com:Loki-Astari/andvari-theme-documentation.git --themeName documentation
+#	> make doc
+#	> git add <all documentation>
+#	> git commit -a -m "Initial documentation"
+#	> cd docSource
+#	> andvari deploy
+#	# Your documentation should be available through your github pages
+#
+#	PostActions
+#		You have set your projects github pages to "docs"
+#			Goto the project "Settings" tab on github.com
+#			Scroll down to the section: "GitHub Pages"
+#			Set the "Source" drop down to "Master branch /docs folder"
+#			Wait 15 minutes for git hub to get all the auto publishing corret.
+#
+# What is put in the documentation
+#	1: Tags
+#			You can place tags in the header file.
+#			This will cause any local comments to placed into the documentation.
+#	2: Docs files
+#			In the source directory Add a docs directory.
+#			Each file in the docs directory will be used for the third column
+#			in the documentation page.
+#			See below for naming conventions.
+#
+# Tags
+# ====
+#
+#	@class
+#	@function
+#	@method
+#	@param
+#	@return
+#
+#	The above tags will add information about class/methdod/functions/param/return values to the documentation.
+#
+#	Useage: @class
+#
+#		// @class
+#		// <Multiple Lines Of Documentation>
+#		class <name>
+#
+#		Example:
+#		========
+#		// @class
+#		// Base of all the socket classes
+#		// This class should not be directly created.
+#		// All socket classes are movable but not copyable
+#		class BaseSocket
+#		{
+#		}
+#
+#	This will create the documentation for "BaseSocket" using the comments between
+#	@class and the class definition as the source used in the documentation.
+#	It is looking for "class <name>" as the termination point
+#
+#	Useage: @function
+#
+#		// @function
+#		// <Multiple Lines Of Documentation>
+#		// @param and @return params allowed
+#		<type> <name>(
+#
+#		Example:
+#		========
+#		// @function
+#		// Builds an error message from 2 parts
+#		std::string buildErrorMessage(char const*, char const*)
+#
+#	The @function declaration works in basically the same way as the @class.
+#	It is just looking for a function definition "<type> <name>(" as the termination point.
+#
+#	Usage: @method
+#
+#		// @class
+#		..... Ignored Lines
+#		// @method
+#		// <Multiple Lines Of Documentation>
+#		// @param and @return params allowed and
+#		<type> <name>(
+#
+#		Example:
+#		========
+#		// @method
+#		// Reads data from a sokcet into a buffer.
+#		// If the stream is blocking will not return until the requested amount of data has been read or there is no more data to read.
+#		// If the stream in non blocking will return if the read operation would block.
+#		// @return              This method returns a <code>std::pair&lt;bool, std::size_t&gt;</code>. The first member `bool` indicates if more data can potentially     be read from the stream. If the socket was cut or the EOF reached then this value will be false. The second member `std::size_t` indicates exactly how many bytes we    re read from this stream.
+#		// @param buffer        The buffer data will be read into.
+#		// @param size          The size of the buffer.
+#		// @param alreadyGot    Offset into buffer (and amount size is reduced by) as this amount was read on a previous call).
+#		std::pair<bool, std::size_t> getMessageData(char* buffer, std::size_t size, std::size_t alreadyGot = 0);
+#
+#	The @method must be used inside a class marked with @class
+#	After the @method line all comments are added to the documentation.
+#	You can also add @param and @return markers to get more specific information about these values.
+#
+#	Usage:	@param
+#		// @param <Name>		<Documentation>
+#
+#	Can only be used after a @method or @function tag.
+#
+#	Usage:	@return
+#		// @return				<Documentation>
+#
+#	Can only be used after a @method or @function tag.
+#
+# Docs
+# ====
+#
+# Files:
+#	docs/package
+#		Added to the package.
+#	docs/<FileName>.<ClassName>
+#		Added this file into the documentation for the class "ClassName" defined in "FileName".
+#	docs/<FileName>.<FunctionName>
+#		Added this file into the documentation for the function "FunctionName" defined in "FileName".
+#	docs/<FileName>.<ClassName>.<MethodName>
+#		Added this file into the documentation for the Method "MethodName" in the class "ClassName" defined in "FileName".
+#
 
 DOC_PACKAGE_TOOL			= $(BUILD_ROOT)/doc/buildPackage
 DOC_CLASS_TOOL				= $(BUILD_ROOT)/doc/buildClass
@@ -48,7 +180,7 @@ docprint:
 	@echo "DOC_CLASS_FILES	$(DOC_CLASS_FILES)"
 	@echo "DOC_METHOD_FILES	$(DOC_METHOD_FILES)"
 
-$(DOC_DIR)/package/%.md: $(DOC_DIR)/package.Dir $(DOC_CLASS_FILES) $(wildcard docs/package1)
+$(DOC_DIR)/package/%.md: $(DOC_DIR)/package.Dir $(DOC_CLASS_FILES) $(wildcard docs/package)
 	@echo "Building Package $* Document"
 	@$(DOC_PACKAGE_TOOL) $* $(DOC_CLASS_FILES) > $@
 
