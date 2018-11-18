@@ -151,13 +151,13 @@ DOC_PACKAGE_SECT			= $(shell $(DOC_PACKAGE_SECTION_TOOL))
 DOC_PACKAGE_SECT_FILE		= $(foreach loop, $(DOC_PACKAGE_SECT), $(call DOC_DEST,package,$(DOC_BASE)-$(loop)))
 DOC_PACKAGE					= $(if $(DOC_CLASS_FILES) $(DOC_METHOD_FILES), $(call DOC_DEST,package,$(DOC_BASE)) $(DOC_PACKAGE_SECT_FILE))
 
-DOC_CLASS_EXPAND			= $(foreach loop, $(shell $(BUILD_ROOT)/doc/$(2)List $(1)), $(call DOC_DEST,$2,$(DOC_BASE).$(basename $(1)).$(loop)))
+DOC_CLASS_EXPAND			= $(foreach loop, $(shell $(BUILD_ROOT)/doc/$(2)List $(1) '.*'), $(call DOC_DEST,$2,$(DOC_BASE).$(basename $(1)).$(loop)))
 DOC_CLASSES					= $(foreach loop, $(DOC_CLASS_FILES), $(call DOC_CLASS_EXPAND, $(loop),class) $(call DOC_CLASS_EXPAND,$(loop),function))
 DOC_CLASS_FILES				= $(shell $(BUILD_ROOT)/doc/findMarksFiles class function)
 
 DOC_METHOD_GETCLASSMETHOD_T	= $(foreach loop, $(shell $(BUILD_ROOT)/doc/methodList $(1) $(3) $(2)), $(call DOC_DEST,method,$(DOC_BASE).$(basename $(1)).$(2).$(3).$(loop)))
 DOC_METHOD_GETCLASSMETHOD	= $(call DOC_METHOD_GETCLASSMETHOD_T,$(1),$(2),methods) $(call DOC_METHOD_GETCLASSMETHOD_T,$(1),$(2),virtual) $(call  DOC_METHOD_GETCLASSMETHOD_T,$(1),$(2),protected)
-DOC_METHOD_GETCLASS			= $(foreach loop, $(shell $(BUILD_ROOT)/doc/classList $(1)), $(call DOC_METHOD_GETCLASSMETHOD, $(1),$(loop)))
+DOC_METHOD_GETCLASS			= $(foreach loop, $(shell $(DOC_CLASS_LIST_TOOL) $(1)), $(call DOC_METHOD_GETCLASSMETHOD, $(1),$(loop)))
 DOC_METHODS					= $(foreach loop, $(DOC_METHOD_FILES), $(call DOC_METHOD_GETCLASS,$(loop)))
 DOC_METHOD_FILES			= $(shell $(BUILD_ROOT)/doc/findMarksFiles method)
 
