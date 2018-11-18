@@ -34,7 +34,14 @@ profile:	$(SUB_PROJECTS)
 build:		$(SUB_PROJECTS)
 lint:		check_lint $(SUB_PROJECTS)
 vera:		$(SUB_PROJECTS)
-doc:		$(SUB_PROJECTS)
+doc:		$(SUB_PROJECTS) docbuild
+
+
+docbuild:
+	@if [[ -d docSource ]]; then		\
+		cd docSource;				\
+		andvari build;				\
+	fi
 
 %.dir:
 	@echo $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage:
-# buildPacjage <base>
+# buildPackage <base>
 
 # Builds the YAML file for documenting a package
 #   Class is annotated with "// @class" just above its declaration.
@@ -20,10 +20,16 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-base=$1
+base=${1%-*}
+marker=${1#*-}
+# echo "Marker: >${base}< >${marker}<"
+if [[ ${marker} == ${base} ]]; then
+    marker=""
+else
+    marker="-${marker}"
+fi
 namespace=$(grep 'using namespace' * 2> /dev/null| awk '{print $3}' | head -1 | sed -e 's/;//' )
 files=$( ${DIR}/findMarksFiles function class )
-shift 1
 children=()
 
 cat - <<PACKAGE_DOC_HEAD
@@ -47,8 +53,12 @@ fi
 
 for file in ${files}; do
     baseName=${file%.*}
-    functionList=( $(${DIR}/functionList ${file}) )
-    classList=( $(${DIR}/classList ${file}) )
+    functionList=( $(${DIR}/functionList ${file} ${marker}) )
+    classList=( $(${DIR}/classList ${file} ${marker}) )
+    allItems=$( echo ${functionList} ${classList} | xargs )
+    if [[ ${allItems} == "" ]]; then
+        continue
+    fi
     cat - <<PACKAGE_DOC_FILE
         - name:   ${file}
 PACKAGE_DOC_FILE

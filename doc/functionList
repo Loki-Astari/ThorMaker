@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Usage
-# functionList <file>
+# functionList <file> [<marker>]
 #
-# Get a list of functions in <file> that have a prefix @function
+# Get a list of functions in <file> that have a prefix @function<marker>
 
+file=$1
+marker=$2
 
 program=$(cat - <<'AWK_PROGRAM'
 BEGIN       {FOUND=0;}
@@ -21,8 +23,8 @@ BEGIN       {FOUND=0;}
                     FOUND=0;
                 }
             }
-/@function/ {FOUND=1}
 AWK_PROGRAM
 )
+program="${program}/@function${marker}[ \t]*$/ {FOUND=1}"
 
-awk "${program}" $1
+awk "${program}" ${file}

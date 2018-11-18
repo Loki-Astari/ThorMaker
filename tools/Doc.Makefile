@@ -132,6 +132,7 @@
 #
 
 DOC_PACKAGE_TOOL			= $(BUILD_ROOT)/doc/buildPackage
+DOC_PACKAGE_SECTION_TOOL	= $(BUILD_ROOT)/doc/packageSectionList
 DOC_CLASS_TOOL				= $(BUILD_ROOT)/doc/buildClass
 DOC_METHOD_TOOL				= $(BUILD_ROOT)/doc/buildMethod
 DOC_FUNCTION_TOOL			= $(BUILD_ROOT)/doc/buildFunction
@@ -146,7 +147,9 @@ DOC_DEST					= $(DOC_DIR)/$(1)/$(2).md
 DOC_FILES					= $(DOC_PACKAGE) $(DOC_CLASSES) $(DOC_METHODS)
 DOC_BASE					= $(basename $(firstword $(TARGET)))
 
-DOC_PACKAGE					= $(if $(DOC_CLASS_FILES) $(DOC_METHOD_FILES), $(call DOC_DEST,package,$(DOC_BASE)))
+DOC_PACKAGE_SECT			= $(shell $(DOC_PACKAGE_SECTION_TOOL))
+DOC_PACKAGE_SECT_FILE		= $(foreach loop, $(DOC_PACKAGE_SECT), $(call DOC_DEST,package,$(DOC_BASE)-$(loop)))
+DOC_PACKAGE					= $(if $(DOC_CLASS_FILES) $(DOC_METHOD_FILES), $(call DOC_DEST,package,$(DOC_BASE)) $(DOC_PACKAGE_SECT_FILE))
 
 DOC_CLASS_EXPAND			= $(foreach loop, $(shell $(BUILD_ROOT)/doc/$(2)List $(1)), $(call DOC_DEST,$2,$(DOC_BASE).$(basename $(1)).$(loop)))
 DOC_CLASSES					= $(foreach loop, $(DOC_CLASS_FILES), $(call DOC_CLASS_EXPAND, $(loop),class) $(call DOC_CLASS_EXPAND,$(loop),function))
@@ -182,7 +185,7 @@ docprint:
 
 $(DOC_DIR)/package/%.md: $(DOC_DIR)/package.Dir $(DOC_CLASS_FILES) $(wildcard docs/package)
 	@echo "Building Package $* Document"
-	@$(DOC_PACKAGE_TOOL) $* $(DOC_CLASS_FILES) > $@
+	$(DOC_PACKAGE_TOOL) $* > $@
 
 $(DOC_DIR)/class/$(DOC_BASE).%.md: $(DOC_DIR)/class.Dir $(DOC_CLASS_FILES) $(wildcard docs/%)
 	@echo "Building Class $* Document"

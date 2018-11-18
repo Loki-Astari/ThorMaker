@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Usage
-# classList <file>
+# classList <file> [<marker>]
 #
-# Get a list of class in <file> that have a prefix @class
+# Get a list of class in <file> that have a prefix @class<marker>
 
+file=$1
+marker=$2
 
 program=$(cat - <<'AWK_PROGRAM'
 BEGIN       {FOUND=0;}
@@ -29,8 +31,8 @@ BEGIN       {FOUND=0;}
                     FOUND=0;
                 }
             }
-/@class/    {FOUND=1;}
 AWK_PROGRAM
 )
+program="${program}/@class${marker}[ \t]*$/    {FOUND=1;}"
 
-awk "${program}" $1
+awk "${program}" ${file}
