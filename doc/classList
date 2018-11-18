@@ -14,20 +14,30 @@ BEGIN       {FOUND=0;}
 /struct/    {
                 if (FOUND == 1)
                 {
-                    sub(":", "", $2);
-                    sub("<", "_", $2);
-                    sub(">", "", $2);
-                    printf("%s ", $2);
+                    $1="";
+                    sub("signed ", "signed-", $0);
+                    sub("long long", "long-long", $0);
+                    sub(/\(.*/, "", $0);
+                    gsub(/ \t/, "", $0);
+                    sub(":", "", $0);
+                    sub("<", "-L", $0);
+                    sub(">", "-R", $0);
+                    printf("%s ", $0);
                     FOUND=0;
                 }
             }
 /class/     {
                 if (FOUND == 1)
                 {
-                    sub(":", "", $2);
-                    sub("<", "_", $2);
-                    sub(">", "", $2);
-                    printf("%s ", $2);
+                    $1="";
+                    sub("signed ", "signed-", $0);
+                    sub("long long", "long-long", $0);
+                    sub(/\(.*/, "", $0);
+                    gsub(/ \t/, "", $0);
+                    sub(":", "", $0);
+                    sub("<", "-L", $0);
+                    sub(">", "-R", $0);
+                    printf("%s ", $0);
                     FOUND=0;
                 }
             }

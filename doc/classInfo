@@ -12,22 +12,36 @@ BEGIN       {FOUND=0;}
 /template/  {next}
 /^\/\/ /    {if (FOUND == 1){next;}}
 /struct/    {
-                sub(":", "", $2);
-                sub("<", "_", $2);
-                sub(">", "", $2);
-                if (FOUND == 1 && $2 == Name && $3 == "public")
+                type=$3;
+                parent=$4;
+                $1="";
+                sub("signed ", "signed-", $0);
+                sub("long long", "long-long", $0);
+                sub(/\(.*/, "", $0);
+                gsub(/ \t/, "", $0);
+                sub(":", "", $0);
+                sub("<", "-L", $0);
+                sub(">", "-R", $0);
+                if (FOUND == 1 && $2 == Name && type == "public")
                 {
-                    printf("%s ", $4);
+                    printf("%s ", parent);
                 }
                 FOUND=0;
             }
 /class/     {
-                sub(":", "", $2);
-                sub("<", "_", $2);
-                sub(">", "", $2);
-                if (FOUND == 1 && $2 == Name && $3 == "public")
+                type=$3;
+                parent=$4;
+                $1="";
+                sub("signed ", "signed-", $0);
+                sub("long long", "long-long", $0);
+                sub(/\(.*/, "", $0);
+                gsub(/ \t/, "", $0);
+                sub(":", "", $0);
+                sub("<", "-L", $0);
+                sub(">", "-R", $0);
+                if (FOUND == 1 && $2 == Name && type == "public")
                 {
-                    printf("%s ", $4);
+                    printf("%s ", parent);
                 }
                 FOUND=0;
             }
