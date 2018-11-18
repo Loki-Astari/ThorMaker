@@ -104,10 +104,10 @@ PACKAGE_DOC_FILE_CLASS_HEAD_EMPTY
 PACKAGE_DOC_FILE_CLASS_HEAD
         for class in "${classList[@]}"; do
             children+=("${baseName}.${class}")
-            classInfo=( $(${DIR}/classInfo ${file} ${class}) )
+            classParent=$( ${DIR}/classInfo ${file} ${class} | head -1 | tr '\n' ' ')
             cat - <<PACKAGE_DOC_FILE_CLASS
             - name:   ${class}
-              parent: ${classInfo[0]}
+              parent: ${classParent}
 PACKAGE_DOC_FILE_CLASS
         done
     fi

@@ -8,12 +8,15 @@
 
 
 program=$(cat - <<'AWK_PROGRAM'
-BEGIN       {FOUND=0;}
-/template/  {next}
+BEGIN       {FOUND=0;tempInfo="";}
+/template/  {tempInfo=$0;next}
 /^\/\/ /    {if (FOUND == 1){next;}}
 /struct/    {
-                type=$3;
-                parent=$4;
+                parent="";
+                if ($3 == "public")
+                {
+                    parent=$4;
+                }
                 $1="";
                 sub("signed ", "signed-", $0);
                 sub("long long", "long-long", $0);
@@ -22,15 +25,18 @@ BEGIN       {FOUND=0;}
                 sub(":", "", $0);
                 sub("<", "-L", $0);
                 sub(">", "-R", $0);
-                if (FOUND == 1 && $2 == Name && type == "public")
+                if (FOUND == 1 && $0 == Name)
                 {
-                    printf("%s ", parent);
+                    printf("%s\n%s", parent, tempInfo);
+                    exit;
                 }
-                FOUND=0;
             }
 /class/     {
-                type=$3;
-                parent=$4;
+                parent="";
+                if ($3 == "public")
+                {
+                    parent=$4;
+                }
                 $1="";
                 sub("signed ", "signed-", $0);
                 sub("long long", "long-long", $0);
@@ -39,11 +45,11 @@ BEGIN       {FOUND=0;}
                 sub(":", "", $0);
                 sub("<", "-L", $0);
                 sub(">", "-R", $0);
-                if (FOUND == 1 && $2 == Name && type == "public")
+                if (FOUND == 1 && $0 == Name)
                 {
-                    printf("%s ", parent);
+                    printf("%s\n%s", parent, tempInfo);
+                    exit;
                 }
-                FOUND=0;
             }
 /@class/    {FOUND=1;}
 AWK_PROGRAM

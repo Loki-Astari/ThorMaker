@@ -28,7 +28,8 @@ namespace=$(grep 'using namespace' * 2> /dev/null| awk '{print $3}' | head -1 | 
 base=$1
 file=$2
 class=$3
-classInfo=( $(${DIR}/classInfo ${file} ${class}) )
+classParent=$( ${DIR}/classInfo ${file} ${class} | head -1 )
+classTemplate=$( ${DIR}/classInfo ${file} ${class} | tail -1 )
 description=$( ${DIR}/classDesc ${file} ${class} )
 
 cat - << CLASS_DOC_HEAD
@@ -39,7 +40,8 @@ typeInfo:
     namespace: ${namespace}
     header:    ${base}/${file}
     classname: ${class}
-    parent:    ${classInfo[0]}
+    parent:    ${classParent}
+    template:  ${classTemplate}
     description: ${description}
 CLASS_DOC_HEAD
 
