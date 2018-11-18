@@ -26,7 +26,8 @@ file=$2
 funct=$3
 children=()
 
-description=$( ${DIR}/functionDesc $2 $3 )
+description=$( ${DIR}/functionDesc ${file} ${funct} )
+tempInfo=$( ${DIR}/functionInfo ${file} ${funct} | tail -1 )
 
 cat - << CLASS_DOC_HEAD
 ---
@@ -37,6 +38,7 @@ typeInfo:
     header:    ${base}/${file}
     function:  ${funct}
     description: ${description}
+    template:  ${tempInfo}
 CLASS_DOC_HEAD
 
 if (( ${#children[@]} == 0 )); then

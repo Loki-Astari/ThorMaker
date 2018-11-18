@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage
-# functionInfo <file> <function>
+# functionDesc <file> <function>
 #
 # Gets the function info from a file:
 # This is a comma separated list of values
@@ -31,6 +31,8 @@ BEGIN       {FOUND=0;description="";}
                     next;
                 }
             }
+/^inline$/   {next}
+/std::enable/{next}
 /template/  {next}
             {
                 if (FOUND == 1 )

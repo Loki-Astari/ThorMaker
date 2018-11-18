@@ -73,7 +73,7 @@ PACKAGE_DOC_FILE_FUNC_HEAD_EMPTY
 PACKAGE_DOC_FILE_FUNC_HEAD
         for func in "${functionList[@]}"; do
             children+=("${baseName}.${func}")
-            functionData=$(${DIR}/functionInfo ${file} ${func})
+            functionData=$(${DIR}/functionInfo ${file} ${func} | head -1)
             IFS=','
             functionInfo=( ${functionData} )
             IFS=' '

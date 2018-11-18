@@ -20,9 +20,11 @@
 
 
 program=$(cat - <<'AWK_PROGRAM'
-BEGIN       {FOUND=0;}
+BEGIN       {FOUND=0;tempInfo="";}
 /^\/\/ /    {if (FOUND == 1){next;}}
-/template/  {next}
+/^inline$/   {next}
+/std::enable/{next}
+/template/  {tempInfo=$0;next}
             {
                 if (FOUND == 1 )
                 {
@@ -46,6 +48,8 @@ BEGIN       {FOUND=0;}
                         {
                             printf(", %s ", param);
                         }
+                        printf("\n%s ", tempInfo);
+                        exit;
                     }
                 }
                 FOUND=0;
