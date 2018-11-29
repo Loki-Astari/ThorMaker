@@ -31,6 +31,16 @@ BEGIN       {FOUND=0;description="";}
                     next;
                 }
             }
+/^\/\//     {
+                if (FOUND == 1)
+                {
+                    if (description == "") {
+                        description=" |\n";
+                    }
+                    description = sprintf("%s        \n",description);
+                    next;
+                }
+            }
 /^inline$/   {next}
 /std::enable/{next}
 /template/  {next}

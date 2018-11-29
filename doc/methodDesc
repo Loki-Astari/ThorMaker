@@ -50,6 +50,16 @@ BEGIN       {FOUND=0;VIRTUAL=0;State=0;Count=0;description="";}
                     next;
                 }
             }
+/\/\//      {
+                if (FOUND == 3)
+                {
+                    if (description == "") {
+                        description=" |\n";
+                    }
+                    description = sprintf("%s        \n",description);
+                    next;
+                }
+            }
 /template/  {next;}
 /virtual/   {if (FOUND == 3) {VIRTUAL=1;}}
             {
