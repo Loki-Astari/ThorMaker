@@ -11,6 +11,7 @@ marker=$2
 program=$(cat - <<'AWK_PROGRAM'
 BEGIN       {FOUND=0;}
 /^\/\/ /    {if (FOUND == 1){next;}}
+/^\/\//     {if (FOUND == 1){next;}}
 /^inline$/   {next}
 /std::enable/{next}
 /template/  {next;}

@@ -23,6 +23,7 @@
 program=$(cat - <<'AWK_PROGRAM'
 BEGIN       {FOUND=0;VIRTUAL=0;State=0;Count=0;description="";}
 /^\/\/ /    {if (FOUND == 1){next;}}
+/^\/\//     {if (FOUND == 1){next;}}
 /\/\/ @param /{
                 if (FOUND == 3)
                 {

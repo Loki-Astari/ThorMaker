@@ -11,6 +11,7 @@ program=$(cat - <<'AWK_PROGRAM'
 BEGIN       {FOUND=0;tempInfo="";}
 /template/  {tempInfo=$0;next}
 /^\/\/ /    {if (FOUND == 1){next;}}
+/^\/\//     {if (FOUND == 1){next;}}
 /struct/    {
                 parent="";
                 if ($3 == "public")

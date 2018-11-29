@@ -22,6 +22,7 @@
 program=$(cat - <<'AWK_PROGRAM'
 BEGIN       {FOUND=0;tempInfo="";}
 /^\/\/ /    {if (FOUND == 1){next;}}
+/^\/\//     {if (FOUND == 1){next;}}
 /^inline$/   {next}
 /std::enable/{next}
 /template/  {tempInfo=$0;next}
