@@ -3,35 +3,42 @@
 # Usage
 # functionDesc <file> <function>
 #
-# Gets the function info from a file:
-# This is a comma separated list of values
-#
-#   Meaning                 Example
-#   Return Type             char const*
-#   Function Info           noexcept
-#   Function Arguments      std::string str
-#
-# Example:
-#   std::string doMyWork(int value, char const* info, std::string const& trip) const noexcept
-#
-# This function will return:
-#   std::string, const noexcept, int value, char const* info, std::string const& trip
+# Gets the class description
+#   Every comment between @method and the method description.
+#       @param and @return values are included.
 #
 
 
 program=$(cat - <<'AWK_PROGRAM'
 BEGIN       {FOUND=0;description="";}
-/^\/\/ /    {
+/\/\/ @param /{
+                if (FOUND == 1)
+                {
+                    st = match($0, "// ");
+                    description = sprintf("%s-- %s\n", description, substr($0, st + 10));
+                    next
+                }
+            }
+/\/\/ @return /{
+                if (FOUND == 1)
+                {
+                    st = match($0, "// ");
+                    description = sprintf("%s-- %s\n", description, substr($0, st + 4));
+                    next
+                }
+            }
+/\/\/ /     {
                 if (FOUND == 1)
                 {
                     if (description == "") {
                         description=" |\n";
                     }
-                    description = sprintf("%s        %s\n",description,substr($0,4));
+                    st = match($0, "// ");
+                    description = sprintf("%s        %s\n",description,substr($0, st + 3));
                     next;
                 }
             }
-/^\/\//     {
+/\/\//      {
                 if (FOUND == 1)
                 {
                     if (description == "") {

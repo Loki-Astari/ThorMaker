@@ -10,12 +10,15 @@
 #   Return Type             char const*
 #   Function Info           noexcept
 #   Function Arguments      std::string str
+#   TemplateInfo            template<typename T>
 #
 # Example:
+#   template<typename T, typename X>
 #   std::string doMyWork(int value, char const* info, std::string const& trip) const noexcept
 #
 # This function will return:
 #   std::string, const noexcept, int value, char const* info, std::string const& trip
+#   template<typename T, typename X>
 #
 
 

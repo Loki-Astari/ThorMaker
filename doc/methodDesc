@@ -1,21 +1,11 @@
 #!/bin/bash
 
 # Usage
-# methodInfo <file> <type> <class> <index>
+# methodDesc <file> <type> <class> <method>
 #
-# Gets the class.method  info from a file:
-# This is a comma separated list of values
-#
-#   Meaning                 Example
-#   Return Type             char const*
-#   Function Info           noexcept
-#   Function Arguments      std::string str
-#
-# Example:
-#   std::string Class::doMyWork(int value, char const* info, std::string const& trip) const noexcept
-#
-# This method will return:
-#   std::string, const noexcept, int value, char const* info, std::string const& trip
+# Gets the class description
+#   Every comment between @method and the method description.
+#       @param and @return values are included.
 #
 
 

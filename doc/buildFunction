@@ -26,8 +26,38 @@ file=$2
 funct=$3
 children=()
 
-description=$( ${DIR}/functionDesc ${file} ${funct} )
+descriptionAll=$( ${DIR}/functionDesc ${file} ${funct} )
+description=$( echo "${descriptionAll}" | grep -v '^-- ' )
+funcData=$( ${DIR}/functionInfo ${file} ${funct} | head -1 )
 tempInfo=$( ${DIR}/functionInfo ${file} ${funct} | tail -1 )
+IFS=','
+funcInfo=( ${funcData} )
+IFS=' '
+
+len=${#funcInfo[@]}
+paramList=''
+if [[ ${len} > 1 ]]; then
+    loop=1
+    while [[ ${loop} < ${len} ]]; do
+        paramList="${paramList}, ${funcInfo[loop]}"
+        loop=$(( ${loop} + 1 ))
+    done
+    paramList=${paramList:1}
+fi
+IFS=','
+paramArray=( ${paramList} )
+IFS=' '
+
+returnDesc=$( echo ${descriptionAll} | grep '^-- ' | grep return | cut -f3- -d" " | xargs )
+if [[ "${returnDesc}" != "" ]]; then
+    returnDesc="'${returnDesc}'"
+fi
+
+returnType=${funcInfo[1]}
+returnType=$( echo ${returnType/@/,} | xargs )
+if [[ "${returnType}" != "" ]]; then
+    returnType="'${returnType}'"
+fi
 
 cat - << CLASS_DOC_HEAD
 ---
@@ -39,7 +69,47 @@ typeInfo:
     function:  ${funct}
     description: ${description}
     template:  ${tempInfo}
+    return:
+        type: ${returnType}
+        description: ${returnDesc}
 CLASS_DOC_HEAD
+
+if [[ ${#paramArray[@]} == 0 ]]; then
+    cat - <<FUNCTION_DOC_HEAD_PARAM_EMPTY
+    parameters: []
+FUNCTION_DOC_HEAD_PARAM_EMPTY
+else
+    cat - <<FUNCTION_DOC_HEAD_PARAM
+    parameters:
+FUNCTION_DOC_HEAD_PARAM
+fi
+
+for loop in "${paramArray[@]}"; do
+
+    defaultValue=${loop#*=}
+    if [[ ${defaultValue} == ${loop} ]]; then
+        defaultValue=''
+    fi
+    args=${loop%=*}
+    varName=$( echo ${args} | awk '{print $NF}' )
+    typeData=${args%${varName}*}
+    typeInfo=$(echo "${typeData}" | xargs)
+    if [[ "${typeInfo}" != "" ]]; then
+        typeInfo="'${typeInfo}'"
+    fi
+
+    paramDesc=$( echo "${descriptionAll}" | grep '^-- ' | grep ${varName} | cut -f3- -d" " | xargs )
+    if [[ "${paramDesc}" != "" ]]; then
+        paramDesc="'${paramDesc}'"
+    fi
+
+cat - <<FUNCTION_DOC_PARAM
+        - name: ${varName}
+          type: ${typeInfo}
+          default: ${defaultValue}
+          description: ${paramDesc}
+FUNCTION_DOC_PARAM
+done
 
 if (( ${#children[@]} == 0 )); then
     cat - <<CLASS_DOC_CHILD_EMPTY
