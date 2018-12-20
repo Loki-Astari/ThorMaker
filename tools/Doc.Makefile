@@ -151,16 +151,44 @@ DOC_PACKAGE_SECT			= $(shell $(DOC_PACKAGE_SECTION_TOOL))
 DOC_PACKAGE_SECT_FILE		= $(foreach loop, $(DOC_PACKAGE_SECT), $(call DOC_DEST,package,$(DOC_BASE)-$(loop)))
 DOC_PACKAGE					= $(if $(DOC_CLASS_FILES) $(DOC_METHOD_FILES), $(call DOC_DEST,package,$(DOC_BASE)) $(DOC_PACKAGE_SECT_FILE))
 
-DOC_CLASS_EXPAND			= $(foreach loop, $(shell $(BUILD_ROOT)/doc/$(2)List $(1) '.*'), $(call DOC_DEST,$2,$(DOC_BASE).$(basename $(1)).$(loop)))
-DOC_CLASSES					= $(foreach loop, $(DOC_CLASS_FILES), $(call DOC_CLASS_EXPAND, $(loop),class) $(call DOC_CLASS_EXPAND,$(loop),function))
-DOC_CLASS_FILES				= $(shell $(BUILD_ROOT)/doc/findMarksFiles class function)
+DOC_CLASS_EXPAND			= $(foreach loop, $(shell $(BUILD_ROOT)/doc/classList $(1) '.*'), $(call DOC_DEST,class,$(DOC_BASE).$(basename $(1)).$(loop)))
+DOC_CLASSES					= $(foreach loop, $(DOC_CLASS_FILES), $(call DOC_CLASS_EXPAND, $(loop)))
+DOC_CLASS_FILES				= $(shell $(BUILD_ROOT)/doc/findMarksFiles function)
 
+DOC_FUNC_EXPAND				= $(foreach loop, $(shell $(BUILD_ROOT)/doc/functionList $(1) '.*'), $(call DOC_DEST,function,$(DOC_BASE).$(basename $(1)).glob.none.$(loop)))
+
+# Given a list of files generate a list of functions
+#	$(call $(DOC_DIR)/function/$(DOC_BASE).${file-rm-ext}.glob.none.${funcName}.md
+DOC_FUNCS					= $(foreach loop, $(DOC_FUNC_FILES), $(call DOC_FUNC_EXPAND,$(loop)))
+
+# List of all files with Functions
+DOC_FUNC_FILES				= $(shell $(BUILD_ROOT)/doc/findMarksFiles function)
+
+# Build a list of file names
+#	$(DOC_DIR)/method/$(DOC_BASE).${file-rm-ext}.${class}.${methodType}.${index}.${methodName}.md
 DOC_METHOD_GETCLASSMETHOD_T	= $(foreach loop, $(shell $(BUILD_ROOT)/doc/methodList $(1) $(3) $(2)), $(call DOC_DEST,method,$(DOC_BASE).$(basename $(1)).$(2).$(3).$(loop)))
+
+# Call DOC_METHOD_GETCLASSMETHOD_T ${file} ${class} ${method}
+#	To get a list of files for methods/virtuals/protected
+#	$(DOC_DIR)/method/$(DOC_BASE).${file-rm-ext}.${class}.${methodType}.${index}.${methodName}.md
 DOC_METHOD_GETCLASSMETHOD	= $(call DOC_METHOD_GETCLASSMETHOD_T,$(1),$(2),methods) $(call DOC_METHOD_GETCLASSMETHOD_T,$(1),$(2),virtual) $(call  DOC_METHOD_GETCLASSMETHOD_T,$(1),$(2),protected)
+
+# Loop over files with @class: call DOC_METHOD_GETCLASSMETHOD ${file} ${class}
+# Get a list of files that need to be built
+#	$(DOC_DIR)/method/$(DOC_BASE).${file-rm-ext}.${class}.${methodType}.${index}.${methodName}.md
 DOC_METHOD_GETCLASS			= $(foreach loop, $(shell $(DOC_CLASS_LIST_TOOL) $(1)), $(call DOC_METHOD_GETCLASSMETHOD, $(1),$(loop)))
+
+# List all classes in the files
 DOC_METHODS					= $(foreach loop, $(DOC_METHOD_FILES), $(call DOC_METHOD_GETCLASS,$(loop)))
+
+# List of files that contain @method
 DOC_METHOD_FILES			= $(shell $(BUILD_ROOT)/doc/findMarksFiles method)
 
+#Give a filename: $(DOC_DIR)/method/$(DOC_BASE).${file-rm-ext}.${class}.${methodType}.${index}.${methodName}
+# F1:		${fileName}
+# F2:		${class}
+# F3:		${methodType}
+# F4:		${index}
 DOC_SUFFIX					= $(subst .,,$(suffix $(1)))
 DOC_F1_OF_4					= $(basename $(basename $(basename $(basename $(1)))))
 DOC_F2_OF_4					= $(call DOC_SUFFIX,$(basename $(basename $(basename $(1)))))
@@ -193,7 +221,7 @@ $(DOC_DIR)/class/$(DOC_BASE).%.md: Note_BuildClass_% $(DOC_DIR)/class.Dir $(DOC_
 
 $(DOC_DIR)/function/$(DOC_BASE).%.md: Note_BuildFunc_% $(DOC_DIR)/function.Dir $(DOC_CLASS_FILES) $(wildcard docs/%)
 	@echo "Building Function $* Documentation"
-	@$(DOC_FUNCTION_TOOL) $(DOC_BASE) $(basename $*).h $(subst .,,$(suffix $*)) > $@
+	@$(DOC_FUNCTION_TOOL) $(DOC_BASE) $(basename $*).h $(call DOC_F4_OF_4,$*) > $@
 
 $(DOC_DIR)/method/$(DOC_BASE).%.md: Note_BuildMethod_% $(DOC_DIR)/method.Dir $(DOC_METHOD_FILES) $(wildcard docs/%)
 	@echo "Building Method $* Document"

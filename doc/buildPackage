@@ -71,9 +71,11 @@ PACKAGE_DOC_FILE_FUNC_HEAD_EMPTY
         cat - <<PACKAGE_DOC_FILE_FUNC_HEAD
           functions:
 PACKAGE_DOC_FILE_FUNC_HEAD
-        for func in "${functionList[@]}"; do
+        for funcID in "${functionList[@]}"; do
+            func=${funcID#*.}
+            index=${funcID%.*}
             children+=("${baseName}.${func}")
-            functionData=$(${DIR}/functionInfo ${file} ${func} | head -1)
+            functionData=$(${DIR}/functionInfo ${file} ${func} ${index} | head -1)
             IFS=','
             functionInfo=( ${functionData} )
             IFS=' '

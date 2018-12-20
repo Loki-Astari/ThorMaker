@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage:
-# buildFunction <base> <file> <funct>
+# buildFunction <base> <file> <funct> <index>
 
 # Builds the YAML file for documenting a function.
 #   Class is annotated with "// @function" just above its declaration.
@@ -24,12 +24,13 @@ namespace=$(grep 'using namespace' * 2> /dev/null| awk '{print $3}' | head -1 | 
 base=$1
 file=$2
 funct=$3
+index=$4
 children=()
 
-descriptionAll=$( ${DIR}/functionDesc ${file} ${funct} )
+descriptionAll=$( ${DIR}/functionDesc ${file} ${index} )
 description=$( echo "${descriptionAll}" | grep -v '^-- ' )
-funcData=$( ${DIR}/functionInfo ${file} ${funct} | head -1 )
-tempInfo=$( ${DIR}/functionInfo ${file} ${funct} | tail -1 )
+funcData=$( ${DIR}/functionInfo ${file} ${funct} ${index} | head -1 )
+tempInfo=$( ${DIR}/functionInfo ${file} ${funct} ${index} | tail -1 )
 IFS=','
 funcInfo=( ${funcData} )
 IFS=' '

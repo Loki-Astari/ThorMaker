@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage
-# functionDesc <file> <function>
+# functionDesc <file> <function> <index>
 #
 # Gets the class description
 #   Every comment between @method and the method description.
@@ -10,7 +10,7 @@
 
 
 program=$(cat - <<'AWK_PROGRAM'
-BEGIN       {FOUND=0;description="";}
+BEGIN       {FOUND=0;description="";Count=0;}
 /\/\/ @param /{
                 if (FOUND == 1)
                 {
@@ -54,11 +54,12 @@ BEGIN       {FOUND=0;description="";}
             {
                 if (FOUND == 1 )
                 {
+                    Count++;
                     sub("<", "_", $0);
                     sub(">", "", $0);
                     matchTypeNameString=sprintf("[^ ]* %s\\(", Name);
                     st=match($0, matchTypeNameString);
-                    if (st != 0) {
+                    if (st != 0 && Count == Index) {
                         printf("%s", description);
                         exit;
                     }
@@ -70,4 +71,4 @@ BEGIN       {FOUND=0;description="";}
 AWK_PROGRAM
 )
 
-awk -v Name=$2 "${program}" $1
+awk -v Name=$2 -v Index=$3 "${program}" $1
