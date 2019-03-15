@@ -292,7 +292,7 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage debug release profile header_only install_dir test.% debug.%
+.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage debug release profile header_only install_dir 
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 	@$(ECHO) $(call colour_text, BLUE, "Done")
@@ -362,11 +362,15 @@ man:		$(MAN_PAGE)
 $(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
 	cp man/$* $(PREFIX_MAN)/$*
 test:	pre_test build_unit_test run_unit_test static_test
-test.%:	pre_test build_unit_test
+
+testrun.%:	pre_test build_unit_test
 	DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib test/coverage/unittest.app --gtest_filter=$*
-debug.%: pre_test build_unit_test
+
+debugrun.%: pre_test build_unit_test
 	DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib lldb -- test/coverage/unittest.app --gtest_filter=$*
+
 pre_test:	$(PRETEST)
+
 static_test:
 	@if [[ "$(TESTNAME)" == "*" ]]; then	\
 		make vera;						\
@@ -385,6 +389,7 @@ build_unit_test:
 		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
 		$(RM)    test/unittest.cpp;							\
 	fi
+
 run_unit_test:
 	@if ( test -d test ); then								\
 		$(ECHO) $(call section_title,Running Unit Tests);	\
