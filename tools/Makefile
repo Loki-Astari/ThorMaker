@@ -293,6 +293,11 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
 .PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage debug release profile header_only install_dir 
+.PHONY:	installAction install_app install_shared_lib install_static_lib install_head try_install_app try_install_shared_lib try_install_static_lib try_install_head
+.PHONY:	doInstall install_Dodebug install_Dorelease install_Doprofile install_Dohead
+.PHONY:	cleanAction clean_app clean_shared_lib clean_static_lib clean_head try_clean_app try_clean_shared_lib try_clean_static_lib try_clean_head
+.PHONY:	doClean clean_Dodebug clean_Dorelease clean_Doprofile clean_Dohead
+
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 	@$(ECHO) $(call colour_text, BLUE, "Done")
@@ -300,6 +305,7 @@ validate:		test
 install:		test
 	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  installAction
 installAction:	Print_On install_Dohead install_Dodebug install_Dorelease man
+cleanAction:	clean_Dohead clean_Dodebug clean_Dorelease clean_man
 install_debug:	test install_Dohead install_Dodebug
 install_release:test install_Dohead install_Dorelease
 install_profile:     install_Dohead install_Doprofile
@@ -334,15 +340,36 @@ install_Dohead:
 
 doInstall:	try_install_app try_install_shared_lib try_install_static_lib
 
+clean_Dodebug:
+	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doClean
+clean_Dorelease:
+	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doClean
+clean_Doprofile:
+	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doClean
+clean_Dohead:
+	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) try_clean_head
+
+doClean:	try_clean_app try_clean_shared_lib try_clean_static_lib
+
 try_install_app:		$(if $(INSTALL_APP), install_app)
 try_install_shared_lib:	$(if $(INSTALL_SHARED_LIB), install_shared_lib)
 try_install_static_lib:	$(if $(INSTALL_STATIC_LIB), install_static_lib)
 try_install_head:		$(if $(INSTALL_HEADER), install_head)
+try_clean_app:			$(if $(INSTALL_APP), clean_app)
+try_clean_shared_lib:	$(if $(INSTALL_SHARED_LIB), clean_shared_lib)
+try_clean_static_lib:	$(if $(INSTALL_STATIC_LIB), clean_static_lib)
+try_clean_head:			$(if $(INSTALL_HEADER), clean_head clean_head_dir)
 
 install_app:		Note_Start_Installing_Applications $(INSTALL_APP)			Note_End_Installing_Applications
 install_shared_lib:	Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)	Note_End_Installing_Libraries
 install_static_lib:	Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)	Note_End_Installing_Libraries
-install_head:		Note_Start_Installing_Headers	   $(INSTALL_HEADER)		Note_End_Installing_Headers
+install_head:		Note_Start_Installing_Headers      $(INSTALL_HEADER)		Note_End_Installing_Headers
+clean_app:			Note_Start_Clean_Applications      $(patsubst install_%, clean_%, $(INSTALL_APP))			Note_End_Clean_Applications
+clean_shared_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_SHARED_LIB))	Note_End_Clean_Libraries
+clean_static_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_STATIC_LIB))	Note_End_Clean_Libraries
+clean_head:			Note_Start_Clean_Headers	       $(patsubst install_%, clean_%, $(INSTALL_HEADER)) 		Note_End_Clean_Headers
+clean_head_dir:
+	@if [[ -e $(PREFIX_INC)/$(LIBBASENAME)/ ]]; then rmdir -p $(PREFIX_INC)/$(LIBBASENAME)/; fi
 
 Note_%:
 	@$(ECHO) $(call section_title, $(subst _, ,$*))
@@ -352,13 +379,16 @@ Note_%:
 objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
 	@$(ECHO) $(call colour_text, BLUE, "Done")
 gcovarch:	$(GCOV_LIB)
-clean: test_clean
+clean:
 	$(RM) $(OBJ) $(GCOV) $(TMP_SRC) $(TMP_HDR) makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
-veryclean: clean test_veryclean
 	$(RM) -rf debug release coverage profile $(TMP_SRC) $(TMP_HDR)
+veryclean: clean cleanAction
+
 man:		$(MAN_PAGE)
+clean_man:
+
 $(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
 	cp man/$* $(PREFIX_MAN)/$*
 test:	pre_test build_unit_test run_unit_test static_test
@@ -428,6 +458,26 @@ install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL))).D
 	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/
 	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/
 	@$(ECHO) $(call subsection_title, Install Header $*)
+
+clean_app_%:
+	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
+	@$(RM) $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
+
+clean_shared_lib_%:
+	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
+	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
+
+clean_static_lib_%:
+	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
+	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
+
+clean_head_%:
+	@$(ECHO) $(call subsection_title, Clean Header $*)
+	@$(RM)  $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst -,/,$*))/$(subst -,/,$*)
+
+clean_head_head_%:
+	@$(ECHO) $(call subsection_title, Clean Header $*)
+	@$(RM) $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/$*
 
 test_%:
 	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile BASE=.. THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app $*; fi
