@@ -177,8 +177,9 @@ CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
-GCOV_REPORT					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
-GCOV_ACTUAL					= $(filter $(GCOV_REPORT), $(wildcard coverage/*.gcov))
+GCOV_FILES					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
+GCOV_REPORT					= $(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_FILES))
+GCOV_ACTUAL					= $(filter $(GCOV_FILES), $(wildcard coverage/*.gcov))
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
 						      $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
@@ -516,7 +517,7 @@ $(BASE)/coverage/MockHeaders.cpp:: $(BASE)/coverage/MockHeaders.h | $(BASE)/cove
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> $(BASE)/coverage/MockHeaders.cpp
 
-coverage:	$(patsubst coverage/%.gcov, report_coverage_%, $(GCOV_REPORT))
+coverage:	$(GCOV_REPORT)
 	@$(RM) *.gcov
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
 		 linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
@@ -578,7 +579,6 @@ coverage/%.tpp.gcov: coverage/%.cpp.gcov
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) Do Nothing;								\
 	fi
-report_coverage: report_coverage_$(COVERAGE)
 report_coverage_%.cpp:	coverage/%.cpp.gcov
 	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.cpp.gcov ; fi;
