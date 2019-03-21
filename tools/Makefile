@@ -178,7 +178,7 @@ CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
 GCOV_FILES					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
-GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES))
+GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES)) $(filter-out %Config.h, $(patsubst %, %_report_coverage, $(wildcard *.h)))
 GCOV_ACTUAL					= $(filter $(GCOV_FILES), $(wildcard coverage/*.gcov))
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
@@ -293,7 +293,7 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage debug release profile header_only install_dir 
+.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage coveragetest debug release profile header_only install_dir 
 .PHONY:	installAction install_app install_shared_lib install_static_lib install_head try_install_app try_install_shared_lib try_install_static_lib try_install_head
 .PHONY:	doInstall install_Dodebug install_Dorelease install_Doprofile install_Dohead
 .PHONY:	cleanAction clean_app clean_shared_lib clean_static_lib clean_head try_clean_app try_clean_shared_lib try_clean_static_lib try_clean_head
@@ -428,6 +428,7 @@ run_unit_test:
 		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME) ||	\
 							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1);	\
 		if [[ "$(TESTNAME)" == "*" ]]; then					\
+			$(MAKE) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE);	\
 			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE);	\
 		fi													\
 	fi
@@ -517,8 +518,10 @@ $(BASE)/coverage/MockHeaders.cpp:: $(BASE)/coverage/MockHeaders.h | $(BASE)/cove
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> $(BASE)/coverage/MockHeaders.cpp
 
+coveragetest: $(GCOV_FILES)
 coverage:	$(GCOV_REPORT)
 	@$(RM) *.gcov
+	@$(RM) test/*.gcov
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
 		 linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
 		 linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
@@ -579,6 +582,26 @@ coverage/%.tpp.gcov: coverage/%.cpp.gcov
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) Do Nothing;								\
 	fi
+coverage/%.h.gcov:
+	@if ( test "$(VERBOSE)" = "On" ); then					\
+		$(ECHO) "Generating Coverage for $*.h";				\
+	fi
+	@if [ -e $*.h ]; then									\
+		tmpSed=$(shell $(MKTEMP));							\
+		input=$$(ls test/*$*.h.gcov 2> /dev/null);			\
+		if [[ "$${input}" != "" ]]; then					\
+			sed 's/#####\(.*\)}$$/    -\1}/' $${input} > $${tmpSed};\
+			sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > coverage/$*.h.gcov;\
+		fi;													\
+		if ( test "$(VERBOSE)" = "On" ); then				\
+			$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.h") | awk '{printf "%-80s", $$0}' ; \
+			$(ECHO) $(GREEN_OK);							\
+		fi;													\
+	fi
+	@if ( test "$(VERBOSE)" = "On" ); then					\
+		$(ECHO) "Done";										\
+	fi
+
 %.cpp_report_coverage:	coverage/%.cpp.gcov
 	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.cpp.gcov ; fi;
@@ -587,7 +610,11 @@ coverage/%.tpp.gcov: coverage/%.cpp.gcov
 	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
-	
+%.h_report_coverage:	coverage/%.h.gcov
+	@$(ECHO) $*.h $(call getPercentColour, $(shell cat test/coverage/*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.h/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}' | sort -n | tail -1)) | awk '{printf "%-80s%s%%\n", $$1, $$2}'
+	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.h.gcov ; fi
+	@if [ "$(COVERAGE)" = "$*.h" ]; then cat coverage/$*.h.gcov ; fi
+
 debug:
 	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	INSTALL_ACTIVE=$(INSTALL_ACTIVE) all
 release:
