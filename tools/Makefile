@@ -403,8 +403,8 @@ debugrun.%: pre_test build_unit_test
 pre_test:	$(PRETEST)
 
 static_test:
-	@if [[ "$(TESTNAME)" == "*" ]]; then	\
-		make vera;						\
+	@if [[ "$(TESTNAME)" == "*" ]]; then					\
+		make vera;											\
 	fi
 vera:	vera.Dir vera_head vera_body
 vera_head:
@@ -538,7 +538,7 @@ coverage:	$(GCOV_REPORT)
 			$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
 			exit 1;														\
 		 else															\
-			$(ECHO) $(GREEN_OK) Code Coverage Passed;						\
+			$(ECHO) $(GREEN_OK) Code Coverage Passed;					\
 		 fi																\
 	 fi
 
@@ -560,9 +560,9 @@ coverage/%.cpp.gcov: always
 		fi;													\
 		if [ $$? != 0 ];									\
 		then												\
-			$(ECHO) $(RED_ERROR);								\
+			$(ECHO) $(RED_ERROR);							\
 			$(ECHO) $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
-			$(ECHO) "========================================";\
+			$(ECHO) "====================================";	\
 			cat $${tmpfile};								\
 			exit 1;											\
 		else 												\
@@ -579,8 +579,8 @@ coverage/%.cpp.gcov: always
 	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
 coverage/%.tpp.gcov: coverage/%.cpp.gcov
-	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) Do Nothing;								\
+	@if ( test "$(VERBOSE)" = "On" ); then					\
+		$(ECHO) Do Nothing;									\
 	fi
 coverage/%.h.gcov:
 	@if ( test "$(VERBOSE)" = "On" ); then					\
@@ -658,7 +658,7 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 
 
 vera/%.vera:
-	@if [ "$(VERA)" != "true" ]; then					\
+	@if [ "$(VERA)" != "true" ]; then						\
 		if ( test "$(VERBOSE)" = "On" ); then				\
 			 $(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*"; \
 		else $(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi; \
