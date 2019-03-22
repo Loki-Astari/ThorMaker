@@ -585,6 +585,15 @@ coverage/%.cpp.gcov: always
 	fi
 	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
+	@tmpHead=$(shell $(MKTEMP));							\
+	for h in $$(ls *.h.gcov); do							\
+		touch coverage/$$h;									\
+		cat $$h coverage/$$h | sort -n -k 2 | awk 'BEGIN {id=0;count=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;count=0;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
+		mv $${tmpHead} coverage/$$h;						\
+	done
+
+
+
 coverage/%.tpp.gcov: coverage/%.cpp.gcov
 	@if ( test "$(VERBOSE)" = "On" ); then					\
 		$(ECHO) Do Nothing;									\
@@ -595,11 +604,20 @@ coverage/%.h.gcov:
 	fi
 	@if [ -e $*.h ]; then									\
 		tmpSed=$(shell $(MKTEMP));							\
-		input=$$(ls test/*$*.h.gcov 2> /dev/null);			\
-		if [[ "$${input}" != "" ]]; then					\
-			sed 's/#####\(.*\)}$$/    -\1}/' $${input} > $${tmpSed};\
-			sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > coverage/$*.h.gcov;\
+		tmpHead=$(shell $(MKTEMP));							\
+		input1=$$(ls coverage/*$*.h.gcov 2> /dev/null);		\
+		input2=$$(ls test/coverage/*$*.h.gcov 2> /dev/null);\
+		if [[ "$${input1}" == "" ]]; then					\
+			input1="coverage/$*.h.gcov";					\
+			touch $${input1};								\
 		fi;													\
+		if [[ "$${input2}" != "" ]]; then					\
+			cat $${input1} $${input2} | sort -n -k 2 | awk 'BEGIN {id=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
+			mv $${tmpHead} $${input1};					\
+		fi;	\
+		sed 's/#####\(.*\)}$$/    -\1}/' $${input1} > $${tmpSed};\
+		sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > coverage/$*.h.gcov;\
+		grep -v '^ *-:' coverage/$*.h.gcov | awk -F: 'BEGIN {id=0;used=0;count=0;exe=0} {if ($$2 != id){id=$$2;count++;if (used == 1){used=0;exe++;}}} /#####/ {next} {used=1} END {if (used == 1){exe++;}if (count != 0){printf("Lines executed: %.2f%% of %d\n", exe * 100 / count, count);}else{}printf("Lines executed: 00.00%%\n");}' > coverage/$*.h.out; \
 		if ( test "$(VERBOSE)" = "On" ); then				\
 			$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.h") | awk '{printf "%-80s", $$0}' ; \
 			$(ECHO) $(GREEN_OK);							\
@@ -618,7 +636,7 @@ coverage/%.h.gcov:
 	@if [ "$(COVERAGE)" = "On" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 %.h_report_coverage:	coverage/%.h.gcov
-	@$(ECHO) $*.h $(call getPercentColour, $(shell cat test/coverage/*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.h/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}' | sort -n | tail -1)) | awk '{printf "%-80s%s%%\n", $$1, $$2}'
+	@$(ECHO) $*.h $(call getPercentColour, $(shell awk '{print substr($$3,0,length($$3)-1)}' coverage/$*.h.out)) | awk '{printf "%-80s%s%%\n", $$1, $$2}'
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.h.gcov ; fi
 	@if [ "$(COVERAGE)" = "$*.h" ]; then cat coverage/$*.h.gcov ; fi
 
