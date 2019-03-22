@@ -144,6 +144,7 @@ TARGET_GENERIC_EXPAND		= $(foreach exp, $(THOR_TARGETLIBS), $(foreach lib, $(TAR
 TARGET_ALL					= $(filter-out %.lib, $(TARGET)) $(TARGET_GENERIC_EXPAND)
 
 APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET_ALL)))
+APP_HEAD					= $(filter %.h,$(patsubst %.app,%.h,$(TARGET_ALL)))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
 CPP_HDR						= $(filter-out %.lex.h   %.tab.h   %.gperf.h             ,$(wildcard *.h))
 LEX_SRC						= $(wildcard *.l)
@@ -178,7 +179,7 @@ CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
 GCOV_FILES					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
-GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES)) $(patsubst %, %_report_coverage, $(filter-out %Config.h, $(wildcard *.h)))
+GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES)) $(patsubst %, %_report_coverage, $(filter-out $(APP_HEAD), $(filter-out %Config.h, $(wildcard *.h))))
 GCOV_ACTUAL					= $(filter $(GCOV_FILES), $(wildcard coverage/*.gcov))
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
