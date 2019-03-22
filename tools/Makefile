@@ -385,7 +385,8 @@ clean:
 	$(RM) $(OBJ) $(GCOV) $(TMP_SRC) $(TMP_HDR) makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
-	$(RM) -rf debug release coverage profile $(TMP_SRC) $(TMP_HDR)
+	$(RM) -rf debug release coverage profile test/coverage $(TMP_SRC) $(TMP_HDR)
+	$(RM) -rf *.gcov test/*.gcov
 veryclean: clean cleanAction
 
 man:		$(MAN_PAGE)
@@ -521,8 +522,11 @@ $(BASE)/coverage/MockHeaders.cpp:: $(BASE)/coverage/MockHeaders.h | $(BASE)/cove
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> $(BASE)/coverage/MockHeaders.cpp
 
-coveragetest: $(GCOV_FILES)
-coverage:	$(GCOV_REPORT)
+cleanCoverage: always
+	rm -f coverage/*.gcov
+
+coveragetest: cleanCoverage $(GCOV_FILES)
+coverage: cleanCoverage $(GCOV_REPORT)
 	@$(RM) *.gcov
 	@$(RM) test/*.gcov
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
