@@ -178,7 +178,7 @@ CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
 GCOV_FILES					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
-GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES)) $(filter-out %Config.h, $(patsubst %, %_report_coverage, $(wildcard *.h)))
+GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES)) $(patsubst %, %_report_coverage, $(filter-out %Config.h, $(wildcard *.h)))
 GCOV_ACTUAL					= $(filter $(GCOV_FILES), $(wildcard coverage/*.gcov))
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
@@ -413,7 +413,9 @@ vera_body:	$(VERA_OBJ)
 build_unit_test:
 	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcda
 	@$(ECHO) $(call section_title,Building Objects for Testing and Coverage)
+	@echo "int ThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
+	@rm ThorsAnvilUnitTestMarker.cpp
 	@$(ECHO) $(call section_title,Building Unit Tests)
 	@if ( test -d test ); then								\
 		touch test/unittest.cpp;							\
@@ -727,6 +729,8 @@ $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 		$(RM) makefile_tmp;								\
 	fi
 
+coverage/ThorsAnvilUnitTestMarker.o: ThorsAnvilUnitTestMarker.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMock.h
+	@$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>&1
 $(TARGET_MODE)/%.o: %.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMock.h
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
