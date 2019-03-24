@@ -6,7 +6,7 @@ SHELL=/bin/bash
 # To use set the variable TARGET
 # Then include this file.
 # The TARGET variable may include multiple things to build
-# 
+#
 
 #
 # A name with a *.app  extension is an executable			(the app will NOT be part of the final name)
@@ -43,7 +43,7 @@ SHELL=/bin/bash
 #	CXX_STD_FLAG					Should be set to the appropriate value		Default: CXX_STD_FLAG	=-std=c++11
 #	VERBOSE=On						Turn on verbose mode
 #										This will print the full compile command rather than a summary
-# 
+#
 # Flags For Specific files:
 #	NO_HEADER
 #		Prevents header files from being installed when building a library
@@ -128,7 +128,7 @@ TESTNAME		?= *
 # Need to look at this
 COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
 COV_LONG_FLAG_Linux		= --long-file-names
-COV_LONG_FLAG_Darwin	= -p 
+COV_LONG_FLAG_Darwin	= -p
 
 MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
 MKTEMP_Linux					= mktemp -u
@@ -172,7 +172,7 @@ LDLIBS_EXTERN_LIB_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_RO
 LDLIBS_EXTERN_INC_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR), -I$($(lib)_ROOT_DIR)/include))
 LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD), -l${lib})
 LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
-LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);) 
+LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);)
 LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE)
 CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
@@ -183,7 +183,7 @@ GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES)) 
 GCOV_ACTUAL					= $(filter $(GCOV_FILES), $(wildcard coverage/*.gcov))
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
-						      $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
+							  $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
 							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))
 LIBBASENAME					= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
 
@@ -207,7 +207,7 @@ CXXSTDVER					?=  11
 TARGET_MODE					?=	debug
 COVERAGE_TARGET				?= COVERAGE_$(subst -,,$(notdir $(shell pwd)))
 PARALLEL					= $(PARALLEL_$(VERBOSE))
-PARALLEL_NONE				= 
+PARALLEL_NONE				=
 
 #
 # Warning flags turned off for test suite.
@@ -255,13 +255,13 @@ TEST_PATH_coverage			=	-I$(LOCAL_ROOT)
 TEST_PATH					=	$(TEST_PATH_$(TARGET_MODE))
 
 
-OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_DISP)$(OPTIMIZER_FLAGS_HIDE)
+OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_DISP) $(OPTIMIZER_FLAGS_HIDE)
 OPTIMIZER_FLAGS_DISP		=	$(OPTIMIZER_FLAGS_DISP_$(TARGET_MODE))
 OPTIMIZER_FLAGS_HIDE		=	$(OPTIMIZER_FLAGS_HIDE_$(TARGET_MODE))
 OPTIMIZER_LIBS				=	$(OPTIMIZER_LIBS_$(TARGET_MODE))
 OPTIMIZER_FLAGS_DISP_debug		=	-g
 OPTIMIZER_FLAGS_DISP_release	=	-O3
-OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET) -DTHOR_COVERAGE 
+OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET) -DTHOR_COVERAGE
 OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
@@ -294,7 +294,7 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage coveragetest debug release profile header_only install_dir 
+.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage coveragetest debug release profile header_only install_dir
 .PHONY:	installAction install_app install_shared_lib install_static_lib install_head try_install_app try_install_shared_lib try_install_static_lib try_install_head
 .PHONY:	doInstall install_Dodebug install_Dorelease install_Doprofile install_Dohead
 .PHONY:	cleanAction clean_app clean_shared_lib clean_static_lib clean_head try_clean_app try_clean_shared_lib try_clean_static_lib try_clean_head
@@ -303,7 +303,7 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 
 all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 	@$(ECHO) $(call colour_text, BLUE, "Done")
-validate:		test 
+validate:		test
 install:		test
 	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  installAction
 installAction:	Print_On install_Dohead install_Dodebug install_Dorelease man
@@ -528,24 +528,24 @@ cleanCoverage: always
 coveragetest: cleanCoverage $(GCOV_FILES)
 coverage: cleanCoverage $(GCOV_REPORT)
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
-		 linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
-		 linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
-		 linesTested=$$(($${linesTestable}-$${linesNotTested}));		\
-		 linesTested100=$$(($${linesTested}*100));						\
-		 if [ $${linesTestable} == 0 ]; then							\
+		linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
+		linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
+		linesTested=$$(($${linesTestable}-$${linesNotTested}));			\
+		linesTested100=$$(($${linesTested}*100));						\
+		if [ $${linesTestable} == 0 ]; then								\
 			coverage=100;												\
-		 else															\
-		    coverage=$$(($${linesTested100}/$${linesTestable}));		\
-		 fi;															\
-		 res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
-		 if [ $${res} -ne 0 ]; then										\
+		else															\
+			coverage=$$(($${linesTested100}/$${linesTestable}));		\
+		fi;																\
+		res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
+		if [ $${res} -ne 0 ]; then										\
 			$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total);	\
 			$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
 			exit 1;														\
-		 else															\
+		else															\
 			$(ECHO) $(GREEN_OK) Code Coverage Passed;					\
-		 fi																\
-	 fi
+		fi																\
+	fi
 	@$(RM) *.gcov test/*.gcov
 
 coverage/%.cpp.gcov: always
@@ -684,7 +684,7 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 vera/%.vera:
 	@if [ "$(VERA)" != "true" ]; then						\
 		if ( test "$(VERBOSE)" = "On" ); then				\
-			 $(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*"; \
+			$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*"; \
 		else $(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi; \
 		PATH=${PATH}:$(PREFIX_BIN) $(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
 		if [ $$? != 0 ];									\
@@ -719,7 +719,7 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 
 $(TARGET_MODE)/lib%.a:	coverage.Dir $(OBJ) $(MOCK_OBJECT)
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		 $(ECHO) '$(AR) $(ARFLAGS) $@ $(OBJ)' ;			\
+		$(ECHO) '$(AR) $(ARFLAGS) $@ $(OBJ)' ;			\
 	else $(ECHO) $(call colour_text, GRAY, "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
 	@$(AR) $(ARFLAGS) $@ $(OBJ) $(MOCK_OBJECT) > makefile_tmp 2>&1;	\
 	if [ $$? != 0 ];									\
@@ -736,7 +736,7 @@ $(TARGET_MODE)/lib%.a:	coverage.Dir $(OBJ) $(MOCK_OBJECT)
 
 $(TARGET_MODE)/lib%.$(SO):	$(OBJ)
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		 $(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
+		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
 	else $(ECHO) $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; fi
 	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
@@ -800,9 +800,9 @@ $(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
 
 %.tab.cpp: %.y
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		 $(ECHO) $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
+		$(ECHO) $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		 $(ECHO) '$(YACC) -o $@ -d $<' ;				\
+		$(ECHO) '$(YACC) -o $@ -d $<' ;					\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(YACC) -o $@ -d $< 2>$${tmpfile};				    \
@@ -824,7 +824,7 @@ $(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
 
 %.lex.cpp: %.l
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		 $(ECHO) $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
+		$(ECHO) $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(LEX) -t $< > $@' ;					\
 	fi
@@ -850,7 +850,7 @@ $(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
 
 %.gperf.cpp: %.gperf
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		 $(ECHO) $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
+		$(ECHO) $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@'	;	\
 	fi
@@ -914,7 +914,7 @@ Print_On:
 
 .PHONY: always
 always:
-	@$(ECHO) 
+	@$(ECHO)
 
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
