@@ -158,7 +158,10 @@ OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					= $(filter-out $(TEST_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
 VERA_OBJ					= $(patsubst %,vera/%.vera, $(VERA_SRC))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
-GCOV						= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(GCOV_OBJ)) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
+GCOV_BASIC_SRC				= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(filter-out $(MOCK_OBJECT) $(APP_SRC) ,$(GCOV_OBJ))) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
+GCOV_BASIC_HEAD				= $(patsubst %, coverage/%.gcov, $(filter-out $(APP_HEAD),$(wildcard *.h)))
+GCOV_SRC					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_SRC))
+GCOV_HEAD					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) %Config.h, $(GCOV_BASIC_HEAD))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
 MAN_SRC						= $(wildcard man/man*/*)
@@ -178,9 +181,7 @@ CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
-GCOV_FILES					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) $(foreach nocoverage,$(NOCOVERAGE),coverage/$(nocoverage).cpp.gcov), $(GCOV))
-GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_FILES)) $(patsubst %, %_report_coverage, $(filter-out $(APP_HEAD), $(filter-out %Config.h, $(wildcard *.h))))
-GCOV_ACTUAL					= $(filter $(GCOV_FILES), $(wildcard coverage/*.gcov))
+GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_SRC)) $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_HEAD))
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
 							  $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
@@ -382,7 +383,7 @@ objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
 	@$(ECHO) $(call colour_text, BLUE, "Done")
 gcovarch:	$(GCOV_LIB)
 clean:
-	$(RM) $(OBJ) $(GCOV) $(TMP_SRC) $(TMP_HDR) makefile_tmp
+	$(RM) $(OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
 	$(RM) -rf debug release coverage profile test/coverage $(TMP_SRC) $(TMP_HDR)
@@ -525,26 +526,24 @@ $(BASE)/coverage/MockHeaders.cpp:: $(BASE)/coverage/MockHeaders.h | $(BASE)/cove
 cleanCoverage: always
 	rm -f coverage/*.gcov
 
-coveragetest: cleanCoverage $(GCOV_FILES)
+coveragetest: cleanCoverage $(GCOV_SRC)
 coverage: cleanCoverage $(GCOV_REPORT)
-	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
-		linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
-		linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
-		linesTested=$$(($${linesTestable}-$${linesNotTested}));			\
-		linesTested100=$$(($${linesTested}*100));						\
-		if [ $${linesTestable} == 0 ]; then								\
-			coverage=100;												\
-		else															\
-			coverage=$$(($${linesTested100}/$${linesTestable}));		\
-		fi;																\
-		res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
-		if [ $${res} -ne 0 ]; then										\
-			$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total);	\
-			$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
-			exit 1;														\
-		else															\
-			$(ECHO) $(GREEN_OK) Code Coverage Passed;					\
-		fi																\
+	linesNotTested=`cat $(GCOV_SRC) $(GCOV_HEAD)| grep '####' | wc -l`;		\
+	linesTestable=`cat $(GCOV_SRC) $(GCOV_HEAD) | grep -v '\-:' | wc -l`;		\
+	linesTested=$$(($${linesTestable}-$${linesNotTested}));			\
+	if [ $${linesTestable} == 0 ]; then								\
+		coverage=100;												\
+	else															\
+		linesTested100=$$(($${linesTested}*100));					\
+		coverage=$$(($${linesTested100}/$${linesTestable}));		\
+	fi;																\
+	res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
+	if [ $${res} -ne 0 ]; then										\
+		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total);	\
+		$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
+		exit 1;														\
+	else															\
+		$(ECHO) $(GREEN_OK) $(call colour_text, PURPLE, Code Coverage) $${coverage}% $(call colour_text, PURPLE, exceed $(COVERAGE_REQUIRED)% of total);	\
 	fi
 	@$(RM) *.gcov test/*.gcov
 
@@ -887,7 +886,8 @@ Print_On:
 	@$(ECHO) "HEAD:	 $(HEAD)"
 	@$(ECHO) "SRC:		 $(SRC)"
 	@$(ECHO) "OBJ:		 $(OBJ)"
-	@$(ECHO) "GCOV:	 $(GCOV)"
+	@$(ECHO_ "GCOV_SRC	$(GCOV_SRC)"
+	@$(ECHO) "GCOV_HEAD:	$(GCOV_HEAD)"
 	@$(ECHO) "GCOV_OBJ: $(GCOV_OBJ)"
 	@$(ECHO) "GPERF_SRC:$(GPERF_SRC)"
 	@$(ECHO) "TEST_IGNORE: $(TEST_IGNORE)"
