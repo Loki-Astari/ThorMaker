@@ -40,10 +40,12 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA],
     )
 
     VERATOOL="";
+    subconfigvera=""
     AS_IF(
         [test "x$enable_vera" == "xno"],
         [
-            VERATOOL='echo "Disabled Static Analysis" ||';
+            VERATOOL="echo 'Disabled Static Analysis' ||";
+            subconfigvera="--disable-vera";
         ],
         [
             VERATOOL='vera++';
@@ -68,6 +70,22 @@ detected that "vera++" (the static analysis tool) is not currently installed.
     )
     AC_SUBST([VERATOOL], [${VERATOOL}])
     AX_THOR_LIB_SELECT
+])
+
+AC_DEFUN([THOR_USE_HOST_BUILD],
+[
+    AC_ARG_WITH(
+        [hostbuild],
+        AS_HELP_STRING([--with-hostbuild=<dir>], [Use the build tools located at <dir>])
+    )
+
+    AS_IF(
+        [test "${with_hostbuild}" != ""],
+        [
+            rm -rf build;
+            ln -s ${with_hostbuild} build
+        ]
+    )
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],
@@ -99,11 +117,16 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     git submodule update --init --recursive
 
     AX_THOR_FUNC_USE_VERA
+    THOR_USE_HOST_BUILD
 
-    pushd build/third
-    ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
-    popd
-
+    AS_IF(
+        [test "${with_hostbuild}" == ""],
+        [
+            pushd build/third
+            ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
+            popd
+        ]
+    )
 ])
 
 AC_DEFUN([AX_THOR_PROG_LEX],

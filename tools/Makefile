@@ -159,9 +159,9 @@ VERA_SRC					= $(filter-out $(TEST_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %
 VERA_OBJ					= $(patsubst %,vera/%.vera, $(VERA_SRC))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
 GCOV_BASIC_SRC				= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(filter-out $(MOCK_OBJECT) $(APP_SRC) ,$(GCOV_OBJ))) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
-GCOV_BASIC_HEAD				= $(patsubst %, coverage/%.gcov, $(filter-out $(APP_HEAD),$(wildcard *.h)))
+GCOV_BASIC_HEAD				= $(patsubst %, coverage/%.gcov, $(filter-out $(APP_HEAD) %Config.h,$(wildcard *.h)))
 GCOV_SRC					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_SRC))
-GCOV_HEAD					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov) %Config.h, $(GCOV_BASIC_HEAD))
+GCOV_HEAD					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_HEAD))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
 MAN_SRC						= $(wildcard man/man*/*)
@@ -414,7 +414,7 @@ vera_head:
 	@$(ECHO) $(call section_title,Static Analysis)
 vera_body:	$(VERA_OBJ)
 build_unit_test:
-	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcda
+	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcov test/coverage/*gcda
 	@$(ECHO) $(call section_title,Building Objects for Testing and Coverage)
 	@echo "int ThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
@@ -433,7 +433,7 @@ run_unit_test:
 		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME) ||	\
 							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1);	\
 		if [[ "$(TESTNAME)" == "*" ]]; then					\
-			$(MAKE) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE);	\
+			$(MAKE) BASE=.. VERBOSE=Min PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE);	\
 			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE);	\
 		fi													\
 	fi
@@ -548,6 +548,9 @@ coverage: cleanCoverage $(GCOV_REPORT)
 	@$(RM) *.gcov test/*.gcov
 
 coverage/%.cpp.gcov: always
+	@if ( test "$(VERBOSE)" = "Min" ); then					\
+		$(ECHO) "Generating Coverage for $*.cpp";			\
+	fi
 	@if ( test "$(VERBOSE)" = "On" ); then					\
 		$(ECHO) "Generating Coverage for $*.cpp";			\
 		$(ECHO) '$(COV) --preserve-paths --object-directory coverage $*.cpp' ;	\
@@ -555,6 +558,7 @@ coverage/%.cpp.gcov: always
 	@if [ -e $*.cpp ]; then									\
 		tmpfile=$(shell $(MKTEMP));							\
 		tmpSed=$(shell $(MKTEMP));							\
+		touch coverage/$*.cpp.gcov;							\
 		if ( test "$(VERBOSE)" = "On" ); then				\
 			$(ECHO) $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
 		fi;													\
@@ -575,7 +579,7 @@ coverage/%.cpp.gcov: always
 				$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.cpp") | awk '{printf "%-80s", $$0}' ; \
 				$(ECHO) $(GREEN_OK);						\
 			fi;												\
-			$(RM) $${tmpfile};								\
+			$(RM) -f $${tmpfilea} $${tmpSed};				\
 		fi													\
 	fi
 	@if ( test "$(VERBOSE)" = "On" ); then					\
@@ -584,7 +588,7 @@ coverage/%.cpp.gcov: always
 	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
 	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
 	@tmpHead=$(shell $(MKTEMP));							\
-	for h in $$(ls *.h.gcov); do							\
+	for h in $$(ls *.h.gcov 2> /dev/null); do				\
 		touch coverage/$$h;									\
 		cat $$h coverage/$$h | sort -n -k 2 | awk 'BEGIN {id=0;count=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;count=0;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
 		mv $${tmpHead} coverage/$$h;						\
@@ -596,6 +600,7 @@ coverage/%.tpp.gcov: coverage/%.cpp.gcov
 	@if ( test "$(VERBOSE)" = "On" ); then					\
 		$(ECHO) Do Nothing;									\
 	fi
+	touch coverage/$*.tpp.gcov
 coverage/%.h.gcov:
 	@if ( test "$(VERBOSE)" = "On" ); then					\
 		$(ECHO) "Generating Coverage for $*.h";				\
@@ -603,23 +608,18 @@ coverage/%.h.gcov:
 	@if [ -e $*.h ]; then									\
 		tmpSed=$(shell $(MKTEMP));							\
 		tmpHead=$(shell $(MKTEMP));							\
+		touch coverage/$*.h.gcov;							\
 		input1=$$(ls coverage/*$*.h.gcov 2> /dev/null);		\
 		input2=$$(ls test/coverage/*$*.h.gcov 2> /dev/null);\
-		if [[ "$${input1}" == "" ]]; then					\
-			input1="coverage/$*.h.gcov";					\
-			touch $${input1};								\
-		fi;													\
-		if [[ "$${input2}" != "" ]]; then					\
-			cat $${input1} $${input2} | sort -n -k 2 | awk 'BEGIN {id=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
-			mv $${tmpHead} $${input1};					\
-		fi;	\
-		sed 's/#####\(.*\)}$$/    -\1}/' $${input1} > $${tmpSed};\
+		cat coverage/$*.h.gcov $${input1} $${input2} | sort -n -k 2 | awk 'BEGIN {id=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
+		sed 's/#####\(.*\)}$$/    -\1}/' $${tmpHead} > $${tmpSed};\
 		sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > coverage/$*.h.gcov;\
 		grep -v '^ *-:' coverage/$*.h.gcov | awk -F: 'BEGIN {id=0;used=0;count=0;exe=0} {if ($$2 != id){id=$$2;count++;if (used == 1){used=0;exe++;}}} /#####/ {next} {used=1} END {if (used == 1){exe++;}if (count != 0){printf("Lines executed: %.2f%% of %d\n", exe * 100 / count, count);}else{}printf("Lines executed: 00.00%%\n");}' > coverage/$*.h.out; \
 		if ( test "$(VERBOSE)" = "On" ); then				\
 			$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.h") | awk '{printf "%-80s", $$0}' ; \
 			$(ECHO) $(GREEN_OK);							\
 		fi;													\
+		$(RM) -f $${tmpHead} $${tmpSed};					\
 	fi
 	@if ( test "$(VERBOSE)" = "On" ); then					\
 		$(ECHO) "Done";										\
@@ -886,7 +886,7 @@ Print_On:
 	@$(ECHO) "HEAD:	 $(HEAD)"
 	@$(ECHO) "SRC:		 $(SRC)"
 	@$(ECHO) "OBJ:		 $(OBJ)"
-	@$(ECHO_ "GCOV_SRC	$(GCOV_SRC)"
+	@$(ECHO) "GCOV_SRC	$(GCOV_SRC)"
 	@$(ECHO) "GCOV_HEAD:	$(GCOV_HEAD)"
 	@$(ECHO) "GCOV_OBJ: $(GCOV_OBJ)"
 	@$(ECHO) "GPERF_SRC:$(GPERF_SRC)"
