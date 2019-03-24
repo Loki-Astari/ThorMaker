@@ -527,8 +527,6 @@ cleanCoverage: always
 
 coveragetest: cleanCoverage $(GCOV_FILES)
 coverage: cleanCoverage $(GCOV_REPORT)
-	@$(RM) *.gcov
-	@$(RM) test/*.gcov
 	@if [ "$(GCOV_ACTUAL)" != "" ]; then								\
 		 linesNotTested=`cat $(GCOV_ACTUAL) | grep '####' | wc -l`;		\
 		 linesTestable=`cat $(GCOV_ACTUAL)| grep -v '\-:' | wc -l`;		\
@@ -548,6 +546,7 @@ coverage: cleanCoverage $(GCOV_REPORT)
 			$(ECHO) $(GREEN_OK) Code Coverage Passed;					\
 		 fi																\
 	 fi
+	@$(RM) *.gcov test/*.gcov
 
 coverage/%.cpp.gcov: always
 	@if ( test "$(VERBOSE)" = "On" ); then					\
