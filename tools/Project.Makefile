@@ -46,7 +46,7 @@ docbuild:
 %.dir:
 	@echo $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
 	@if test -d $*; then														\
-		$(MAKE) -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
+		$(MAKE) -j1 -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		echo $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi
