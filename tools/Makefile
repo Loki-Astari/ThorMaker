@@ -117,7 +117,7 @@ CP				= cp
 
 CXX				?= g++
 COV				?= gcov
-VERA			?= $(if $(VERATOOL), $(VERATOOL), vera++)
+VERA			?= $(if $(VERATOOL),$(VERATOOL), vera++)
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 MAKE			= make --silent
 
@@ -681,7 +681,7 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 
 
 vera/%.vera:
-	@if [ "$(VERA)" != "true" ]; then						\
+	@if [ "$(VERA)" != "off" ]; then						\
 		if ( test "$(VERBOSE)" = "On" ); then				\
 			$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*"; \
 		else $(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi; \

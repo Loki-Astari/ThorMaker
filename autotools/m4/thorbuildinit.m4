@@ -44,7 +44,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA],
     AS_IF(
         [test "x$enable_vera" == "xno"],
         [
-            VERATOOL="echo 'Disabled Static Analysis' ||";
+            VERATOOL='off';
             subconfigvera="--disable-vera";
         ],
         [
