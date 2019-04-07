@@ -18,17 +18,18 @@ BEGIN       {FOUND=0;tempInfo="";}
                 {
                     parent=$4;
                 }
-                $1="";
                 sub("signed ", "signed-", $0);
                 sub("long long", "long-long", $0);
                 sub(/\(.*/, "", $0);
-                gsub(/[ \t]+/, "", $0);
+                gsub(/[ \t]+/, " ", $0);
                 sub(":", "", $0);
                 sub("<", "-L", $0);
                 sub(">", "-R", $0);
+                matchTypeNameString=sprintf("struct %s", Name);
+                st=match($0, matchTypeNameString);
                 if (FOUND == 1 && $0 == Name)
                 {
-                    printf("%s\n%s", parent, tempInfo);
+                    printf("%s\n%s\n", parent, tempInfo);
                     exit;
                 }
             }
@@ -38,17 +39,18 @@ BEGIN       {FOUND=0;tempInfo="";}
                 {
                     parent=$4;
                 }
-                $1="";
                 sub("signed ", "signed-", $0);
                 sub("long long", "long-long", $0);
                 sub(/\(.*/, "", $0);
-                gsub(/[ \t]+/, "", $0);
-                sub(":", "", $0);
+                gsub(/[ \t]+/, " ", $0);
+                sub(":", " ", $0);
                 sub("<", "-L", $0);
                 sub(">", "-R", $0);
-                if (FOUND == 1 && $0 == Name)
+                matchTypeNameString=sprintf("class %s", Name);
+                st=match($0, matchTypeNameString);
+                if (FOUND == 1 && st != 0)
                 {
-                    printf("%s\n%s", parent, tempInfo);
+                    printf("%s\n%s\n", parent, tempInfo);
                     exit;
                 }
             }

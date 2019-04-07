@@ -31,15 +31,14 @@ BEGIN       {FOUND=0;description="";}
                 }
             }
 /struct/    {
-                $1="";
                 sub("signed ", "signed-", $0);
                 sub("long long", "long-long", $0);
                 sub(/\(.*/, "", $0);
-                gsub(/[ \t]+/, "", $0);
+                gsub(/[ \t]+/, " ", $0);
                 sub(":", "", $0);
                 sub("<", "-L", $0);
                 sub(">", "-R", $0);
-                if (FOUND == 1 && $0 == Name)
+                if (FOUND == 1 && $2 == Name)
                 {
                     printf("%s", description);
                     exit;
@@ -48,15 +47,14 @@ BEGIN       {FOUND=0;description="";}
                 FOUND=0;
             }
 /class/     {
-                $1="";
                 sub("signed ", "signed-", $0);
                 sub("long long", "long-long", $0);
                 sub(/\(.*/, "", $0);
-                gsub(/[ \t]+/, "", $0);
+                gsub(/[ \t]+/, " ", $0);
                 sub(":", "", $0);
                 sub("<", "-L", $0);
                 sub(">", "-R", $0);
-                if (FOUND == 1 && $0 == Name)
+                if (FOUND == 1 && $2 == Name)
                 {
                     printf("%s", description);
                     exit;

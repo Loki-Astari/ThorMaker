@@ -20,7 +20,7 @@ BEGIN       {FOUND=0;}
                     sub("long long", "long-long", $0);
                     sub(/\(.*/, "", $0);
                     gsub(/[ \t]+/, "", $0);
-                    sub(":", "", $0);
+                    gsub(/:.*/, "", $0);
                     sub("<", "-L", $0);
                     sub(">", "-R", $0);
                     printf("%s ", $0);
@@ -35,7 +35,7 @@ BEGIN       {FOUND=0;}
                     sub("long long", "long-long", $0);
                     sub(/\(.*/, "", $0);
                     gsub(/[ \t]+/, "", $0);
-                    sub(":", "", $0);
+                    gsub(/:.*/, "", $0);
                     sub("<", "-L", $0);
                     sub(">", "-R", $0);
                     printf("%s ", $0);

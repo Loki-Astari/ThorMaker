@@ -12,4 +12,4 @@ AWK_PROGRAM
 )
 
 files=$( find . -type f -name "*.h" | xargs )
-cat ${files} | awk "${program}" - | sort | uniq | xargs
+cat /dev/null ${files} | awk "${program}" - | sort | uniq | xargs

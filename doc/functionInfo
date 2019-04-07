@@ -32,12 +32,12 @@ BEGIN       {FOUND=0;tempInfo="";}
             {
                 if (FOUND == 1 )
                 {
-                    matchTypeNameString=sprintf("[^ ]* %s\\(", Name);
+                    matchTypeNameString=sprintf(".* %s\\(", Name);
                     st=match($0, matchTypeNameString);
                     if (st != 0) {
                         matchNameString=sprintf(" %s\\(", Name);
                         en=match($0, matchNameString);
-                        printf("%s", substr($0, st, (en - st)));
+                        printf("%s\n", substr($0, st, (en - st)));
 
 
                         paramBegin=match($0, "\\(");
@@ -50,7 +50,7 @@ BEGIN       {FOUND=0;tempInfo="";}
                         sub(">", "", param);
                         if ( param != "")
                         {
-                            printf(", %s ", param);
+                            printf("%s ", param);
                         }
                         printf("\n%s ", tempInfo);
                         exit;

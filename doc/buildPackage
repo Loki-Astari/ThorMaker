@@ -73,14 +73,15 @@ PACKAGE_DOC_FILE_FUNC_HEAD_EMPTY
 PACKAGE_DOC_FILE_FUNC_HEAD
         for func in "${functionList[@]}"; do
             children+=("${baseName}.${func}")
-            functionData=$(${DIR}/functionInfo ${file} ${func} | head -1)
+            functionRetn=$(${DIR}/functionInfo ${file} ${func} | head -1)
+            functionData=$(${DIR}/functionInfo ${file} ${func} | head -2 | tail -1)
             IFS=','
             functionInfo=( ${functionData} )
             IFS=' '
             len=${#functionInfo[@]}
             paramList=''
             if (( ${len} != 1 )); then
-                loop=1
+                loop=0
                 while [[ ${loop} < ${len} ]]; do
                     paramList="${paramList}, ${functionInfo[loop]}"
                     loop=$(( ${loop} + 1 ))
@@ -88,7 +89,7 @@ PACKAGE_DOC_FILE_FUNC_HEAD
                 paramList=${paramList:1}
             fi
             cat - <<PACKAGE_DOC_FILE_FUNC
-            - return: ${functionInfo[0]}
+            - return: ${functionRetn}
               name:   ${func}
               param:  [ ${paramList} ]
 PACKAGE_DOC_FILE_FUNC

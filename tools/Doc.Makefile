@@ -175,7 +175,7 @@ DOC_METHOD_METHOD			= $(call DOC_F4_OF_4,$(1))
 
 doc: $(DOC_FILES)
 
-docprint:
+docprint:	always
 	@echo "DOC_FILES		$(DOC_FILES)"
 	@echo "DOC_PACKAGE		$(DOC_PACKAGE)"
 	@echo "DOC_CLASSES		$(DOC_CLASSES)"

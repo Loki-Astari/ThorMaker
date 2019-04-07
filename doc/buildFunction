@@ -28,7 +28,8 @@ children=()
 
 descriptionAll=$( ${DIR}/functionDesc ${file} ${funct} )
 description=$( echo "${descriptionAll}" | grep -v '^-- ' )
-funcData=$( ${DIR}/functionInfo ${file} ${funct} | head -1 )
+funcRetn=$( ${DIR}/functionInfo ${file} ${funct} | head -1 )
+funcData=$( ${DIR}/functionInfo ${file} ${funct} | head -2 | tail -1)
 tempInfo=$( ${DIR}/functionInfo ${file} ${funct} | tail -1 )
 IFS=','
 funcInfo=( ${funcData} )
@@ -37,7 +38,7 @@ IFS=' '
 len=${#funcInfo[@]}
 paramList=''
 if [[ ${len} > 1 ]]; then
-    loop=1
+    loop=0
     while [[ ${loop} < ${len} ]]; do
         paramList="${paramList}, ${funcInfo[loop]}"
         loop=$(( ${loop} + 1 ))
@@ -53,7 +54,7 @@ if [[ "${returnDesc}" != "" ]]; then
     returnDesc="'${returnDesc}'"
 fi
 
-returnType=${funcInfo[1]}
+returnType=${funcRetn}
 returnType=$( echo ${returnType/@/,} | xargs )
 if [[ "${returnType}" != "" ]]; then
     returnType="'${returnType}'"
