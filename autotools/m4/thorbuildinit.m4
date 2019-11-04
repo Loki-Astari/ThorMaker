@@ -14,6 +14,45 @@ AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
         [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[-Wl,--no-whole-archive])]
     )
 ])
+AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
+[
+    AC_ARG_WITH(
+        [cryptoroot],
+        AS_HELP_STRING([--with-cryptoroot=<location>], [Directory of CRYPTO_ROOT])
+    )
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="$LDFLAGS -L$with_cryptoroot/lib"
+
+    AC_CHECK_LIB(
+        [crypto],
+        [SHA1_Init],
+        [
+            AS_IF([test "$with_cryptoroot" != ""],
+                  [
+                    AC_SUBST([crypto_ROOT_LIBDIR], ["-L $with_cryptoroot/lib"])
+                    AC_SUBST([crypto_ROOT_INCDIR], ["-I $with_cryptoroot/include"])
+                  ])
+        ],
+        [AC_MSG_ERROR([
+ 
+Error: Could not find libcrypto
+
+        On a mac you will need to install openssl
+        and define the crypto root directory to configuration.
+
+            brew install openssl
+            ./configure --with-cryptoroot=/usr/local/Cellar/openssl/1.0.2j/
+
+        On Linux you will need to install openssl
+
+            sudo apt-get install openssl
+            sudo apt-get install libssl-dev
+
+                ], [1])]
+    )
+
+    LDFLAGS="${ORIG_LDFLAGS}"
+])
 AC_DEFUN([AX_THOR_LIB_SELECT],
 [
     THOR_TARGETLIBS=""
