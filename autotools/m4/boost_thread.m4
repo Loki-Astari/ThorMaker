@@ -30,7 +30,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 30
+#serial 32
 
 AC_DEFUN([AX_BOOST_THREAD],
 [
@@ -68,11 +68,11 @@ AC_DEFUN([AX_BOOST_THREAD],
              CXXFLAGS_SAVE=$CXXFLAGS
 
              if test "x$host_os" = "xsolaris" ; then
-                 CXXFLAGS=" $CXXFLAGS"
+                 CXXFLAGS="-pthreads $CXXFLAGS"
              elif test "x$host_os" = "xmingw32" ; then
                  CXXFLAGS="-mthreads $CXXFLAGS"
              else
-                CXXFLAGS=" $CXXFLAGS"
+                CXXFLAGS="-pthread $CXXFLAGS"
              fi
              AC_COMPILE_IFELSE([
                  AC_LANG_PROGRAM(
@@ -85,11 +85,11 @@ AC_DEFUN([AX_BOOST_THREAD],
         ])
         if test "x$ax_cv_boost_thread" = "xyes"; then
            if test "x$host_os" = "xsolaris" ; then
-              BOOST_CPPFLAGS=" $BOOST_CPPFLAGS"
+              BOOST_CPPFLAGS="-pthreads $BOOST_CPPFLAGS"
            elif test "x$host_os" = "xmingw32" ; then
               BOOST_CPPFLAGS="-mthreads $BOOST_CPPFLAGS"
            else
-              BOOST_CPPFLAGS=" $BOOST_CPPFLAGS"
+              BOOST_CPPFLAGS="-pthread $BOOST_CPPFLAGS"
            fi
 
             AC_SUBST(BOOST_CPPFLAGS)
@@ -101,7 +101,7 @@ AC_DEFUN([AX_BOOST_THREAD],
             LDFLAGS_SAVE=$LDFLAGS
                         case "x$host_os" in
                           *bsd* )
-                               LDFLAGS=" $LDFLAGS"
+                               LDFLAGS="-pthread $LDFLAGS"
                           break;
                           ;;
                         esac
@@ -130,7 +130,7 @@ AC_DEFUN([AX_BOOST_THREAD],
 
             fi
             if test "x$ax_lib" = "x"; then
-                AC_MSG_ERROR(Could not find a version of the library!)
+                AC_MSG_ERROR(Could not find a version of the Boost::Thread library!)
             fi
             if test "x$link_thread" = "xno"; then
                 AC_MSG_ERROR(Could not link against $ax_lib !)
@@ -138,18 +138,18 @@ AC_DEFUN([AX_BOOST_THREAD],
                 BOOST_THREAD_LIB="-l$ax_lib"
                 case "x$host_os" in
                     *bsd* )
-                        BOOST_LDFLAGS=" $BOOST_LDFLAGS"
+                        BOOST_LDFLAGS="-pthread $BOOST_LDFLAGS"
                         break;
                         ;;
-                    solaris )
-                        BOOST_THREAD_LIB="$BOOST_THREAD_LIB "
+                    xsolaris )
+                        BOOST_THREAD_LIB="$BOOST_THREAD_LIB -lpthread"
                         break;
                         ;;
-                    mingw32 )
+                    xmingw32 )
                         break;
                         ;;
                     * )
-                        BOOST_THREAD_LIB="$BOOST_THREAD_LIB "
+                        BOOST_THREAD_LIB="$BOOST_THREAD_LIB -lpthread"
                         break;
                         ;;
                 esac
