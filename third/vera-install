@@ -5,7 +5,7 @@ CDIR=$(pwd)
 cd  build/vera-plusplus
 mkdir -p build
 cd build
-cmake .. -DVERA_LUA=OFF -DVERA_USE_SYSTEM_BOOST=ON -DCMAKE_INSTALL_PREFIX=${CDIR}/build
+cmake .. -DVERA_LUA=OFF -DVERA_USE_SYSTEM_BOOST=ON -DCMAKE_INSTALL_PREFIX=${CDIR}/build -DBoost_NO_BOOST_CMAKE=ON
 make 
 make install
 
