@@ -33,20 +33,16 @@ Generic build files.
 
     SetUp
     =====
-        git clone https://github.com/Loki-Astari/ThorMaker.git build
-        cd third
-        ./setup
-
-        the "./setup":
-            1) creates bin lib include include3rd
-            2) install(s) gtest
-            3) installs locally vera++  (unless configure is run with --disable-vera)
-                a) Needs the following libs installed to build vera
-                    i  ) libboost
-                    ii ) libboost-python
-                    iii) tcl/tk
-                    iv ) cmake
-
+    
+        mkdir MyProj
+        cd MyProj
+        git init
+        wget https://raw.githubusercontent.com/Loki-Astari/ThorMaker/master/autotools/Notes
+        ./Notes MyProj
+        git commit -a -m "First Commit"
+    
+    
+ 
     Simplified Makefile
     ===================
         Each project directory you will need a makefile that looks like this:
