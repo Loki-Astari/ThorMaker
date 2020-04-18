@@ -7,7 +7,6 @@ SHELL=/bin/bash
 # Then include this file.
 # The TARGET variable may include multiple things to build
 #
-
 #
 # A name with a *.app  extension is an executable			(the app will NOT be part of the final name)
 # A name with a *.dir  extension builds a subdirectory
@@ -82,6 +81,10 @@ SHELL=/bin/bash
 #
 #	COVERAGE_REQUIRED defaults to 80%
 #		but if you want to reduce this you can set this in a specific project make file
+#
+#	Displaying coverage:
+#		make test COVERAGE=file.h	=> Display the coverage for file.h
+#		make test COVERAGE=On		=> Display the coverage for ALL files
 #
 
 -include $(THORSANVIL_ROOT)/Makefile.config
@@ -538,6 +541,7 @@ coverage: cleanCoverage $(GCOV_REPORT)
 		coverage=$$(($${linesTested100}/$${linesTestable}));		\
 	fi;																\
 	res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
+	$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
 	if [ $${res} -ne 0 ]; then										\
 		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total);	\
 		$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
