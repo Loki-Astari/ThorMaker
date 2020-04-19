@@ -86,6 +86,20 @@ SHELL=/bin/bash
 #		make test COVERAGE=file.h	=> Display the coverage for file.h
 #		make test COVERAGE=On		=> Display the coverage for ALL files
 #
+#	Run specific UNIT TEST
+#		Note:	TestName	=> *
+#							=> <ClassName>.*
+#							=> <ClassName>.<TestMethod>
+#
+#		make test TESTNAME=<TestName>
+#
+#	Run Test and see coverage for that test on file:
+#		make test TESTNAME=<TestName> COVERAGE=<FileName or On>
+#
+#	Only Run specific test
+#		make testrun.<TestName>
+#	Run a specific unit test in the debugger
+#		make debugrun.<TestName>
 
 -include $(THORSANVIL_ROOT)/Makefile.config
 BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
