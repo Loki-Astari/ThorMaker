@@ -801,19 +801,17 @@ $(TARGET_MODE)/%.o: %.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMo
 		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
+	$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-80s", $$0}' ; \
 	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
-		$(ECHO) $(RED_ERROR);							\
+		$(ECHO) " $(RED_ERROR)";						\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
-		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
-		fi;												\
-		$(ECHO) $(GREEN_OK);							\
+		$(ECHO) " $(GREEN_OK)";							\
 		$(RM) $${tmpfile};								\
 	fi
 $(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
@@ -823,19 +821,17 @@ $(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
 		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
+	$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-80s", $$0}' ; \
 	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
-		$(ECHO) $(RED_ERROR);							\
+		$(ECHO) " $(RED_ERROR)";						\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
-		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
-		fi;												\
-		$(ECHO) $(GREEN_OK);							\
+		$(ECHO) " $(GREEN_OK)";							\
 		$(RM) $${tmpfile};								\
 	fi
 
