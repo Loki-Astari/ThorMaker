@@ -805,13 +805,13 @@ $(TARGET_MODE)/%.o: %.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMo
 	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
-		$(ECHO) " $(RED_ERROR)";						\
+		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
-		$(ECHO) " $(GREEN_OK)";							\
+		$(ECHO) $(GREEN_OK);							\
 		$(RM) $${tmpfile};								\
 	fi
 $(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
@@ -825,13 +825,13 @@ $(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
 	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
-		$(ECHO) " $(RED_ERROR)";						\
+		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
-		$(ECHO) " $(GREEN_OK)";							\
+		$(ECHO) $(GREEN_OK);							\
 		$(RM) $${tmpfile};								\
 	fi
 
