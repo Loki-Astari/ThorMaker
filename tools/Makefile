@@ -1,4 +1,4 @@
-#
+
 # Generic Makefile for all building.
 #
 SHELL=/bin/bash
@@ -437,11 +437,14 @@ build_unit_test:
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
 	@rm ThorsAnvilUnitTestMarker.cpp
 	@$(ECHO) $(call section_title,Building Unit Tests)
-	@if ( test -d test ); then								\
+	@result = 0;											\
+	if ( test -d test ); then								\
 		touch test/unittest.cpp;							\
 		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
+		result=$$?;											\
 		$(RM)    test/unittest.cpp;							\
-	fi
+	fi;														\
+	exit $${result}
 
 run_unit_test:
 	@if ( test -d test ); then								\
