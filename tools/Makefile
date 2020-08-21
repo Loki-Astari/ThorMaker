@@ -253,7 +253,7 @@ LANGUAGE_SPECIFIC_FLAGS		= -DTHOR_USE_CPLUSPLUS$(CXXSTDVER)
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
-WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Werror -Wunreachable-code -Wno-long-long
+WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Werror -Wunreachable-code -Wno-long-long -Wdeprecated -Wdeprecated-declarations
 
 THORSLINKDIRS				=	$(PREFIX_LIB) $(filter -L%, %, $(LDFLAGS)) ${libdir}
 findfullpath				=	$(firstword $(foreach dir, $(1), $(realpath $(dir)/$(2))))
@@ -413,6 +413,10 @@ clean_man:
 $(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
 	cp man/$* $(PREFIX_MAN)/$*
 test:	pre_test build_unit_test run_unit_test static_test
+testonly:
+	make pre_test build_unit_test run_unit_test_only
+test-%:
+	TESTNAME=$* make pre_test build_unit_test run_unit_test_only
 
 testrun.%:	pre_test build_unit_test
 	DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib test/coverage/unittest.app --gtest_filter=$*
@@ -437,7 +441,7 @@ build_unit_test:
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
 	@rm ThorsAnvilUnitTestMarker.cpp
 	@$(ECHO) $(call section_title,Building Unit Tests)
-	@result = 0;											\
+	@result=0;												\
 	if ( test -d test ); then								\
 		touch test/unittest.cpp;							\
 		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
@@ -445,6 +449,14 @@ build_unit_test:
 		$(RM)    test/unittest.cpp;							\
 	fi;														\
 	exit $${result}
+
+run_unit_test_only:
+	@if ( test -d test ); then								\
+		$(ECHO) $(call section_title,Running Unit Tests);	\
+		$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME)";	\
+		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME) ||	\
+							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1);\
+	fi
 
 run_unit_test:
 	@if ( test -d test ); then								\
@@ -504,7 +516,7 @@ clean_head_head_%:
 	@$(RM) $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/$*
 
 test_%:
-	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile BASE=.. THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app $*; fi
+	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile BASE=.. THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app TESTNAME=$*; fi
 
 mock:	coverage.Dir $(MOCK_FILES)
 	$(ECHO) "MOCKING: $(TARGET_MODE) $(MOCK_FILES)"

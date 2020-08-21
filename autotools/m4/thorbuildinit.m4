@@ -443,9 +443,11 @@ AC_DEFUN(
         AX_CHECK_COMPILE_FLAG([-std=c++11], [AC_SUBST([CXXMaxLanguage],11) AC_SUBST([StdFlag11],[-std=c++11])])
         AX_CHECK_COMPILE_FLAG([-std=c++14], [AC_SUBST([CXXMaxLanguage],14) AC_SUBST([StdFlag14],[-std=c++14])])
         AX_CHECK_COMPILE_FLAG([-std=c++17], [AC_SUBST([CXXMaxLanguage],17) AC_SUBST([StdFlag17],[-std=c++17])])
+        AX_CHECK_COMPILE_FLAG([-std=c++20], [AC_SUBST([CXXMaxLanguage],20) AC_SUBST([StdFlag20],[-std=c++20])])
         AX_CHECK_COMPILE_FLAG([-std=c++1x], [AC_SUBST([CXXExpLanguage],11) AC_SUBST([ExpFlag11],[-std=c++1x])])
         AX_CHECK_COMPILE_FLAG([-std=c++1y], [AC_SUBST([CXXExpLanguage],14) AC_SUBST([ExpFlag14],[-std=c++1y])])
         AX_CHECK_COMPILE_FLAG([-std=c++1z], [AC_SUBST([CXXExpLanguage],17) AC_SUBST([ExpFlag17],[-std=c++1z])])
+        AX_CHECK_COMPILE_FLAG([-std=c++2a], [AC_SUBST([CXXExpLanguage],20) AC_SUBST([ExpFlag20],[-std=c++2a])])
 
         #CXX_STD_FLAG
         #CXXSTDVER
