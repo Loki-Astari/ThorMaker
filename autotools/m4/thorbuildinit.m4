@@ -157,8 +157,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
     git submodule update --init --recursive
 
-    THOR_USE_HOST_BUILD
-
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
         [
