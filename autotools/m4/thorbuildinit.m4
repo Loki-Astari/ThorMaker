@@ -71,7 +71,7 @@ AC_DEFUN([AX_THOR_LIB_SELECT],
 
     AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
 ])
-AC_DEFUN([AX_THOR_FUNC_USE_VERA],
+AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
 [
     AC_ARG_ENABLE(
         [vera],
@@ -88,6 +88,17 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA],
         ],
         [
             VERATOOL='vera++';
+        ]
+    )
+    AC_SUBST([VERATOOL], [${VERATOOL}])
+    AX_THOR_LIB_SELECT
+])
+
+AC_DEFUN([AX_THOR_FUNC_USE_VERA_BUILD],
+[
+    AS_IF(
+        [test "x$enable_vera" != "xno"],
+        [
             ./build/third/vera-install
             AC_CHECK_PROGS([TestVera], [vera++], [:], ${PATH}:./build/bin)
             AS_IF(
@@ -107,8 +118,6 @@ detected that "vera++" (the static analysis tool) is not currently installed.
             )
         ]
     )
-    AC_SUBST([VERATOOL], [${VERATOOL}])
-    AX_THOR_LIB_SELECT
 ])
 
 AC_DEFUN([THOR_USE_HOST_BUILD],
@@ -154,12 +163,13 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
 
     git submodule update --init --recursive
+    AX_THOR_FUNC_USE_VERA_INIT
     THOR_USE_HOST_BUILD
 
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
         [
-            AX_THOR_FUNC_USE_VERA
+            AX_THOR_FUNC_USE_VERA_BUILD
             pushd build/third
             ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
             popd
