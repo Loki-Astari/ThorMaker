@@ -119,9 +119,11 @@ AC_DEFUN([THOR_USE_HOST_BUILD],
     )
 
     AS_IF(
-        [test "${with_hostbuild}" != ""],
+        [test "x${with_hostbuild}" == "x"],
         [
-            rm -rf build;
+            ln -s .build build
+        ],
+        [
             ln -s ${with_hostbuild} build
         ]
     )
@@ -155,12 +157,12 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
     git submodule update --init --recursive
 
-    AX_THOR_FUNC_USE_VERA
     THOR_USE_HOST_BUILD
 
     AS_IF(
-        [test "${with_hostbuild}" == ""],
+        [test "x${with_hostbuild}" == "x"],
         [
+            AX_THOR_FUNC_USE_VERA
             pushd build/third
             ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
             popd
