@@ -1,18 +1,23 @@
 #!/bin/bash
 
-sudo apt-get install -qq g++-9 -y
+echo "Installing G++"
+sudo apt-get install -qq g++-9 -y           > /dev/null
 
-sudo apt-get install python-dev -y
-sudo apt-get install -qq libboost-all-dev
+echo "Installing Dependencies"
+sudo apt-get install python-dev -y          > /dev/null
+sudo apt-get install -qq libboost-all-dev   > /dev/null
 
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9
+echo "Setting up G++"
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9 > /dev/null
 
-wget -O boost_1_71_0.tar.gz https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
+echo "Building Boost Co-Routines"
+wget -O boost_1_71_0.tar.gz https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz       > /dev/null
 
-tar xzf boost_1_71_0.tar.gz
-cd boost_1_71_0/
-mkdir -p /tmp/extra
-./bootstrap.sh --prefix=/tmp/extra
-./b2 cxxflags="-Wno-strict-aliasing -Wno-unused-local-typedefs -Wno-maybe-uninitialized -Wno-deprecated-declarations -Wno-placement-new" --with-system --with-context --with-coroutine
+tar xzf boost_1_71_0.tar.gz             > /dev/null
+cd boost_1_71_0/                        > /dev/null
+mkdir -p /tmp/extra                     > /dev/null
+./bootstrap.sh --prefix=/tmp/extra      > /dev/null
+./b2 cxxflags="-Wno-strict-aliasing -Wno-unused-local-typedefs -Wno-maybe-uninitialized -Wno-deprecated-declarations -Wno-placement-new" --with-system --with-context --with-coroutine  > /dev/null
 
-sudo ./b2 --with-system --with-context --with-coroutine install
+echo "Building Boost Co-Routines"
+sudo ./b2 --with-system --with-context --with-coroutine install > /dev/null
