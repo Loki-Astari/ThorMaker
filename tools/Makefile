@@ -470,7 +470,21 @@ clean_man:
 
 $(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
 	cp man/$* $(PREFIX_MAN)/$*
-test:	pre_test build_unit_test run_unit_test static_test
+test:	pre_test build_unit_test coverage/test.report coverage/coverage.report coverage/vera.report
+	@cat coverage/test.report.out coverage/coverage.report.out coverage/vera.report.out
+	@cat coverage/test.report		> coverage/test.report.out
+	@cat coverage/coverage.report	> coverage/coverage.report.out
+	@cat coverage/vera.report		> coverage/vera.report.out
+
+coverage/test.report: $(SRC) $(HEAD)
+	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO run_unit_test
+
+coverage/coverage.report: $(SRC) $(HEAD) coverage/test.report
+	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO run_coverage
+
+coverage/vera.report: $(SRC) $(HEAD)
+	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO static_test
+
 testonly:
 	make pre_test build_unit_test run_unit_test_only
 test-%:
@@ -485,6 +499,8 @@ debugrun.%: pre_test build_unit_test
 pre_test:	$(PRETEST)
 
 static_test:
+	@$(RM) coverage/vera.report
+	echo -n > coverage/vera.report.out
 	@if [[ "$(TESTNAME)" == "*" ]]; then					\
 		make vera;											\
 	fi
@@ -517,15 +533,30 @@ run_unit_test_only:
 	fi
 
 run_unit_test:
+	@$(RM) coverage/test.report
+	echo -n > coverage/test.report.out
 	@if ( test -d test ); then								\
 		$(ECHO) $(call section_title,Running Unit Tests);	\
 		$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME)";	\
-		$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME) ||	\
-							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1);	\
+		($(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) ||	\
+							($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1)) | tee -a coverage/test.report;\
+	else													\
+		echo "NO Tests" > coverage/test.report;				\
+	fi
+
+
+#($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1)) | tee coverage/test.report;\
+
+run_coverage:
+	@$(RM) coverage/coverage.report
+	echo -n > coverage/coverage.report.out
+	@if ( test -d test ); then								\
 		if [[ "$(TESTNAME)" == "*" ]]; then					\
 			$(MAKE) BASE=.. VERBOSE=Min PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE);	\
 			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE);	\
 		fi													\
+	else													\
+		echo "NO Tests" > coverage/coverage.report;			\
 	fi
 
 install_app_%:
@@ -657,11 +688,11 @@ coverage: cleanCoverage $(GCOV_REPORT)
 	res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
 	$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
 	if [ $${res} -ne 0 ]; then										\
-		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total);	\
+		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total) | tee -a coverage/coverage.report;	\
 		$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
 		exit 1;														\
 	else															\
-		$(ECHO) $(GREEN_OK) $(call colour_text, PURPLE, Code Coverage) $${coverage}% $(call colour_text, PURPLE, exceed $(COVERAGE_REQUIRED)% of total);	\
+		$(ECHO) $(GREEN_OK) $(call colour_text, PURPLE, Code Coverage) $${coverage}% $(call colour_text, PURPLE, exceed $(COVERAGE_REQUIRED)% of total) | tee -a coverage/coverage.report;	\
 	fi
 	@$(RM) *.gcov test/*.gcov
 
@@ -768,15 +799,15 @@ coverage/%*.h.out: coverage/%.h.gcov
 	fi
 
 %.cpp_report_coverage:	coverage/%.cpp.gcov
-	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
+	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a coverage/coverage.report; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.cpp.gcov ; fi;
 	@if [ "$(COVERAGE)" = "$*.cpp" ]; then cat coverage/$*.cpp.gcov ; fi;
 %.tpp_report_coverage:	coverage/%.tpp.gcov
-	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}'; fi
+	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a coverage/coverage.report; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 %.h_report_coverage:	coverage/%.h.gcov coverage/%*.h.out
-	@$(ECHO) $*.h $(call getPercentColour, $(shell awk '{print substr($$3,0,length($$3)-1)}' coverage/$*.h.out)) | awk '{printf "%-80s%s%%\n", $$1, $$2}'
+	@$(ECHO) $*.h $(call getPercentColour, $(shell awk '{print substr($$3,0,length($$3)-1)}' coverage/$*.h.out)) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a coverage/coverage.report
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.h.gcov ; fi
 	@if [ "$(COVERAGE)" = "$*.h" ]; then cat coverage/$*.h.gcov ; fi
 
@@ -837,18 +868,20 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 vera/%.vera:
 	@if [ "$(VERA)" != "off" ]; then						\
 		if ( test "$(VERBOSE)" = "On" ); then				\
-			$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*"; \
-		else $(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' ; fi; \
+			$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*" | tee -a coverage/vera.report; \
+		else												\
+			$(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' | tee -a coverage/vera.report;	\
+		fi;													\
 		PATH="${PATH}:$(PREFIX_BIN)" $(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
 		if [ $$? != 0 ];									\
 		then												\
-			$(ECHO) $(RED_ERROR);							\
+			$(ECHO) $(RED_ERROR) | tee -a coverage/vera.report;\
 			$(ECHO) "$(VERA) --profile thor --show-rule --error --std-report $@.report $*";	\
 			$(ECHO) "==================================================="; \
 			cat $@.report;									\
 			exit 1;											\
 		else 												\
-			$(ECHO) $(GREEN_OK);							\
+			$(ECHO) $(GREEN_OK) | tee -a coverage/vera.report;\
 			$(RM) $@.report;								\
 		fi;													\
 	fi
