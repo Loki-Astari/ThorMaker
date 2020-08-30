@@ -499,10 +499,16 @@ debugrun.%: pre_test build_unit_test
 pre_test:	$(PRETEST)
 
 static_test:
-	@$(RM) coverage/vera.report
-	echo -n > coverage/vera.report.out
-	@if [[ "$(TESTNAME)" == "*" ]]; then					\
-		make vera;											\
+	@echo -n > coverage/vera.report
+	@echo -n > coverage/vera.report.out
+	@if ( test -d test ); then								\
+		if [[ "$(TESTNAME)" == "*" ]]; then					\
+			make vera;										\
+		else												\
+			echo "No Test" > coverage/vera.report;			\
+		fi													\
+	else													\
+		echo "No Test" > coverage/vera.report;				\
 	fi
 vera:	vera.Dir vera_head vera_body
 vera_head:
