@@ -3,3 +3,5 @@ include
 include3rd
 lib
 share
+obj
+.build
