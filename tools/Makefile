@@ -37,6 +37,30 @@ SHELL=/bin/bash
 #					   i.e. If you have a TARGET=bob.app glib.slib
 #					   then glib.so will not include the source file bob.cpp
 #
+# A name with a *.defer	builds the object files and but does not build a library.
+#						The header files are deployed as normal.
+#						All the object files are saved to the build directory.
+#
+#						These object files can be used by a subsequent library by specifying the
+#							DEFER_LIBS = <List of Projects that have been deferred>
+#
+#						Example:
+#							Dir:	ThorsDB
+#										Makfile:	TARGET = ThorsDB.defer
+#							Dir:	ThorsDBCommon
+#										Makefile:	TARGET = ThorsDBCommon.defer
+#							Dir:	MySQL
+#										Makefile:	TARGET = ThorsMySQL.defer
+#							Dir:	ThorsDBBuild
+#										Makefile:	TARGET = ThorsDB.lib
+#													DEFER_LIBS = ThorsDB ThorsDBCommon ThorsMySQL
+#													This will build the library: ThorsDB.lib
+#													and use all the object files from the three
+#													projects defined above
+#
+#						This extension was added so that we could build a single library from multiple directories.
+#						See the XXX
+#
 # Flags Help:
 #	CXXSTDVER=03/11/14/17			Should be set to the appropriate value:		Default: CXXSTDVER		=03
 #	CXX_STD_FLAG					Should be set to the appropriate value		Default: CXX_STD_FLAG	=-std=c++11
@@ -58,6 +82,7 @@ SHELL=/bin/bash
 #				RPATH				= $(RPATH):%(yaml_ROOT_DIR)/lib
 #			Note: This is supposed to be used in conjunction with configuration file and
 #				  you will probably see xxxx_ROOT_DIR defined in Makefile.config
+#			UNITTEST_CXXFLAGS
 #
 #	<TARGET>_LDLIBS			= <Libs>
 #		Adds libs for specific targets in the makefile.
@@ -111,9 +136,12 @@ LOCAL_ROOT		?= $(shell pwd)
 
 export PATH := $(BUILD_ROOT)/bin:$(PATH)
 
+INSTALL_ACTIVE	?= NO
+
 PREFIX?=$(BUILD_ROOT)
 PREFIX_BIN?=$(BUILD_ROOT)/bin
 PREFIX_LIB?=$(BUILD_ROOT)/lib
+PREFIX_OBJ?=$(BUILD_ROOT)/obj
 PREFIX_INC?=$(BUILD_ROOT)/include
 PREFIX_MAN?=$(BUILD_ROOT)/share/man
 
@@ -131,6 +159,8 @@ YACC			= bison
 LEX				= flex
 GPERF			= gperf --ignore-case
 CP				= cp
+MKDIR			= mkdir
+RMDIR			= rmdir
 
 CXX				?= g++
 COV				?= gcov
@@ -184,6 +214,9 @@ GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
 MAN_SRC						= $(wildcard man/man*/*)
 MAN_DIR						= $(patsubst man/%, $(PREFIX_MAN)/%.Dir, $(sort $(dir $(MAN_SRC))))
 MAN_PAGE					= $(patsubst man/%, $(PREFIX_MAN)/%.man, $(MAN_SRC))
+DEFER_OBJX					= $(foreach lib, $(wildcard $(PREFIX_OBJ)/$(lib)/$(TARGET_MODE)/*.o), $(DEFER_LIBS))
+DEFER_OBJDIR				= $(foreach lib, $(DEFER_LIBS), $(PREFIX_OBJ)/$(lib)/$(TARGET_MODE))
+DEFER_OBJ					= $(foreach dir, $(DEFER_OBJDIR), $(wildcard $(dir)/*.o))
 
 
 NOTHING						:=
@@ -194,7 +227,7 @@ LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD), -l${lib})
 LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);)
 LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE)
-CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH)
+CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
@@ -202,14 +235,27 @@ GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_SRC)) $(
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
 							  $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
-							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))
-LIBBASENAME					= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
+							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))	\
+							  $(patsubst %.defer,%, $(filter %.defer,$(TARGET)))
+LIBBASENAME_ACTUAL			= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
+USE_HEADER					= $(if $(NO_HEADER),NO,YES)
+LIBBASENAME_NO_NO			= $(LIBBASENAME_ACTUAL)
+LIBBASENAME_YES_NO			= $(LIBBASENAME_ACTUAL)
+LIBBASENAME_YES_YES			= $(LIBBASENAME_ACTUAL)
+#
+# If we don't want headers and this is a full install
+# Then don't do any work with the headers (ie. don't install into /usr/local/include)
+# All other situations above we make a copy locally.
+LIBBASENAME_NO_YES			= 
+LIBBASENAME					= $(LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
 
-
-INSTALL_APP					= $(patsubst %.app,  install_app_%, $(filter %.app,  $(TARGET_ALL)))
-INSTALL_SHARED_LIB			= $(patsubst %.slib, install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
-INSTALL_STATIC_LIB			= $(patsubst %.a,    install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
-INSTALL_HEADER				= $(if $(NO_HEADER),,$(if $(LIBBASENAME), $(patsubst %, install_head_%, $(subst /,-,$(HEAD)))))
+INSTALL_APP					= $(patsubst %.app,   install_app_%, $(filter %.app,  $(TARGET_ALL)))
+INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
+INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
+INSTALL_HEADER				= $(patsubst %, install_head_%, $(LIBBASENAME))
+DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
+INSTALL_DEFER_OBJ			= $(patsubst %, install_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
+INSTALL_DEFER				= $(INSTALL_DEFER_OBJ) $(patsubst %, install_lib_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 
 #
 # Set to On to see debug output
@@ -325,7 +371,7 @@ validate:		test
 install:		test
 	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  installAction
 installAction:	Print_On install_Dohead install_Dodebug install_Dorelease man
-cleanAction:	clean_Dohead clean_Dodebug clean_Dorelease clean_man
+cleanAction:	clean_Dohead clean_Dodebug clean_Dorelease clean_Dodefer clean_man
 install_debug:	test install_Dohead install_Dodebug
 install_release:test install_Dohead install_Dorelease
 install_profile:     install_Dohead install_Doprofile
@@ -358,7 +404,7 @@ install_Doprofile:
 install_Dohead:
 	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) try_install_head
 
-doInstall:	try_install_app try_install_shared_lib try_install_static_lib
+doInstall:	try_install_app try_install_shared_lib try_install_static_lib try_install_defer
 
 clean_Dodebug:
 	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doClean
@@ -366,30 +412,36 @@ clean_Dorelease:
 	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doClean
 clean_Doprofile:
 	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doClean
+clean_Dodefer:
+	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile try_clean_defer_root
 clean_Dohead:
 	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) try_clean_head
 
-doClean:	try_clean_app try_clean_shared_lib try_clean_static_lib
+doClean:	try_clean_app try_clean_shared_lib try_clean_static_lib try_clean_defer
 
 try_install_app:		$(if $(INSTALL_APP), install_app)
 try_install_shared_lib:	$(if $(INSTALL_SHARED_LIB), install_shared_lib)
 try_install_static_lib:	$(if $(INSTALL_STATIC_LIB), install_static_lib)
 try_install_head:		$(if $(INSTALL_HEADER), install_head)
+try_install_defer:		$(if $(INSTALL_DEFER), install_defer)
 try_clean_app:			$(if $(INSTALL_APP), clean_app)
 try_clean_shared_lib:	$(if $(INSTALL_SHARED_LIB), clean_shared_lib)
 try_clean_static_lib:	$(if $(INSTALL_STATIC_LIB), clean_static_lib)
-try_clean_head:			$(if $(INSTALL_HEADER), clean_head clean_head_dir)
+try_clean_head:			$(if $(INSTALL_HEADER), clean_head)
+try_clean_defer:		$(if $(INSTALL_DEFER), clean_defer)
+try_clean_defer_root:	$(if $(INSTALL_DEFER), clean_defer_root)
 
-install_app:		Note_Start_Installing_Applications $(INSTALL_APP)			Note_End_Installing_Applications
-install_shared_lib:	Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)	Note_End_Installing_Libraries
-install_static_lib:	Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)	Note_End_Installing_Libraries
-install_head:		Note_Start_Installing_Headers      $(INSTALL_HEADER)		Note_End_Installing_Headers
-clean_app:			Note_Start_Clean_Applications      $(patsubst install_%, clean_%, $(INSTALL_APP))			Note_End_Clean_Applications
-clean_shared_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_SHARED_LIB))	Note_End_Clean_Libraries
-clean_static_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_STATIC_LIB))	Note_End_Clean_Libraries
-clean_head:			Note_Start_Clean_Headers	       $(patsubst install_%, clean_%, $(INSTALL_HEADER)) 		Note_End_Clean_Headers
-clean_head_dir:
-	@if [[ -e $(PREFIX_INC)/$(LIBBASENAME)/ ]]; then rmdir -p $(PREFIX_INC)/$(LIBBASENAME)/; fi
+install_app:		Note_Start_Installing_Applications $(INSTALL_APP)           Note_End_Installing_Applications
+install_shared_lib:	Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)    Note_End_Installing_Libraries
+install_static_lib:	Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)    Note_End_Installing_Libraries
+install_head:		Note_Start_Installing_Headers      $(INSTALL_HEADER)        Note_End_Installing_Headers
+install_defer:		Note_Start_Installing_DeferLib     $(INSTALL_DEFER)         Note_End_Installing_DeferLib
+clean_app:			Note_Start_Clean_Applications      $(patsubst install_%, clean_%, $(INSTALL_APP))           Note_End_Clean_Applications
+clean_shared_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_SHARED_LIB))    Note_End_Clean_Libraries
+clean_static_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_STATIC_LIB))    Note_End_Clean_Libraries
+clean_head:			Note_Start_Clean_Headers           $(patsubst install_%, clean_%, $(INSTALL_HEADER))        Note_End_Clean_Headers
+clean_defer:		Note_Start_Clean_Defer_$(TARGET_MODE) $(patsubst install_%, clean_%, $(INSTALL_DEFER))      Note_End_Clean_Defer_$(TARGET_MODE)
+clean_defer_root:	Note_Start_Clean_Defer_Root        $(patsubst install_%, root_clean_%, $(INSTALL_DEFER_OBJ))    Note_End_Clean_Defer_Root
 
 Note_%:
 	@$(ECHO) $(call section_title, $(subst _, ,$*))
@@ -400,9 +452,10 @@ objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
 	@$(ECHO) $(call colour_text, BLUE, "Done")
 gcovarch:	$(GCOV_LIB)
 clean:
-	$(RM) $(OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
+	$(RM) $(GCOV_OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
+	$(RM) $(LIBBASENAME_ACTUAL)TestMarker.cpp
 	$(RM) -rf debug release coverage profile test/coverage $(TMP_SRC) $(TMP_HDR)
 	$(RM) -rf *.gcov test/*.gcov
 veryclean: clean cleanAction
@@ -444,7 +497,7 @@ build_unit_test:
 	@result=0;												\
 	if ( test -d test ); then								\
 		touch test/unittest.cpp;							\
-		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EX_LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
+		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" LDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
 		result=$$?;											\
 		$(RM)    test/unittest.cpp;							\
 	fi;														\
@@ -471,28 +524,41 @@ run_unit_test:
 	fi
 
 install_app_%:
-	@mkdir -p $(PREFIX_BIN)
+	@$(MKDIR) -p $(PREFIX_BIN)
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
 	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 
 install_shared_lib_%:
-	@mkdir -p $(PREFIX_LIB)
+	@$(MKDIR) -p $(PREFIX_LIB)
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
 install_static_lib_%:
-	@mkdir -p $(PREFIX_LIB)
+	@$(MKDIR) -p $(PREFIX_LIB)
 	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
 	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 
-install_head_%:
-	@mkdir -p $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst -,/,$*))/
-	@$(CP) $(subst -,/,$*) $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst -,/,$*))/
-	@$(ECHO) $(call subsection_title, Install Header $*)
+install_defer_YES_%:
+	# Do nothng
+#
+# Deferred objects are not installed into the main system.
+# They are only installed when INSTALL_ACTIVE is not set and thus built into the build directory
+# When the deferred library is then build it will use these object to build the appropriate
+# library object.
 
-install_head_head_%: $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL))).Dir
-	@mkdir -p $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/
-	@$(CP) $* $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/
+install_defer_NO_%:
+	@$(MKDIR) -p $(PREFIX_OBJ)/$*/$(TARGET_MODE)
+	@for obj in $(OBJ); do base=$$(basename $${obj});$(CP) $${obj} $(PREFIX_OBJ)/$*/$(TARGET_MODE)/$${base}; done
+	@$(ECHO) $(call subsection_title, Install Defer $*)
+
+install_lib_defer_YES_%:
+	# Do nothng
+install_lib_defer_NO_%:
+	$(CP) $(TARGET_MODE)/lib$*$(BUILD_EXTENSION).a $(PREFIX_LIB)/
+
+install_head_%:
+	@$(MKDIR) -p $(PREFIX_INC)/$*
+	for head in $(HEAD); do $(CP) $${head} $(PREFIX_INC)/$*/;done
 	@$(ECHO) $(call subsection_title, Install Header $*)
 
 clean_app_%:
@@ -509,11 +575,25 @@ clean_static_lib_%:
 
 clean_head_%:
 	@$(ECHO) $(call subsection_title, Clean Header $*)
-	@$(RM)  $(PREFIX_INC)/$(LIBBASENAME)/$(dir $(subst -,/,$*))/$(subst -,/,$*)
+	@for head in $(HEAD); do $(RM) -f $(PREFIX_INC)/$*/$${head};done
+	@if [[ -e $(PREFIX_INC)/$*/ ]]; then $(RMDIR) $(PREFIX_INC)/$*/; fi
 
-clean_head_head_%:
-	@$(ECHO) $(call subsection_title, Clean Header $*)
-	@$(RM) $(PREFIX_INC)/$(basename $(filter %.head, $(TARGET_ALL)))/$*
+clean_defer_YES_%:
+	@# nothing to do
+clean_defer_NO_%:
+	@$(ECHO) $(call subsection_title, Clean Defer $(TARGET_MODE) $*)
+	@for obj in $(OBJ); do base=$$(basename $${obj});$(RM) -f $(PREFIX_OBJ)/$*/$(TARGET_MODE)/$${base}; done
+	@if [[ -e $(PREFIX_OBJ)/$*/$(TARGET_MODE) ]]; then $(RMDIR) $(PREFIX_OBJ)/$*/$(TARGET_MODE); fi
+clean_lib_defer_YES_%:
+	@# nothing to do
+clean_lib_defer_NO_%:
+	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
+root_clean_defer_YES_%:
+	@# nothing to do
+root_clean_defer_NO_%:
+	@$(ECHO) $(call subsection_title, Clean Defer $* ROOT)
+	@if [[ -e $(PREFIX_OBJ)/$*/ ]]; then $(RMDIR) $(PREFIX_OBJ)/$*/; fi
+
 
 test_%:
 	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile BASE=.. THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app TESTNAME=$*; fi
@@ -560,8 +640,8 @@ cleanCoverage: always
 
 coveragetest: cleanCoverage $(GCOV_SRC)
 coverage: cleanCoverage $(GCOV_REPORT)
-	linesNotTested=`cat $(GCOV_SRC) $(GCOV_HEAD)| grep '####' | wc -l`;		\
-	linesTestable=`cat $(GCOV_SRC) $(GCOV_HEAD) | grep -v '\-:' | wc -l`;		\
+	linesNotTested=`echo | cat $(GCOV_SRC) $(GCOV_HEAD) - | grep '####' | wc -l`;		\
+	linesTestable=`echo | cat $(GCOV_SRC) $(GCOV_HEAD) - | grep -v '\-:' | wc -l`;		\
 	linesTested=$$(($${linesTestable}-$${linesNotTested}));			\
 	if [ $${linesTestable} == 0 ]; then								\
 		coverage=100;												\
@@ -709,6 +789,7 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 	@if [ ! -e $* ]; then mkdir -p $*; fi
 
 .PRECIOUS:	$(OBJ)
+.PRECIOUS:	$(GCOV_OBJ)
 .PRECIOUS:	$(TARGET_MODE)/%.app
 .PRECIOUS:	$(TARGET_MODE)/lib%.$(SO)
 .PRECIOUS:  $(TARGET_MODE)/lib%.a
@@ -720,7 +801,7 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 .PRECIOUS:	%.vera
 
 
-.PHONY:	%.app %.slib %.headu
+.PHONY:	%.app %.slib %.head %.defer
 .PHONY:	run_test vera vera_head vera_body
 
 %.head:
@@ -734,6 +815,14 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 
 %.slib:		buildDir $(TARGET_MODE)/lib%.$(SO)
 	@$(ECHO) $(call subsection_title, Done Building $(shell basename `pwd`) $(TARGET_MODE)/lib$*.$(SO))
+
+#
+# The defer mode builds a static lib
+# This library is used for unit testing but never installed.
+# This also has the side affect of building the required object files.
+# That we will copy into the build directory for later use when building a library
+%.defer:	buildDir  $(TARGET_MODE)/lib%$(BUILD_EXTENSION).a
+	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/defer)
 
 
 
@@ -756,15 +845,15 @@ vera/%.vera:
 		fi;													\
 	fi
 
-$(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
+$(TARGET_MODE)/%.app:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o
 	@if ( test "$(VERBOSE)" = "On" ); then \
-		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
+		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
 	else $(ECHO) $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ;	fi
-	@$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
+	@$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)); \
+		$(ECHO) $(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)); \
 		$(ECHO) "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
@@ -773,15 +862,15 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(TARGET_MODE)/%.o
 		$(RM) makefile_tmp;								\
 	fi
 
-$(TARGET_MODE)/lib%.a:	coverage.Dir $(OBJ) $(MOCK_OBJECT)
+$(TARGET_MODE)/lib%.a:	coverage.Dir $(GCOV_OBJ) $(DEFER_OBJ)
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(AR) $(ARFLAGS) $@ $(OBJ)' ;			\
+		$(ECHO) '$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ)';\
 	else $(ECHO) $(call colour_text, GRAY, "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
-	@$(AR) $(ARFLAGS) $@ $(OBJ) $(MOCK_OBJECT) > makefile_tmp 2>&1;	\
+	@$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ) > makefile_tmp 2>&1;	\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(AR) $(ARFLAGS) $@ $(OBJ);				\
+		$(ECHO) $(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ);\
 		$(ECHO) "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
@@ -790,15 +879,15 @@ $(TARGET_MODE)/lib%.a:	coverage.Dir $(OBJ) $(MOCK_OBJECT)
 		$(RM) makefile_tmp;								\
 	fi
 
-$(TARGET_MODE)/lib%.$(SO):	$(OBJ)
+$(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ)
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
+		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
 	else $(ECHO) $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; fi
-	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
+	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(LDLIBS_EXTERN_RPATH) $(CXX) -shared -o $@ $(LDFLAGS) $(OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL); \
+		$(ECHO) $(LDLIBS_EXTERN_RPATH) $(CXX) -shared -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL); \
 		$(ECHO) "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
@@ -932,38 +1021,46 @@ PrintDebug:	Print_$(VERBOSE)
 Print_Off:
 Print_NONE:
 Print_On:
-	@$(ECHO) "TARGET:   $(TARGET)"
-	@$(ECHO) "TARGET_ALL:$(TARGET_ALL)"
-	@$(ECHO) "CPP_SRC:	 $(CPP_SRC)"
-	@$(ECHO) "APP_SRC:	 $(APP_SRC)"
-	@$(ECHO) "HEAD:	 $(HEAD)"
-	@$(ECHO) "SRC:		 $(SRC)"
-	@$(ECHO) "OBJ:		 $(OBJ)"
-	@$(ECHO) "GCOV_SRC	$(GCOV_SRC)"
-	@$(ECHO) "GCOV_HEAD:	$(GCOV_HEAD)"
-	@$(ECHO) "GCOV_OBJ: $(GCOV_OBJ)"
-	@$(ECHO) "GPERF_SRC:$(GPERF_SRC)"
-	@$(ECHO) "TEST_IGNORE: $(TEST_IGNORE)"
-	@$(ECHO) "VERA_SRC: $(VERA_SRC)"
-	@$(ECHO) "VERA_OBJ: $(VERA_OBJ)"
-	@$(ECHO) "BOOST_CPPFLAGS: $(BOOST_CPPFLAGS)"
-	@$(ECHO) "RUNTIME_PATH: $(RUNTIME_PATH)"
+	@$(ECHO) "TARGET:               $(TARGET)"
+	@$(ECHO) "TARGET_ALL:           $(TARGET_ALL)"
+	@$(ECHO) "TARGET_MODE:          $(TARGET_MODE)"
+	@$(ECHO) "CPP_SRC:              $(CPP_SRC)"
+	@$(ECHO) "APP_SRC:              $(APP_SRC)"
+	@$(ECHO) "HEAD:                 $(HEAD)"
+	@$(ECHO) "SRC:                  $(SRC)"
+	@$(ECHO) "OBJ:                  $(OBJ)"
+	@$(ECHO) "DEFER_OBJ:            $(DEFER_OBJ)"
+	@$(ECHO) "GCOV_SRC              $(GCOV_SRC)"
+	@$(ECHO) "GCOV_HEAD:            $(GCOV_HEAD)"
+	@$(ECHO) "GCOV_OBJ:             $(GCOV_OBJ)"
+	@$(ECHO) "GPERF_SRC:            $(GPERF_SRC)"
+	@$(ECHO) "GCOV_REPORT:          $(GCOV_REPORT)"
+	@$(ECHO) "TEST_IGNORE:          $(TEST_IGNORE)"
+	@$(ECHO) "VERA_SRC:             $(VERA_SRC)"
+	@$(ECHO) "VERA_OBJ:             $(VERA_OBJ)"
+	@$(ECHO) "BOOST_CPPFLAGS:       $(BOOST_CPPFLAGS)"
+	@$(ECHO) "RUNTIME_PATH:         $(RUNTIME_PATH)"
 	@$(ECHO) "RUNTIME_SHARED_PATH_SET: $(RUNTIME_SHARED_PATH_SET)"
 	@$(ECHO) "RUNTIME_SHARED_PATH_SET EXPAND: $($(RUNTIME_SHARED_PATH_SET))"
-	@$(ECHO) "libdir:   $(libdir)"
-	@$(ECHO) "libdir:   ${libdir}"
-	@$(ECHO) "THORSLINKDIRS: $(THORSLINKDIRS)"
+	@$(ECHO) "libdir:               $(libdir)"
+	@$(ECHO) "libdir:               ${libdir}"
+	@$(ECHO) "THORSLINKDIRS:        $(THORSLINKDIRS)"
 	@$(ECHO) "THORSANVIL_STATICLOADALL: $(THORSANVIL_STATICLOADALL)"
-	@$(ECHO) "MAN_SRC:	$(MAN_SRC)"
-	@$(ECHO) "MAN_DIR:	$(MAN_DIR)"
-	@$(ECHO) "MAN_PAGE:	$(MAN_PAGE)"
-	@$(ECHO) "TARGET_ALL:         $(TARGET_ALL)"
-	@$(ECHO) "INSTALL_APP:        $(INSTALL_APP)"
-	@$(ECHO) "INSTALL_SHARED_LIB: $(INSTALL_SHARED_LIB)"
-	@$(ECHO) "INSTALL_STATIC_LIB: $(INSTALL_STATIC_LIB)"
-	@$(ECHO) "INSTALL_HEADER:     $(INSTALL_HEADER)"
-	@$(ECHO) "TESTNAME:           $(TESTNAME)"
-	@echo "ECHO: $(ECHO)"
+	@$(ECHO) "MAN_SRC:              $(MAN_SRC)"
+	@$(ECHO) "MAN_DIR:              $(MAN_DIR)"
+	@$(ECHO) "MAN_PAGE:             $(MAN_PAGE)"
+	@$(ECHO) "INSTALL_APP:          $(INSTALL_APP)"
+	@$(ECHO) "INSTALL_SHARED_LIB:   $(INSTALL_SHARED_LIB)"
+	@$(ECHO) "INSTALL_STATIC_LIB:   $(INSTALL_STATIC_LIB)"
+	@$(ECHO) "INSTALL_HEADER:       $(INSTALL_HEADER)"
+	@$(ECHO) "TESTNAME:             $(TESTNAME)"
+	@$(ECHO) "DEFER_NAME:           $(DEFER_NAME)"
+	@$(ECHO) "INSTALL_DEFER:        $(INSTALL_DEFER)"
+	@$(ECHO) "DEFER_NAME:           $(DEFER_NAME)"
+	@$(ECHO) "DEFER_LIBS:           $(DEFER_LIBS)"
+	@$(ECHO) "DEFER_OBJDIR:         $(DEFER_OBJDIR)"
+	@$(ECHO) "DEFER_OBJ:            $(DEFER_OBJ)"
+	@echo    "ECHO:                 $(ECHO)"
 
 .PHONY: always
 always:
