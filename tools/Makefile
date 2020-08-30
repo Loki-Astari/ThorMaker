@@ -15,6 +15,8 @@ SHELL=/bin/bash
 # A name with a *.a    extension is a static library		(the lib prefix will automatically be added)
 # A name with a *.slib extension is a shared library		(the lib prefix will automatically be added. And platform specific suffix will replace slib)
 # A name with a *.head extension builds a header only library
+# A name with a *.defer
+# A name with a *.test
 #
 # A name with a *.lib  extension is static or shared depending THOR_TARGETLIBS (this is usually defined by the configure script)
 #					   if THOR_TARGETLIBS is empty it defaults to shared.
@@ -57,6 +59,8 @@ SHELL=/bin/bash
 #													This will build the library: ThorsDB.lib
 #													and use all the object files from the three
 #													projects defined above
+# A name with a *.test only builds and runs the test.
+#						It does nothing for debug/release/install
 #
 #						This extension was added so that we could build a single library from multiple directories.
 #						See the XXX
@@ -236,6 +240,7 @@ LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
 							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
 							  $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
 							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))	\
+							  $(patsubst %.test, %, $(filter %.test, $(TARGET)))	\
 							  $(patsubst %.defer,%, $(filter %.defer,$(TARGET)))
 LIBBASENAME_ACTUAL			= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
 USE_HEADER					= $(if $(NO_HEADER),NO,YES)
@@ -801,12 +806,15 @@ buildDir:	$(TARGET_MODE).Dir coverage.Dir
 .PRECIOUS:	%.vera
 
 
-.PHONY:	%.app %.slib %.head %.defer
+.PHONY:	%.app %.slib %.head %.defer %.test
 .PHONY:	run_test vera vera_head vera_body
 
 %.head:
 	@$(ECHO) $(call subsection_title, Nothing to build for $*)
-	
+
+%.test:
+	@$(ECHO) $(call subsection_title, Nothing to build for $*)
+
 %.app:		buildDir $(TARGET_MODE)/%.app
 	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/$*)
 
