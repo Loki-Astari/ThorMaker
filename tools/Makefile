@@ -236,31 +236,6 @@ CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
 GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_SRC)) $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_HEAD))
-LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET)))	\
-							  $(patsubst %.slib, %, $(filter %.slib, $(TARGET)))	\
-							  $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET)))	\
-							  $(patsubst %.head, %, $(filter %.head, $(TARGET)))	\
-							  $(patsubst %.test, %, $(filter %.test, $(TARGET)))	\
-							  $(patsubst %.defer,%, $(filter %.defer,$(TARGET)))
-LIBBASENAME_ACTUAL			= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
-USE_HEADER					= $(if $(NO_HEADER),NO,YES)
-LIBBASENAME_NO_NO			= $(LIBBASENAME_ACTUAL)
-LIBBASENAME_YES_NO			= $(LIBBASENAME_ACTUAL)
-LIBBASENAME_YES_YES			= $(LIBBASENAME_ACTUAL)
-#
-# If we don't want headers and this is a full install
-# Then don't do any work with the headers (ie. don't install into /usr/local/include)
-# All other situations above we make a copy locally.
-LIBBASENAME_NO_YES			= 
-LIBBASENAME					= $(LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
-
-INSTALL_APP					= $(patsubst %.app,   install_app_%, $(filter %.app,         $(TARGET_ALL)))
-INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
-INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
-INSTALL_HEADER				= $(patsubst %, install_head_%, $(LIBBASENAME))
-DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
-INSTALL_DEFER_OBJ			= $(patsubst %, install_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
-INSTALL_DEFER				= $(INSTALL_DEFER_OBJ) $(patsubst %, install_lib_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 
 #
 # Set to On to see debug output
