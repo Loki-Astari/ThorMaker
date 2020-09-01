@@ -2,7 +2,7 @@
 -include $(THORSANVIL_ROOT)/Makefile.config
 -include $(THORSANVIL_ROOT)/build/tools/Colour.Makefile
 
-.PHONY:	all test clean install %.dir
+.PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
 MAKE	= make --silent
 
@@ -14,6 +14,7 @@ test:		ACTION=test
 clean:		ACTION=clean
 veryclean:	ACTION=veryclean
 install:	ACTION=install
+uninstall:	ACTION=uninstall
 profile:	ACTION=profile
 build:		ACTION=build
 lint:		ACTION=lint
@@ -30,6 +31,7 @@ test:		$(SUB_PROJECTS)
 clean:		$(SUB_PROJECTS)
 veryclean:	$(SUB_PROJECTS)
 install:	$(SUB_PROJECTS)
+uninstall:	$(SUB_PROJECTS)
 profile:	$(SUB_PROJECTS)
 build:		$(SUB_PROJECTS)
 lint:		check_lint $(SUB_PROJECTS)

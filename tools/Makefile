@@ -230,8 +230,8 @@ LDLIBS_EXTERN_INC_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_RO
 LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD), -l${lib})
 LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);)
-LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE)
-CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
+LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE) $(EXLDLIBS)
+CXXFLAGS					+= $(LDL"IBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
@@ -254,7 +254,7 @@ LIBBASENAME_YES_YES			= $(LIBBASENAME_ACTUAL)
 LIBBASENAME_NO_YES			= 
 LIBBASENAME					= $(LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
 
-INSTALL_APP					= $(patsubst %.app,   install_app_%, $(filter %.app,  $(TARGET_ALL)))
+INSTALL_APP					= $(patsubst %.app,   install_app_%, $(filter %.app,         $(TARGET_ALL)))
 INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
 INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
 INSTALL_HEADER				= $(patsubst %, install_head_%, $(LIBBASENAME))
@@ -363,26 +363,23 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all validate install lint objectarch gcovarch clean veryclean test mock coverage coveragetest debug release profile header_only install_dir
-.PHONY:	installAction install_app install_shared_lib install_static_lib install_head try_install_app try_install_shared_lib try_install_static_lib try_install_head
-.PHONY:	doInstall install_Dodebug install_Dorelease install_Doprofile install_Dohead
-.PHONY:	cleanAction clean_app clean_shared_lib clean_static_lib clean_head try_clean_app try_clean_shared_lib try_clean_static_lib try_clean_head
-.PHONY:	doClean clean_Dodebug clean_Dorelease clean_Doprofile clean_Dohead
+.PHONY:	all install uninstall build veryclean lint man tools
+.PHONY:	objectarch gcovarch test mock coverage coveragetest debug release profile install_dir
 
 
-all:	PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
-	@$(ECHO) $(call colour_text, BLUE, "Done")
-validate:		test
-install:		test
+all:			build
+install:		test debug release
 	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  installAction
-installAction:	Print_On install_Dohead install_Dodebug install_Dorelease man
-cleanAction:	clean_Dohead clean_Dodebug clean_Dorelease clean_Dodefer clean_man
-install_debug:	test install_Dohead install_Dodebug
-install_release:test install_Dohead install_Dorelease
-install_profile:     install_Dohead install_Doprofile
-header_only:	test install_Dohead
-build:			test install_Dohead install_Dodebug install_Dorelease
+uninstall:
+	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  cleanAction
+build:			test debug release
+	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=NO   installAction
+veryclean:		clean
+	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=NO   cleanAction
 lint:			doLint
+man:			$(MAN_PAGE)
+item:			PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
+
 
 tools:
 	@$(ECHO) "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
@@ -396,57 +393,7 @@ tools:
 	@$(ECHO) "CXX:              $(CXX)   :  Name: $(COMPILER_NAME) Version:$(COMPILER_VERSION) Language:$(CXXSTDVER)"
 	@$(ECHO) "COV:              $(COV)"
 
-	
-install_Dodebug:
-	$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug INSTALL_ACTIVE=$(INSTALL_ACTIVE) all
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doInstall
-install_Dorelease:
-	$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release INSTALL_ACTIVE=$(INSTALL_ACTIVE) all
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doInstall
-install_Doprofile:
-	$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) all
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doInstall
-install_Dohead:
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) try_install_head
-
-doInstall:	try_install_app try_install_shared_lib try_install_static_lib try_install_defer
-
-clean_Dodebug:
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug doClean
-clean_Dorelease:
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release doClean
-clean_Doprofile:
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile doClean
-clean_Dodefer:
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile try_clean_defer_root
-clean_Dohead:
-	$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) try_clean_head
-
-doClean:	try_clean_app try_clean_shared_lib try_clean_static_lib try_clean_defer
-
-try_install_app:		$(if $(INSTALL_APP), install_app)
-try_install_shared_lib:	$(if $(INSTALL_SHARED_LIB), install_shared_lib)
-try_install_static_lib:	$(if $(INSTALL_STATIC_LIB), install_static_lib)
-try_install_head:		$(if $(INSTALL_HEADER), install_head)
-try_install_defer:		$(if $(INSTALL_DEFER), install_defer)
-try_clean_app:			$(if $(INSTALL_APP), clean_app)
-try_clean_shared_lib:	$(if $(INSTALL_SHARED_LIB), clean_shared_lib)
-try_clean_static_lib:	$(if $(INSTALL_STATIC_LIB), clean_static_lib)
-try_clean_head:			$(if $(INSTALL_HEADER), clean_head)
-try_clean_defer:		$(if $(INSTALL_DEFER), clean_defer)
-try_clean_defer_root:	$(if $(INSTALL_DEFER), clean_defer_root)
-
-install_app:		Note_Start_Installing_Applications $(INSTALL_APP)           Note_End_Installing_Applications
-install_shared_lib:	Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)    Note_End_Installing_Libraries
-install_static_lib:	Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)    Note_End_Installing_Libraries
-install_head:		Note_Start_Installing_Headers      $(INSTALL_HEADER)        Note_End_Installing_Headers
-install_defer:		Note_Start_Installing_DeferLib     $(INSTALL_DEFER)         Note_End_Installing_DeferLib
-clean_app:			Note_Start_Clean_Applications      $(patsubst install_%, clean_%, $(INSTALL_APP))           Note_End_Clean_Applications
-clean_shared_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_SHARED_LIB))    Note_End_Clean_Libraries
-clean_static_lib:	Note_Start_Clean_Libraries         $(patsubst install_%, clean_%, $(INSTALL_STATIC_LIB))    Note_End_Clean_Libraries
-clean_head:			Note_Start_Clean_Headers           $(patsubst install_%, clean_%, $(INSTALL_HEADER))        Note_End_Clean_Headers
-clean_defer:		Note_Start_Clean_Defer_$(TARGET_MODE) $(patsubst install_%, clean_%, $(INSTALL_DEFER))      Note_End_Clean_Defer_$(TARGET_MODE)
-clean_defer_root:	Note_Start_Clean_Defer_Root        $(patsubst install_%, root_clean_%, $(INSTALL_DEFER_OBJ))    Note_End_Clean_Defer_Root
+include $(BUILD_ROOT)/tools/Build/install.Makefile
 
 Note_%:
 	@$(ECHO) $(call section_title, $(subst _, ,$*))
@@ -456,20 +403,11 @@ Note_%:
 objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
 	@$(ECHO) $(call colour_text, BLUE, "Done")
 gcovarch:	$(GCOV_LIB)
-clean:
-	$(RM) $(GCOV_OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
-	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
-	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
-	$(RM) $(LIBBASENAME_ACTUAL)TestMarker.cpp
-	$(RM) -rf debug release coverage profile test/coverage $(TMP_SRC) $(TMP_HDR)
-	$(RM) -rf *.gcov test/*.gcov
-veryclean: clean cleanAction
 
-man:		$(MAN_PAGE)
-clean_man:
 
 $(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
 	cp man/$* $(PREFIX_MAN)/$*
+
 test:	pre_test build_unit_test coverage/test.report coverage/coverage.report coverage/vera.report
 	@cat coverage/test.report.out coverage/coverage.report.out coverage/vera.report.out
 	@cat coverage/test.report		> coverage/test.report.out
@@ -514,17 +452,19 @@ vera:	vera.Dir vera_head vera_body
 vera_head:
 	@$(ECHO) $(call section_title,Static Analysis)
 vera_body:	$(VERA_OBJ)
+ThorsAnvilUnitTestMarker.cpp:
+	@echo "int aThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
 build_unit_test:
 	@-$(RM) -rf coverage/libobject.a coverage/*gcov coverage/*.gcda test/coverage/unittest.app test/coverage/*gcov test/coverage/*gcda
 	@$(ECHO) $(call section_title,Building Objects for Testing and Coverage)
-	@echo "int ThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
+	@echo "int aThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) gcovarch
 	@rm ThorsAnvilUnitTestMarker.cpp
 	@$(ECHO) $(call section_title,Building Unit Tests)
 	@result=0;												\
 	if ( test -d test ); then								\
 		touch test/unittest.cpp;							\
-		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EXLDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)";	\
+		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EXLDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)" item;	\
 		result=$$?;											\
 		$(RM)    test/unittest.cpp;							\
 	fi;														\
@@ -558,87 +498,16 @@ run_coverage:
 	echo -n > coverage/coverage.report.out
 	@if ( test -d test ); then								\
 		if [[ "$(TESTNAME)" == "*" ]]; then					\
-			$(MAKE) BASE=.. VERBOSE=Min PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE);	\
-			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE);	\
+			$(MAKE) BASE=.. VERBOSE=Min PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE) item;	\
+			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE) item;	\
 		fi													\
 	else													\
 		echo "NO Tests" > coverage/coverage.report;			\
 	fi
 
-install_app_%:
-	@$(MKDIR) -p $(PREFIX_BIN)
-	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
-	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
-
-install_shared_lib_%:
-	@$(MKDIR) -p $(PREFIX_LIB)
-	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
-	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
-
-install_static_lib_%:
-	@$(MKDIR) -p $(PREFIX_LIB)
-	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
-	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
-
-install_defer_YES_%:
-	# Do nothng
-#
-# Deferred objects are not installed into the main system.
-# They are only installed when INSTALL_ACTIVE is not set and thus built into the build directory
-# When the deferred library is then build it will use these object to build the appropriate
-# library object.
-
-install_defer_NO_%:
-	@$(MKDIR) -p $(PREFIX_OBJ)/$*/$(TARGET_MODE)
-	@for obj in $(OBJ); do base=$$(basename $${obj});$(CP) $${obj} $(PREFIX_OBJ)/$*/$(TARGET_MODE)/$${base}; done
-	@$(ECHO) $(call subsection_title, Install Defer $*)
-
-install_lib_defer_YES_%:
-	# Do nothng
-install_lib_defer_NO_%:
-	$(CP) $(TARGET_MODE)/lib$*$(BUILD_EXTENSION).a $(PREFIX_LIB)/
-
-install_head_%:
-	@$(MKDIR) -p $(PREFIX_INC)/$*
-	for head in $(HEAD); do $(CP) $${head} $(PREFIX_INC)/$*/;done
-	@$(ECHO) $(call subsection_title, Install Header $*)
-
-clean_app_%:
-	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
-	@$(RM) $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
-
-clean_shared_lib_%:
-	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
-	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
-
-clean_static_lib_%:
-	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
-	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
-
-clean_head_%:
-	@$(ECHO) $(call subsection_title, Clean Header $*)
-	@for head in $(HEAD); do $(RM) -f $(PREFIX_INC)/$*/$${head};done
-	@if [[ -e $(PREFIX_INC)/$*/ ]]; then $(RMDIR) $(PREFIX_INC)/$*/; fi
-
-clean_defer_YES_%:
-	@# nothing to do
-clean_defer_NO_%:
-	@$(ECHO) $(call subsection_title, Clean Defer $(TARGET_MODE) $*)
-	@for obj in $(OBJ); do base=$$(basename $${obj});$(RM) -f $(PREFIX_OBJ)/$*/$(TARGET_MODE)/$${base}; done
-	@if [[ -e $(PREFIX_OBJ)/$*/$(TARGET_MODE) ]]; then $(RMDIR) $(PREFIX_OBJ)/$*/$(TARGET_MODE); fi
-clean_lib_defer_YES_%:
-	@# nothing to do
-clean_lib_defer_NO_%:
-	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
-root_clean_defer_YES_%:
-	@# nothing to do
-root_clean_defer_NO_%:
-	@$(ECHO) $(call subsection_title, Clean Defer $* ROOT)
-	@if [[ -e $(PREFIX_OBJ)/$*/ ]]; then $(RMDIR) $(PREFIX_OBJ)/$*/; fi
-
 
 test_%:
-	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile BASE=.. THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app TESTNAME=$*; fi
+	@if [ -d test ]; then $(MAKE) -C test -f ../Makefile BASE=.. THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) TEST_STATE=on TARGET=unittest.app TESTNAME=$* item; fi
 
 mock:	coverage.Dir $(MOCK_FILES)
 	$(ECHO) "MOCKING: $(TARGET_MODE) $(MOCK_FILES)"
@@ -692,10 +561,10 @@ coverage: cleanCoverage $(GCOV_REPORT)
 		coverage=$$(($${linesTested100}/$${linesTestable}));		\
 	fi;																\
 	res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
-	$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
+	$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On item' to get details about coverage";		\
 	if [ $${res} -ne 0 ]; then										\
 		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total) | tee -a coverage/coverage.report;	\
-		$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On' to get details about coverage";		\
+		$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On item' to get details about coverage";		\
 		exit 1;														\
 	else															\
 		$(ECHO) $(GREEN_OK) $(call colour_text, PURPLE, Code Coverage) $${coverage}% $(call colour_text, PURPLE, exceed $(COVERAGE_REQUIRED)% of total) | tee -a coverage/coverage.report;	\
@@ -818,11 +687,9 @@ coverage/%*.h.out: coverage/%.h.gcov
 	@if [ "$(COVERAGE)" = "$*.h" ]; then cat coverage/$*.h.gcov ; fi
 
 debug:
-	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	INSTALL_ACTIVE=$(INSTALL_ACTIVE) all
+	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	INSTALL_ACTIVE=$(INSTALL_ACTIVE) item
 release:
-	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release INSTALL_ACTIVE=$(INSTALL_ACTIVE) all
-profile:
-	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=profile INSTALL_ACTIVE=$(INSTALL_ACTIVE) all try_install_head doInstall
+	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release INSTALL_ACTIVE=$(INSTALL_ACTIVE) item
 
 buildDir:	$(TARGET_MODE).Dir coverage.Dir
 
