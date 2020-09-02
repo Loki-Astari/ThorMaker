@@ -51,6 +51,9 @@ LIBBASENAME_YES_YES			= $(LIBBASENAME_ACTUAL)
 LIBBASENAME_NO_YES			= 
 LIBBASENAME					= $(LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
 DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
+INSTALL_MAN_SRC				= $(wildcard man/man*/*)
+INSTALL_MAN_DIR				= $(patsubst man/%, $(PREFIX_MAN)/%.Dir, $(sort $(dir $(INSTALL_MAN_SRC))))
+INSTALL_MAN_PAGE			= $(patsubst man/%, $(PREFIX_MAN)/%.man, $(INSTALL_MAN_SRC))
 
 
 INSTALL_APP					= $(patsubst %.app,   install_app_%,		$(filter %.app,  $(TARGET_ALL)))
@@ -58,7 +61,7 @@ INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib
 INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
 INSTALL_HEADER				= $(patsubst %,		  install_head_%,		$(LIBBASENAME))
 # TODO
-INSTALL_MAN					=
+INSTALL_MAN					= $(if $(strip $(INSTALL_MAN_PAGE)), install_man_$(INSTALL_ACTIVE))
 INSTALL_DEFER				= $(patsubst %, install_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 INSTALL_DEFER_DIR			= $(patsubst %, install_defer_dir_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 
@@ -132,6 +135,12 @@ install_head_%:
 	@for head in $(HEAD); do $(CP) $${head} $(PREFIX_INC)/$*/;done
 	@$(ECHO) $(call subsection_title, Install Header $*)
 
+install_man_NO:
+install_man_YES: $(INSTALL_MAN_PAGE)
+
+$(PREFIX_MAN)/%.man:	man/%	$(INSTALL_MAN_DIR)
+	cp man/$* $(PREFIX_MAN)/$*
+
 install_defer_YES_%:
 	@# Do nothng
 #
@@ -166,6 +175,12 @@ uninstall_head_%:
 	@$(ECHO) $(call subsection_title, Clean Header $*)
 	@for head in $(HEAD); do $(RM) -f $(PREFIX_INC)/$*/$${head};done
 	@if [[ -e $(PREFIX_INC)/$*/ ]]; then $(RMDIR) $(PREFIX_INC)/$*/; fi
+
+uninstall_man_NO:
+uninstall_man_YES: $(patsubst %.man, %.unman, $(INSTALL_MAN_PAGE))
+
+$(PREFIX_MAN)/%.unman:
+	$(RM) $(PREFIX_MAN)/$*
 
 uninstall_defer_YES_%:
 	@# nothing to do

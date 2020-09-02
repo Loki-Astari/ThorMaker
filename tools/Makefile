@@ -215,9 +215,6 @@ GCOV_SRC					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocov
 GCOV_HEAD					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_HEAD))
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
-MAN_SRC						= $(wildcard man/man*/*)
-MAN_DIR						= $(patsubst man/%, $(PREFIX_MAN)/%.Dir, $(sort $(dir $(MAN_SRC))))
-MAN_PAGE					= $(patsubst man/%, $(PREFIX_MAN)/%.man, $(MAN_SRC))
 DEFER_OBJX					= $(foreach lib, $(wildcard $(PREFIX_OBJ)/$(lib)/$(TARGET_MODE)/*.o), $(DEFER_LIBS))
 DEFER_OBJDIR				= $(foreach lib, $(DEFER_LIBS), $(PREFIX_OBJ)/$(lib)/$(TARGET_MODE))
 DEFER_OBJ					= $(foreach dir, $(DEFER_OBJDIR), $(wildcard $(dir)/*.o))
@@ -352,7 +349,6 @@ build:			test debug release
 veryclean:		clean
 	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=NO   ActionUInstall
 lint:			doLint
-man:			$(MAN_PAGE)
 item:			PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
 
 clean:
@@ -387,9 +383,6 @@ objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
 	@$(ECHO) $(call colour_text, BLUE, "Done")
 gcovarch:	$(GCOV_LIB)
 
-
-$(PREFIX_MAN)/%.man:	man/%	$(MAN_DIR)
-	cp man/$* $(PREFIX_MAN)/$*
 
 test:	pre_test build_unit_test coverage/test.report coverage/coverage.report coverage/vera.report
 	@cat coverage/test.report.out coverage/coverage.report.out coverage/vera.report.out
