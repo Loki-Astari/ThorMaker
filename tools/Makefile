@@ -341,15 +341,23 @@ RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUN
 
 all:			build
 install:		test debug release
-	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  ActionInstall
+	@$(MAKE) INSTALL_ACTIVE=YES		ActionInstall
 uninstall:
-	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=YES  ActionUInstall
+	@$(MAKE) INSTALL_ACTIVE=YES		ActionUInstall
 build:			test debug release
-	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=NO   ActionInstall
+	@$(MAKE) INSTALL_ACTIVE=NO		ActionInstall
 veryclean:		clean
-	$(MAKE)             BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=$(TARGET_MODE) INSTALL_ACTIVE=NO   ActionUInstall
+	@$(MAKE) INSTALL_ACTIVE=NO		ActionUInstall
+debug:
+	@$(MAKE) TARGET_MODE=debug		item
+release:
+	@$(MAKE) TARGET_MODE=release	item
 lint:			doLint
 item:			PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
+buildDir:		$(TARGET_MODE).Dir coverage.Dir
+%.Dir:
+	@if [ ! -e $* ]; then mkdir -p $*; fi
+
 
 clean:
 	$(RM) $(GCOV_OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
@@ -661,17 +669,6 @@ coverage/%*.h.out: coverage/%.h.gcov
 	@$(ECHO) $*.h $(call getPercentColour, $(shell awk '{print substr($$3,0,length($$3)-1)}' coverage/$*.h.out)) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a coverage/coverage.report
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.h.gcov ; fi
 	@if [ "$(COVERAGE)" = "$*.h" ]; then cat coverage/$*.h.gcov ; fi
-
-debug:
-	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=debug	INSTALL_ACTIVE=$(INSTALL_ACTIVE) item
-release:
-	@$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=release INSTALL_ACTIVE=$(INSTALL_ACTIVE) item
-
-buildDir:	$(TARGET_MODE).Dir coverage.Dir
-
-
-%.Dir:
-	@if [ ! -e $* ]; then mkdir -p $*; fi
 
 .PRECIOUS:	$(OBJ)
 .PRECIOUS:	$(GCOV_OBJ)
