@@ -145,9 +145,10 @@ INSTALL_ACTIVE	?= NO
 PREFIX?=$(BUILD_ROOT)
 PREFIX_BIN?=$(BUILD_ROOT)/bin
 PREFIX_LIB?=$(BUILD_ROOT)/lib
-PREFIX_OBJ?=$(BUILD_ROOT)/obj
 PREFIX_INC?=$(BUILD_ROOT)/include
 PREFIX_MAN?=$(BUILD_ROOT)/share/man
+PREFIX_DEFER_OBJ?=$(BUILD_ROOT)/dobj
+PREFIX_DEFER_LIB?=$(BUILD_ROOT)/dlib
 
 ifeq ($(INSTALL_ACTIVE),YES)
 PREFIX=${prefix}
@@ -193,6 +194,7 @@ THOR_TARGETLIBS				?= slib
 TARGET_GENERIC_LIB			= $(patsubst %.lib, %, $(filter %.lib, $(TARGET)))
 TARGET_GENERIC_EXPAND		= $(foreach exp, $(THOR_TARGETLIBS), $(foreach lib, $(TARGET_GENERIC_LIB), $(lib).$(exp)))
 TARGET_ALL					= $(filter-out %.lib, $(TARGET)) $(TARGET_GENERIC_EXPAND)
+TARGET_ITEM					= $(if $(TARGET_OVERRIDE), $(TARGET_OVERRIDE), $(TARGET_ALL))
 
 APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET_ALL)))
 APP_HEAD					= $(filter %.h,$(patsubst %.app,%.h,$(TARGET_ALL)))
@@ -213,10 +215,8 @@ GCOV_BASIC_SRC				= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(filter-out $
 GCOV_BASIC_HEAD				= $(patsubst %, coverage/%.gcov, $(filter-out $(APP_HEAD) %Config.h,$(wildcard *.h)))
 GCOV_SRC					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_SRC))
 GCOV_HEAD					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_HEAD))
-GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 GCOV_LIBOBJ					= $(if $(GCOV_OBJ),-lobject)
-DEFER_OBJX					= $(foreach lib, $(wildcard $(PREFIX_OBJ)/$(lib)/$(TARGET_MODE)/*.o), $(DEFER_LIBS))
-DEFER_OBJDIR				= $(foreach lib, $(DEFER_LIBS), $(PREFIX_OBJ)/$(lib)/$(TARGET_MODE))
+DEFER_OBJDIR				= $(foreach lib, $(DEFER_LIBS), $(PREFIX_DEFER_OBJ)/$(lib)/$(TARGET_MODE))
 DEFER_OBJ					= $(foreach dir, $(DEFER_OBJDIR), $(wildcard $(dir)/*.o))
 
 
@@ -291,7 +291,7 @@ THORSANVIL_STATICLOADALL	=   $(if $(LINK_SLIBS), $(THOR_STATIC_LOAD_FLAG) $(call
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
 TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread
 TEST_FLAGS_on				=	-I..
-TEST_LIBS_on				=	-L../coverage -L$(THORSANVIL_ROOT)/build/lib $(GCOV_LIBOBJ_PASS) -lgtest
+TEST_LIBS_on				=	-L../coverage -L$(PREFIX_DEFER_LIB) -L$(THORSANVIL_ROOT)/build/lib $(GCOV_LIBOBJ_PASS) -lgtest
 TEST_PATH_coverage			=	-I$(LOCAL_ROOT)
 TEST_PATH					=	$(TEST_PATH_$(TARGET_MODE))
 
@@ -329,34 +329,44 @@ BUILD_EXTENSION_TYPE_profile	=	P
 
 RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIME_SHARED_PATH_SET))| sed '-e s/ /:/')
 
+DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
 
 #
 # For reference the default rules are
 #	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS)
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
-.PHONY:	all install uninstall build veryclean lint man tools
-.PHONY:	objectarch gcovarch test mock coverage coveragetest debug release profile install_dir
+.PHONY:	all install uninstall build veryclean debug release lint item
+.PHONY: buildDir %.Dir
+.PHONY:	testonly test
+.PHONY:	tools
+.PHONY:	mock coverage coveragetest 
 
 
-all:			build
-install:		test debug release
+all:					build
+install:				test debug release
 	@$(MAKE) INSTALL_ACTIVE=YES		ActionInstall
 uninstall:
 	@$(MAKE) INSTALL_ACTIVE=YES		ActionUInstall
-build:			test debug release
+build:					test debug release
 	@$(MAKE) INSTALL_ACTIVE=NO		ActionInstall
-veryclean:		clean
+veryclean:				clean
 	@$(MAKE) INSTALL_ACTIVE=NO		ActionUInstall
 debug:
 	@$(MAKE) TARGET_MODE=debug		item
 release:
 	@$(MAKE) TARGET_MODE=release	item
-lint:			doLint
-item:			PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ALL)
+lint:					doLint
+item:					PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ITEM)
 buildDir:		$(TARGET_MODE).Dir coverage.Dir
 %.Dir:
 	@if [ ! -e $* ]; then mkdir -p $*; fi
+testonly:				ActionRunUnitTest
+test:					ActionRunUnitTest ActionRunCoverage ActionRunVera
+
+ActionRunCoverage:		report/coverage
+ActionRunVera:			report/vera
+
 
 
 clean:
@@ -364,7 +374,7 @@ clean:
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
 	$(RM) $(LIBBASENAME_ACTUAL)TestMarker.cpp
-	$(RM) -rf debug release coverage profile test/coverage $(TMP_SRC) $(TMP_HDR)
+	$(RM) -rf debug release coverage profile report test/coverage $(TMP_SRC) $(TMP_HDR)
 	$(RM) -rf *.gcov test/*.gcov
 
 
@@ -388,94 +398,49 @@ Note_%:
 
 %.cpp:	%.h
 	
-objectarch:	buildDir $(GCOV_OBJ) $(TARGET_MODE)/libobject.a
-	@$(ECHO) $(call colour_text, BLUE, "Done")
-gcovarch:	$(GCOV_LIB)
 
 
-test:	build_unit_test coverage/test.report coverage/coverage.report coverage/vera.report
-	@cat coverage/test.report.out coverage/coverage.report.out coverage/vera.report.out
-	@cat coverage/test.report		> coverage/test.report.out
-	@cat coverage/coverage.report	> coverage/coverage.report.out
-	@cat coverage/vera.report		> coverage/vera.report.out
+# @cat report/test report/coverage report/vera
 
-coverage/test.report: $(SRC) $(HEAD)
-	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO run_unit_test
 
-coverage/coverage.report: $(SRC) $(HEAD) coverage/test.report
+report/coverage: report.Dir $(SRC) $(HEAD) report/test
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO run_coverage
 
-coverage/vera.report: $(SRC) $(HEAD)
+report/vera: report.Dir $(SRC) $(HEAD)
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO static_test
 
 static_test:
-	@echo -n > coverage/vera.report
-	@echo -n > coverage/vera.report.out
+	@echo -n > report/vera
 	@if ( test -d test ); then								\
 		if [[ "$(TESTNAME)" == "*" ]]; then					\
 			make vera;										\
 		else												\
-			echo "No Test" > coverage/vera.report;			\
+			echo "No Test" > report/vera;			\
 		fi													\
 	else													\
-		echo "No Test" > coverage/vera.report;				\
+		echo "No Test" > report/vera;				\
 	fi
 vera:	vera.Dir vera_head vera_body
 vera_head:
 	@$(ECHO) $(call section_title,Static Analysis)
 vera_body:	$(VERA_OBJ)
-ThorsAnvilUnitTestMarker.cpp:
-	@echo "int aThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
+#ThorsAnvilUnitTestMarker.cpp:
+#	@echo "int aThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
 
 
 run_coverage:
-	@$(RM) coverage/coverage.report
-	echo -n > coverage/coverage.report.out
+	@$(RM) report/coverage
 	@if ( test -d test ); then								\
 		if [[ "$(TESTNAME)" == "*" ]]; then					\
 			$(MAKE) BASE=.. VERBOSE=Min PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE) item;	\
 			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE) item;	\
 		fi													\
 	else													\
-		echo "NO Tests" > coverage/coverage.report;			\
+		echo "NO Tests" > report/coverage;			\
 	fi
 
 mock:	coverage.Dir $(MOCK_FILES)
 	$(ECHO) "MOCKING: $(TARGET_MODE) $(MOCK_FILES)"
-
-$(BASE)/coverage/Mock.built:
-$(BASE)/coverage/MockHeaders.h: $(BASE)/coverage/Mock.built | $(BASE)/coverage.Dir
-	@touch $(BASE)/coverage/Mock.built
-	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix $(BASE)/coverage/MockHeaders.h
-	@if [[ -e $(BASE)/test/Mock.def ]]; then \
-		perl -ne '/(#include .*)/ and print "$$1\n"' $(BASE)/test/Mock.def >> $(BASE)/coverage/MockHeaders.h; \
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.preamb >> $(BASE)/coverage/MockHeaders.h; \
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "extern std::function<RemoveNoExceptType<decltype(::$$1)>> mock$$1;\n"' $(BASE)/test/Mock.def >> $(BASE)/coverage/MockHeaders.h; \
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.median >> $(BASE)/coverage/MockHeaders.h; \
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#define $$1 ThorsAnvil::BuildTools::Mock::mock$$1\n"' $(BASE)/test/Mock.def >> $(BASE)/coverage/MockHeaders.h;\
-	fi
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> $(BASE)/coverage/MockHeaders.h
-
-$(BASE)/coverage/ThorMock.h: $(BASE)/coverage/MockHeaders.h | $(BASE)/coverage.Dir
-	@cp $(THORSANVIL_ROOT)/build/mock/ThorMock.h.prefix $(BASE)/coverage/ThorMock.h
-	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.preamb >> $(BASE)/coverage/ThorMock.h
-	@if [ -e $(BASE)/test/Mock.def ]; then		\
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' $(BASE)/test/Mock.def >> $(BASE)/coverage/ThorMock.h; \
-	fi
-	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.median >> $(BASE)/coverage/ThorMock.h
-	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.suffix >> $(BASE)/coverage/ThorMock.h
-
-$(BASE)/coverage/MockHeaders.cpp:: $(BASE)/coverage/MockHeaders.h | $(BASE)/coverage.Dir
-	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix $(BASE)/coverage/MockHeaders.cpp
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.preamb >> $(BASE)/coverage/MockHeaders.cpp
-	@if [ -e $(BASE)/test/Mock.def ]; then		\
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' $(BASE)/test/Mock.def >> $(BASE)/coverage/MockHeaders.cpp; \
-	fi
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.median >> $(BASE)/coverage/MockHeaders.cpp
-	@if [ -e $(BASE)/test/Mock.def ]; then		\
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "std::function<RemoveNoExceptType<decltype(::$$1)>> mock$$1 = $$1;\n"' $(BASE)/test/Mock.def >> $(BASE)/coverage/MockHeaders.cpp; \
-	fi
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> $(BASE)/coverage/MockHeaders.cpp
 
 cleanCoverage: always
 	rm -f coverage/*.gcov
@@ -494,11 +459,11 @@ coverage: cleanCoverage $(GCOV_REPORT)
 	res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
 	$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On item' to get details about coverage";		\
 	if [ $${res} -ne 0 ]; then										\
-		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total) | tee -a coverage/coverage.report;	\
+		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total) | tee -a report/coverage;	\
 		$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On item' to get details about coverage";		\
 		exit 1;														\
 	else															\
-		$(ECHO) $(GREEN_OK) $(call colour_text, PURPLE, Code Coverage) $${coverage}% $(call colour_text, PURPLE, exceed $(COVERAGE_REQUIRED)% of total) | tee -a coverage/coverage.report;	\
+		$(ECHO) $(GREEN_OK) $(call colour_text, PURPLE, Code Coverage) $${coverage}% $(call colour_text, PURPLE, exceed $(COVERAGE_REQUIRED)% of total) | tee -a report/coverage;	\
 	fi
 	@$(RM) *.gcov test/*.gcov
 
@@ -605,15 +570,15 @@ coverage/%*.h.out: coverage/%.h.gcov
 	fi
 
 %.cpp_report_coverage:	coverage/%.cpp.gcov
-	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a coverage/coverage.report; fi
+	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a report/coverage; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.cpp.gcov ; fi;
 	@if [ "$(COVERAGE)" = "$*.cpp" ]; then cat coverage/$*.cpp.gcov ; fi;
 %.tpp_report_coverage:	coverage/%.tpp.gcov
-	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a coverage/coverage.report; fi
+	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a report/coverage; fi
 	@if [ "$(COVERAGE)" = "On" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
 %.h_report_coverage:	coverage/%.h.gcov coverage/%*.h.out
-	@$(ECHO) $*.h $(call getPercentColour, $(shell awk '{print substr($$3,0,length($$3)-1)}' coverage/$*.h.out)) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a coverage/coverage.report
+	@$(ECHO) $*.h $(call getPercentColour, $(shell awk '{print substr($$3,0,length($$3)-1)}' coverage/$*.h.out)) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a report/coverage
 	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.h.gcov ; fi
 	@if [ "$(COVERAGE)" = "$*.h" ]; then cat coverage/$*.h.gcov ; fi
 
@@ -661,20 +626,20 @@ coverage/%*.h.out: coverage/%.h.gcov
 vera/%.vera:
 	@if [ "$(VERA)" != "off" ]; then						\
 		if ( test "$(VERBOSE)" = "On" ); then				\
-			$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*" | tee -a coverage/vera.report; \
+			$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*" | tee -a report/vera; \
 		else												\
-			$(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' | tee -a coverage/vera.report;	\
+			$(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' | tee -a report/vera;	\
 		fi;													\
 		PATH="${PATH}:$(PREFIX_BIN)" $(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
 		if [ $$? != 0 ];									\
 		then												\
-			$(ECHO) $(RED_ERROR) | tee -a coverage/vera.report;\
+			$(ECHO) $(RED_ERROR) | tee -a report/vera;\
 			$(ECHO) "$(VERA) --profile thor --show-rule --error --std-report $@.report $*";	\
 			$(ECHO) "==================================================="; \
 			cat $@.report;									\
 			exit 1;											\
 		else 												\
-			$(ECHO) $(GREEN_OK) | tee -a coverage/vera.report;\
+			$(ECHO) $(GREEN_OK) | tee -a report/vera;\
 			$(RM) $@.report;								\
 		fi;													\
 	fi
@@ -701,6 +666,7 @@ $(TARGET_MODE)/lib%.a:	coverage.Dir $(GCOV_OBJ) $(DEFER_OBJ)
 		$(ECHO) '$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ)';\
 	else $(ECHO) $(call colour_text, GRAY, "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
 	@$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ) > makefile_tmp 2>&1;	\
+	ranlib $@ 2> /dev/null;								\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
@@ -732,7 +698,11 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ)
 
 coverage/ThorsAnvilUnitTestMarker.o: ThorsAnvilUnitTestMarker.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMock.h
 	@$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>&1
-$(TARGET_MODE)/%.o: %.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMock.h
+##
+
+# $(TARGET_MODE)/%.o: %.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMock.h
+$(TARGET_MODE)/%.o: %.cpp
+	mkdir -p $(TARGET_MODE)
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
@@ -752,26 +722,27 @@ $(TARGET_MODE)/%.o: %.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMo
 		$(ECHO) $(GREEN_OK);							\
 		$(RM) $${tmpfile};								\
 	fi
-$(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
-	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
-	elif ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
-	fi
-	@export tmpfile=$(shell $(MKTEMP));					\
-	$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-80s", $$0}' ; \
-	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
-	if [ $$? != 0 ];									\
-	then												\
-		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
-		$(ECHO) "========================================";\
-		cat $${tmpfile};								\
-		exit 1;											\
-	else 												\
-		$(ECHO) $(GREEN_OK);							\
-		$(RM) $${tmpfile};								\
-	fi
+
+##$(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
+##	@if ( test "$(VERBOSE)" = "Off" ); then				\
+##		$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
+##	elif ( test "$(VERBOSE)" = "On" ); then				\
+##		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
+##	fi
+##	@export tmpfile=$(shell $(MKTEMP));					\
+##	$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-80s", $$0}' ; \
+##	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+##	if [ $$? != 0 ];									\
+##	then												\
+##		$(ECHO) $(RED_ERROR);							\
+##		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
+##		$(ECHO) "========================================";\
+##		cat $${tmpfile};								\
+##		exit 1;											\
+##	else 												\
+##		$(ECHO) $(GREEN_OK);							\
+##		$(RM) $${tmpfile};								\
+##	fi
 
 %.tab.cpp: %.y
 	@if ( test "$(VERBOSE)" = "Off" ); then				\

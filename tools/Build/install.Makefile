@@ -50,7 +50,6 @@ LIBBASENAME_YES_YES			= $(LIBBASENAME_ACTUAL)
 # All other situations above we make a copy locally.
 LIBBASENAME_NO_YES			= 
 LIBBASENAME					= $(LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
-DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
 INSTALL_MAN_SRC				= $(wildcard man/man*/*)
 INSTALL_MAN_DIR				= $(patsubst man/%, $(PREFIX_MAN)/%.Dir, $(sort $(dir $(INSTALL_MAN_SRC))))
 INSTALL_MAN_PAGE			= $(patsubst man/%, $(PREFIX_MAN)/%.man, $(INSTALL_MAN_SRC))
@@ -150,8 +149,12 @@ install_defer_YES_%:
 # library object.
 
 install_defer_NO_%:
-	@$(MKDIR) -p $(PREFIX_OBJ)/$*/$(TARGET_MODE)
-	@for obj in $(OBJ); do base=$$(basename $${obj});$(CP) $${obj} $(PREFIX_OBJ)/$*/$(TARGET_MODE)/$${base}; done
+	@$(MKDIR) -p $(PREFIX_DEFER_OBJ)
+	@$(MKDIR) -p $(PREFIX_DEFER_LIB)
+	@$(CP) coverage/libUnitTest$*.a $(PREFIX_DEFER_LIB)/libUnitTest$*$(BUILD_EXTENSION).a
+	@$(ECHO) $(call subsection_title, Install Defer - $(TARGET_MODE) - libUnitTest$*$(BUILD_EXTENSION).a)
+	@$(MKDIR) -p $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)
+	@for obj in $(OBJ); do base=$$(basename $${obj});$(CP) $${obj} $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)/$${base}; done
 	@$(ECHO) $(call subsection_title, Install Defer $*)
 
 install_defer_dir_YES_%:
@@ -186,15 +189,17 @@ uninstall_defer_YES_%:
 	@# nothing to do
 
 uninstall_defer_NO_%:
+	@$(ECHO) $(call subsection_title, Clean Defer $(TARGET_MODE) libUnitTest$*$(BUILD_EXTENSION).a)
+	@$(RM) $(PREFIX_DEFER_LIB)/libUnitTest$*$(BUILD_EXTENSION).a
 	@$(ECHO) $(call subsection_title, Clean Defer $(TARGET_MODE) $*)
-	@for obj in $(OBJ); do base=$$(basename $${obj});$(RM) -f $(PREFIX_OBJ)/$*/$(TARGET_MODE)/$${base}; done
-	@if [[ -e $(PREFIX_OBJ)/$*/$(TARGET_MODE) ]]; then $(RMDIR) $(PREFIX_OBJ)/$*/$(TARGET_MODE); fi
+	@for obj in $(OBJ); do base=$$(basename $${obj});$(RM) -f $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)/$${base}; done
+	@if [[ -e $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE) ]]; then $(RMDIR) $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE); fi
 
 uninstall_defer_dir_YES_%:
 	@# nothing to do
 
 uninstall_defer_dir_NO_%:
 	@$(ECHO) $(call subsection_title, Clean Defer $* ROOT)
-	@if [[ -e $(PREFIX_OBJ)/$*/ ]]; then $(RMDIR) $(PREFIX_OBJ)/$*/; fi
+	@if [[ -e $(PREFIX_DEFER_OBJ)/$*/ ]]; then $(RMDIR) $(PREFIX_DEFER_OBJ)/$*/; fi
 
 
