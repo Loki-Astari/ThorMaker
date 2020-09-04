@@ -53,6 +53,7 @@ check_obj_coverage:	$(GCOV_OBJ_FILES)
 check_hed_coverage: $(GCOV_HED_FILES)
 
 coverage/%.out:			coverage/%.gcov
+	@(MKDIR) -p $(Ignore)coverage/
 	@touch $(Ignore)coverage/$*.out
 	@$(ECHO) $(call colour_text, GRAY,$*) | awk '{printf "\t%-80s", $$1}' | tee -a $(Ignore)coverage/$*.out
 	@if [[ "$(Ignore)" == "/tmp/" ]]; then	\
