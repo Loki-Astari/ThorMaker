@@ -116,6 +116,7 @@ coverage/
 debug/
 release/
 profile/
+report/
 vera/
 
 makefile_tmp

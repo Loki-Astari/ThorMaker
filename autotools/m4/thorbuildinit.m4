@@ -255,9 +255,9 @@ can be disabled with:
         LDFLAGS="${ORIG_LDFLAGS}"
     )
 ])
-AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SQL],
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
 [
-    AX_THOR_FUNC_USE_THORS_LIB(SQL, $1, ThorSQL, [ThorSQL$1D], [_ZN10ThorsAnvil3SQL3Lib15ConnectionProxyD2Ev], [https://github.com/Loki-Astari/ThorsSQL])
+    AX_THOR_FUNC_USE_THORS_LIB(DB, $1, ThorsDB, [ThorsDB$1D], [_ZN10ThorsAnvil2DB6Access3Lib15ConnectionProxyD2Ev], [https://github.com/Loki-Astari/ThorsDB])
 ])
 AC_DEFUN([AX_THOR_FUC_USE_THORS_LIB_SERIALIZE],
 [
