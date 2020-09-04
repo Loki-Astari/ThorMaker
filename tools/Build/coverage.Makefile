@@ -27,7 +27,7 @@ coverage-%:
 report/coverage.show:
 	@cat report/coverage
 
-report/coverage: report/test
+report/coverage: report/test Makefile
 	@$(ECHO) $(call section_title,Running Coverage) > report/coverage
 	@$(MKDIR) -p report
 	@if [[ -d test ]]; then $(MAKE) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_obj_coverage; fi
@@ -41,8 +41,9 @@ report/coverage: report/test
 reportCoverage:
 	@$(ECHO) $(call subsection_title,Project-Coverage:) | awk '{printf("%-88s", $$0);}' | tee -a report/coverage
 	@$(ECHO) $(call getPercentColour, $(shell  echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a report/coverage
-	coverage=$$(echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk); \
-	if [[ $${coverage} < $(COVERAGE_REQUIRED) ]]; then \
+	@coverage=$$(echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk);\
+	coverageInt=$$( printf "%.0f" $${coverage} );\
+	if [[ $${coverageInt} -le $(COVERAGE_REQUIRED) ]]; then \
 		$(ECHO) $(RED_ERROR)  $(call colour_text, GRAY, Coverage $${coverage} is below $(COVERAGE_REQUIRED)%);\
 		exit 1;\
 	fi

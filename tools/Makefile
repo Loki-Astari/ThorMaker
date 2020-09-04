@@ -238,7 +238,7 @@ GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_SRC)) $(
 # On:		Full message all the time
 # Off:		Nice messages easy to read
 # NONE:		Turn of messages and build in parallel
-VERBOSE						?=	Off
+VERBOSE						?=	NONE
 #
 # Set to 03 for old C++
 CXXSTDVER					?=  11
@@ -577,9 +577,10 @@ $(TARGET_MODE)/%.o: %.cpp
 		$(ECHO) $(GREEN_OK);							\
 	fi
 
-.PHONY:	PrintDebug Print_Off Print_On
+.PHONY:	PrintDebug Print_NONE Print_Off Print_On
 PrintDebug:	Print_$(VERBOSE)
 Print_Off:
+Print_NONE:
 Print_On:
 	@$(ECHO) "TARGET:               $(TARGET)"
 	@$(ECHO) "TARGET_ALL:           $(TARGET_ALL)"

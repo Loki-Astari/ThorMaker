@@ -8,7 +8,7 @@ END         {
                     printf("%.2f\n", executed * 100 / total);
                 }
                 else {
-                    printf("00.00\n");
+                    printf("100.00\n");
                 }
             }
 /^ *-:/     {
