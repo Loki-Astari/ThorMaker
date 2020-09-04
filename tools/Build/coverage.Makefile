@@ -3,6 +3,7 @@
 .PHONY:	ActionRunCoverage
 .PHONY: coverage-%
 # Internal
+.PHONY:	reportCoverage
 .PHONY:	check_obj_coverage check_hed_coverage
 
 .PRECIOUS:	coverage/%.cpp.gcov
@@ -27,15 +28,15 @@ report/coverage.show:
 	@cat report/coverage
 
 report/coverage: report/test
-	@$(ECHO) $(call section_title,Running Coverage)
+	@$(ECHO) $(call section_title,Running Coverage) > report/coverage
 	@$(MKDIR) -p report
 	@if [[ -d test ]]; then $(MAKE) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_obj_coverage; fi
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_obj_coverage; fi
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_hed_coverage; fi
-	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  report/coverage; fi
-	@touch report/coverage.show
-	@echo -n | cat - $$(ls coverage/*.out 2> /dev/null) > report/coverage
+	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  -a report/coverage; fi
+	@echo -n | cat - $$(ls coverage/*.out 2> /dev/null) >> report/coverage
 	@$(MAKE) TARGET_MODE=coverage reportCoverage
+	@touch report/coverage.show
 
 reportCoverage:
 	@$(ECHO) $(call subsection_title,Project-Coverage:) | awk '{printf("%-88s", $$0);}' | tee -a report/coverage

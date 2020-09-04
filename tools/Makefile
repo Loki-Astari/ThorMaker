@@ -209,7 +209,6 @@ SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
 HEAD						= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp)) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					= $(filter-out $(TEST_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
-VERA_OBJ					= $(patsubst %,vera/%.vera, $(VERA_SRC))
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
 GCOV_BASIC_SRC				= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(filter-out $(MOCK_OBJECT) $(APP_SRC) ,$(GCOV_OBJ))) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_BASIC_HEAD				= $(patsubst %, coverage/%.gcov, $(filter-out $(APP_HEAD) %Config.h,$(wildcard *.h)))
@@ -239,7 +238,7 @@ GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_SRC)) $(
 # On:		Full message all the time
 # Off:		Nice messages easy to read
 # NONE:		Turn of messages and build in parallel
-VERBOSE						?=	NONE
+VERBOSE						?=	Off
 #
 # Set to 03 for old C++
 CXXSTDVER					?=  11
@@ -341,7 +340,7 @@ DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
 .PHONY:	testonly covonly
 .PHONY:	test
 .PHONY:	tools
-.PHONY:	coverage coveragetest 
+.PHONY:	coverage coveragetest veraonly
 
 
 all:					build
@@ -364,11 +363,8 @@ buildDir:		$(TARGET_MODE).Dir coverage.Dir
 	@if [ ! -e $* ]; then mkdir -p $*; fi
 testonly:				ActionRunUnitTest
 covonly:				ActionRunCoverage
+veraonly:				ActionRunVera
 test:					ActionRunUnitTest ActionRunCoverage ActionRunVera
-
-ActionRunVera:			report/vera
-
-
 
 clean:
 	$(RM) $(GCOV_OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
@@ -382,6 +378,7 @@ clean:
 include $(BUILD_ROOT)/tools/Build/install.Makefile
 include $(BUILD_ROOT)/tools/Build/test.Makefile
 include $(BUILD_ROOT)/tools/Build/coverage.Makefile
+include $(BUILD_ROOT)/tools/Build/vera.Makefile
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
 
@@ -391,25 +388,6 @@ Note_%:
 
 %.cpp:	%.h
 	
-report/vera: report.Dir $(SRC) $(HEAD)
-	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO static_test
-
-static_test:
-	@echo -n > report/vera
-	@if ( test -d test ); then								\
-		if [[ "$(TESTNAME)" == "*" ]]; then					\
-			make vera;										\
-		else												\
-			echo "No Test" > report/vera;			\
-		fi													\
-	else													\
-		echo "No Test" > report/vera;				\
-	fi
-vera:	vera.Dir vera_head vera_body
-vera_head:
-	@$(ECHO) $(call section_title,Static Analysis)
-vera_body:	$(VERA_OBJ)
-
 .PRECIOUS:	$(OBJ)
 .PRECIOUS:	$(GCOV_OBJ)
 .PRECIOUS:	$(TARGET_MODE)/%.app
@@ -451,26 +429,6 @@ vera_body:	$(VERA_OBJ)
 
 
 
-vera/%.vera:
-	@if [ "$(VERA)" != "off" ]; then						\
-		if ( test "$(VERBOSE)" = "On" ); then				\
-			$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*" | tee -a report/vera; \
-		else												\
-			$(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' | tee -a report/vera;	\
-		fi;													\
-		PATH="${PATH}:$(PREFIX_BIN)" $(VERA) --profile thor --show-rule --error --std-report $@.report $*; \
-		if [ $$? != 0 ];									\
-		then												\
-			$(ECHO) $(RED_ERROR) | tee -a report/vera;\
-			$(ECHO) "$(VERA) --profile thor --show-rule --error --std-report $@.report $*";	\
-			$(ECHO) "==================================================="; \
-			cat $@.report;									\
-			exit 1;											\
-		else 												\
-			$(ECHO) $(GREEN_OK) | tee -a report/vera;\
-			$(RM) $@.report;								\
-		fi;													\
-	fi
 
 $(TARGET_MODE)/%.app:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o
 	@if ( test "$(VERBOSE)" = "On" ); then \
@@ -619,10 +577,9 @@ $(TARGET_MODE)/%.o: %.cpp
 		$(ECHO) $(GREEN_OK);							\
 	fi
 
-.PHONY:	Print_Off Print_On
+.PHONY:	PrintDebug Print_Off Print_On
 PrintDebug:	Print_$(VERBOSE)
 Print_Off:
-Print_NONE:
 Print_On:
 	@$(ECHO) "TARGET:               $(TARGET)"
 	@$(ECHO) "TARGET_ALL:           $(TARGET_ALL)"
