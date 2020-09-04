@@ -1,0 +1,92 @@
+#!/bin/bash
+
+#
+# Input
+#   File-Name:      Base name of file that we are generating report on.
+#
+# Assumption:
+#   We can find the generated files for coverage information in the current location(s)
+#       Prefix: Is the name of the file that contributed to the File's coverage.
+#
+#       coverage/<File-Name>.gcov
+#       coverage/<Prefix><File-Name>.gcov
+#       test/coverage/<Prefix><File-Name>.gcov
+#
+
+# This script is used to combine multiple .gconf files into a single file.
+# It assumes the combined files have been sorted by line number so that
+# all version of a particular line are consecutive.
+read -r -d '' AwkCommand <<'AwkCommand'
+BEGIN       {
+                # Initialize the variables
+                id=0;
+                used=0;
+                line="";
+            }
+END         {
+                # Print the last line if not already printed.
+                if (line != "") {
+                    print line;
+                }
+            }
+            {
+                # If we have moved to the next line
+                if ($2 != id) {
+                    # print out the last line as defined by the rules below.
+                    # then reset all the variables define in BEGIN
+                    print line;
+                    id=$2;
+                    used=0;
+                    line="";
+                }
+            }
+/^ *#####: *[0-9]+:[ \t]*}/ {
+                if (used == 0) {
+                    # Spacial case: A closing brace all by itself does not count.
+                    # The closing brace of a function just after a return will never be executed.
+                    $1 = "        -";
+                    OFS=":";
+                    line = $0;
+                    next;
+                }
+            }
+/^ *#####:/ {
+                # Spacial case: we should never be able to executed a throw that throws
+                # a domain error. These are put in locations that can never legally be
+                # reached in the code.
+                if (used == 0 && $0 ~ /domain_error/) {
+                    $1 = "        -";
+                    OFS=":";
+                    line = $0;
+                    next;
+                }
+            }
+/^ *#####:/ {
+                # We have found a line that can't be executed.
+                # Make a note and move on (multiple lines will be compressed).
+                if (used == 0) {
+                    line=$0;
+                }
+                next;
+            }
+/^ * -:/    {
+                # We have a line that can be executed but was not in this version.
+                if (used == 0) {
+                    line=$0;
+                }
+                next;
+            }
+            {
+                # We have a line that can be exectures.
+                used=1;
+                line=$0;
+            }
+AwkCommand
+
+file=$1
+
+input1=$(ls coverage/*.cpp.coverage/*${file}.gcov 2> /dev/null)
+input2=$(ls test/coverage/*.cpp.coverage/*${file}.gcov 2> /dev/null)
+
+echo -n | cat - ${input1} ${input2} | sort -n -k 2 | awk -F: "${AwkCommand}" > coverage/${file}.gcov
+

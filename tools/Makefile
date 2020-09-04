@@ -180,7 +180,7 @@ TESTNAME		?= *
 # Need to look at this
 COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
 COV_LONG_FLAG_Linux		= --long-file-names
-COV_LONG_FLAG_Darwin	= -p
+COV_LONG_FLAG_Darwin	= -l
 
 MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
 MKTEMP_Linux					= mktemp -u
@@ -338,9 +338,10 @@ DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
 
 .PHONY:	all install uninstall build veryclean debug release lint item
 .PHONY: buildDir %.Dir
-.PHONY:	testonly test
+.PHONY:	testonly covonly
+.PHONY:	test
 .PHONY:	tools
-.PHONY:	mock coverage coveragetest 
+.PHONY:	coverage coveragetest 
 
 
 all:					build
@@ -362,9 +363,9 @@ buildDir:		$(TARGET_MODE).Dir coverage.Dir
 %.Dir:
 	@if [ ! -e $* ]; then mkdir -p $*; fi
 testonly:				ActionRunUnitTest
+covonly:				ActionRunCoverage
 test:					ActionRunUnitTest ActionRunCoverage ActionRunVera
 
-ActionRunCoverage:		report/coverage
 ActionRunVera:			report/vera
 
 
@@ -378,34 +379,18 @@ clean:
 	$(RM) -rf *.gcov test/*.gcov
 
 
-tools:
-	@$(ECHO) "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
-	@$(ECHO) "PLATFORM FLAGS:   $(PLATFORM_SPECIFIC_FLAGS)"
-	@$(ECHO) "COMPILER FLAGS:   $(COMPILER_SPECIFIC_FLAGS)"
-	@$(ECHO) "LANGUAGE FLAGS:   $(LANGUAGE_SPECIFIC_FLAGS)"
-	@$(ECHO) "YACC:             $(YACC)"
-	@$(ECHO) "LEX:              $(LEX)"
-	@$(ECHO) "GPERF:            $(GPERF)"
-	@$(ECHO) "CP:               $(CP)"
-	@$(ECHO) "CXX:              $(CXX)   :  Name: $(COMPILER_NAME) Version:$(COMPILER_VERSION) Language:$(CXXSTDVER)"
-	@$(ECHO) "COV:              $(COV)"
-
 include $(BUILD_ROOT)/tools/Build/install.Makefile
 include $(BUILD_ROOT)/tools/Build/test.Makefile
+include $(BUILD_ROOT)/tools/Build/coverage.Makefile
+include $(BUILD_ROOT)/tools/lint.Makefile
+include $(BUILD_ROOT)/tools/Doc.Makefile
+
 
 Note_%:
 	@$(ECHO) $(call section_title, $(subst _, ,$*))
 
 %.cpp:	%.h
 	
-
-
-# @cat report/test report/coverage report/vera
-
-
-report/coverage: report.Dir $(SRC) $(HEAD) report/test
-	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO run_coverage
-
 report/vera: report.Dir $(SRC) $(HEAD)
 	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO static_test
 
@@ -424,163 +409,6 @@ vera:	vera.Dir vera_head vera_body
 vera_head:
 	@$(ECHO) $(call section_title,Static Analysis)
 vera_body:	$(VERA_OBJ)
-#ThorsAnvilUnitTestMarker.cpp:
-#	@echo "int aThorsAnvilUnitTestMarker = 1;" > ThorsAnvilUnitTestMarker.cpp
-
-
-run_coverage:
-	@$(RM) report/coverage
-	@if ( test -d test ); then								\
-		if [[ "$(TESTNAME)" == "*" ]]; then					\
-			$(MAKE) BASE=.. VERBOSE=Min PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile coveragetest THORSANVIL_ROOT=$(THORSANVIL_ROOT) COVERAGE=$(COVERAGE) item;	\
-			$(MAKE) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) coverage COVERAGE=$(COVERAGE) item;	\
-		fi													\
-	else													\
-		echo "NO Tests" > report/coverage;			\
-	fi
-
-mock:	coverage.Dir $(MOCK_FILES)
-	$(ECHO) "MOCKING: $(TARGET_MODE) $(MOCK_FILES)"
-
-cleanCoverage: always
-	rm -f coverage/*.gcov
-
-coveragetest: cleanCoverage $(GCOV_SRC)
-coverage: cleanCoverage $(GCOV_REPORT)
-	linesNotTested=`echo | cat $(GCOV_SRC) $(GCOV_HEAD) - | grep '####' | wc -l`;		\
-	linesTestable=`echo | cat $(GCOV_SRC) $(GCOV_HEAD) - | grep -v '\-:' | wc -l`;		\
-	linesTested=$$(($${linesTestable}-$${linesNotTested}));			\
-	if [ $${linesTestable} == 0 ]; then								\
-		coverage=100;												\
-	else															\
-		linesTested100=$$(($${linesTested}*100));					\
-		coverage=$$(($${linesTested100}/$${linesTestable}));		\
-	fi;																\
-	res=`$(ECHO) "scale=2;$${linesNotTested} > ($${linesTestable} * ((100-$(COVERAGE_REQUIRED))/100))" | bc`;				\
-	$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On item' to get details about coverage";		\
-	if [ $${res} -ne 0 ]; then										\
-		$(ECHO) $(RED_ERROR) $(call colour_text, PURPLE, Code Coverage $${coverage}% does not exceed $(COVERAGE_REQUIRED)% of total) | tee -a report/coverage;	\
-		$(ECHO) "Use: '$(MAKE) test BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) INSTALL_ACTIVE=$(INSTALL_ACTIVE) COVERAGE=On item' to get details about coverage";		\
-		exit 1;														\
-	else															\
-		$(ECHO) $(GREEN_OK) $(call colour_text, PURPLE, Code Coverage) $${coverage}% $(call colour_text, PURPLE, exceed $(COVERAGE_REQUIRED)% of total) | tee -a report/coverage;	\
-	fi
-	@$(RM) *.gcov test/*.gcov
-
-coverage/%.cpp.gcov: always
-	@if ( test "$(VERBOSE)" = "Min" ); then					\
-		$(ECHO) "Generating Coverage for $*.cpp";			\
-	fi
-	@if ( test "$(VERBOSE)" = "On" ); then					\
-		$(ECHO) "Generating Coverage for $*.cpp";			\
-		$(ECHO) '$(COV) --preserve-paths --object-directory coverage $*.cpp' ;	\
-	fi
-	@if [ -e $*.cpp ]; then									\
-		tmpfile=$(shell $(MKTEMP));							\
-		tmpSed=$(shell $(MKTEMP));							\
-		touch coverage/$*.cpp.gcov;							\
-		if ( test "$(VERBOSE)" = "On" ); then				\
-			$(ECHO) $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
-		fi;													\
-		$(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp 2>$${tmpfile}	> coverage/$*.cpp.out ;	\
-		if [[ -e $*.cpp.gcov ]]; then						\
-			sed 's/#####\(.*\)}$$/    -\1}/' $*.cpp.gcov > $${tmpSed};\
-			sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > $*.cpp.gcov;\
-		fi;													\
-		if [ $$? != 0 ];									\
-		then												\
-			$(ECHO) $(RED_ERROR);							\
-			$(ECHO) $(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp ;	\
-			$(ECHO) "====================================";	\
-			cat $${tmpfile};								\
-			exit 1;											\
-		else 												\
-			if ( test "$(VERBOSE)" = "On" ); then			\
-				$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.cpp") | awk '{printf "%-80s", $$0}' ; \
-				$(ECHO) $(GREEN_OK);						\
-			fi;												\
-			$(RM) -f $${tmpfilea} $${tmpSed};				\
-		fi													\
-	fi
-	@if ( test "$(VERBOSE)" = "On" ); then					\
-		$(ECHO) "Done";										\
-	fi
-	@if [ -e $*.tpp.gcov ]; then mv $*.tpp.gcov coverage/; fi;
-	@if [ -e $*.cpp.gcov ]; then mv $*.cpp.gcov coverage/; fi;
-	@tmpHead=$(shell $(MKTEMP));							\
-	for h in $$(ls *.h.gcov 2> /dev/null); do				\
-		touch coverage/$$h;									\
-		cat $$h coverage/$$h | sort -n -k 2 | awk 'BEGIN {id=0;count=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;count=0;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
-		mv $${tmpHead} coverage/$$h;						\
-	done
-
-
-
-coverage/%.tpp.gcov: coverage/%.cpp.gcov
-	@if ( test "$(VERBOSE)" = "On" ); then					\
-		$(ECHO) Do Nothing;									\
-	fi
-	touch coverage/$*.tpp.gcov
-coverage/%.h.gcov:
-	@if ( test "$(VERBOSE)" = "On" ); then					\
-		$(ECHO) "Generating Coverage for $*.h";				\
-	fi
-	@if [ -e $*.h ]; then									\
-		tmpSed=$(shell $(MKTEMP));							\
-		tmpHead=$(shell $(MKTEMP));							\
-		touch coverage/$*.h.gcov;							\
-		input1=$$(ls coverage/*$*.h.gcov 2> /dev/null);		\
-		input2=$$(ls test/coverage/*$*.h.gcov 2> /dev/null);\
-		cat coverage/$*.h.gcov $${input1} $${input2} | sort -n -k 2 | awk 'BEGIN {id=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
-		sed 's/#####\(.*\)}$$/    -\1}/' $${tmpHead} > $${tmpSed};\
-		sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > coverage/$*.h.gcov;\
-		grep -v '^ *-:' coverage/$*.h.gcov | awk -F: 'BEGIN {id=0;used=0;count=0;exe=0} {if ($$2 != id){id=$$2;count++;if (used == 1){used=0;exe++;}}} /#####/ {next} {used=1} END {if (used == 1){exe++;}if (count != 0){printf("Lines executed: %.2f%% of %d\n", exe * 100 / count, count);}else{}printf("Lines executed: 00.00%%\n");}' > coverage/$*.h.out; \
-		if ( test "$(VERBOSE)" = "On" ); then				\
-			$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.h") | awk '{printf "%-80s", $$0}' ; \
-			$(ECHO) $(GREEN_OK);							\
-		fi;													\
-		$(RM) -f $${tmpHead} $${tmpSed};					\
-	fi
-	@if ( test "$(VERBOSE)" = "On" ); then					\
-		$(ECHO) "Done";										\
-	fi
-
-coverage/%*.h.out: coverage/%.h.gcov
-	@if ( test "$(VERBOSE)" = "On" ); then					\
-		$(ECHO) "Generating Coverage Output for $*.h";		\
-	fi
-	@if [ -e $*.h ]; then									\
-		tmpSed=$(shell $(MKTEMP));							\
-		tmpHead=$(shell $(MKTEMP));							\
-		touch coverage/$*.h.gcov;							\
-		input1=$$(ls coverage/*$*.h.gcov 2> /dev/null);		\
-		input2=$$(ls test/coverage/*$*.h.gcov 2> /dev/null);\
-		cat coverage/$*.h.gcov $${input1} $${input2} | sort -n -k 2 | awk 'BEGIN {id=0;used=0;line=""} {if ($$2 != id){print line;id=$$2;used=0;line="";}} /^ *#####:/ {if (used == 0) {line=$$0}next} /^ * -:/ {if (used == 0){line=$$0}next} {used=1;line=$$0;}' > $${tmpHead}; \
-		sed 's/#####\(.*\)}$$/    -\1}/' $${tmpHead} > $${tmpSed};\
-		sed 's/#####\(.*\)\(throw std::domain_error\)/    -\1\2/' $${tmpSed} > coverage/$*.h.gcov;\
-		grep -v '^ *-:' coverage/$*.h.gcov | awk -F: 'BEGIN {id=0;used=0;count=0;exe=0} {if ($$2 != id){id=$$2;count++;if (used == 1){used=0;exe++;}}} /#####/ {next} {used=1} END {if (used == 1){exe++;}if (count != 0){printf("Lines executed: %.2f%% of %d\n", exe * 100 / count, count);}else{}printf("Lines executed: 00.00%%\n");}' > coverage/$*.h.out; \
-		if ( test "$(VERBOSE)" = "On" ); then				\
-			$(ECHO) $(call colour_text, GRAY, "$(COV) coverage $*.h") | awk '{printf "%-80s", $$0}' ; \
-			$(ECHO) $(GREEN_OK);							\
-		fi;													\
-		$(RM) -f $${tmpHead} $${tmpSed};					\
-	fi
-	@if ( test "$(VERBOSE)" = "On" ); then					\
-		$(ECHO) "Done";										\
-	fi
-
-%.cpp_report_coverage:	coverage/%.cpp.gcov
-	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.cpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.cpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a report/coverage; fi
-	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.cpp.gcov ; fi;
-	@if [ "$(COVERAGE)" = "$*.cpp" ]; then cat coverage/$*.cpp.gcov ; fi;
-%.tpp_report_coverage:	coverage/%.tpp.gcov
-	@if [ -e coverage/$*.cpp.out ]; then $(ECHO) $*.tpp $(call getPercentColour,$(shell cat coverage/$*.cpp.out | awk -F: 'START {FOUND=0} {if (FOUND==1) {print $$2;FOUND=0}} /File.*$*.tpp/ {FOUND=1}' | awk '{print substr($$1,0,length($$1)-1)}')) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a report/coverage; fi
-	@if [ "$(COVERAGE)" = "On" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
-	@if [ "$(COVERAGE)" = "$*.tpp" ]; then cat $$(find . -name "*$*.tpp.gcov") ; fi
-%.h_report_coverage:	coverage/%.h.gcov coverage/%*.h.out
-	@$(ECHO) $*.h $(call getPercentColour, $(shell awk '{print substr($$3,0,length($$3)-1)}' coverage/$*.h.out)) | awk '{printf "%-80s%s%%\n", $$1, $$2}' | tee -a report/coverage
-	@if [ "$(COVERAGE)" = "On" ]; then cat coverage/$*.h.gcov ; fi
-	@if [ "$(COVERAGE)" = "$*.h" ]; then cat coverage/$*.h.gcov ; fi
 
 .PRECIOUS:	$(OBJ)
 .PRECIOUS:	$(GCOV_OBJ)
@@ -696,11 +524,6 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ)
 		$(RM) makefile_tmp;								\
 	fi
 
-coverage/ThorsAnvilUnitTestMarker.o: ThorsAnvilUnitTestMarker.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMock.h
-	@$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>&1
-##
-
-# $(TARGET_MODE)/%.o: %.cpp $(BASE)/coverage/MockHeaders.h $(BASE)/coverage/ThorMock.h
 $(TARGET_MODE)/%.o: %.cpp
 	mkdir -p $(TARGET_MODE)
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
@@ -722,27 +545,6 @@ $(TARGET_MODE)/%.o: %.cpp
 		$(ECHO) $(GREEN_OK);							\
 		$(RM) $${tmpfile};								\
 	fi
-
-##$(BASE)/coverage/%.o: $(BASE)/coverage/%.cpp
-##	@if ( test "$(VERBOSE)" = "Off" ); then				\
-##		$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
-##	elif ( test "$(VERBOSE)" = "On" ); then				\
-##		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
-##	fi
-##	@export tmpfile=$(shell $(MKTEMP));					\
-##	$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-80s", $$0}' ; \
-##	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
-##	if [ $$? != 0 ];									\
-##	then												\
-##		$(ECHO) $(RED_ERROR);							\
-##		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
-##		$(ECHO) "========================================";\
-##		cat $${tmpfile};								\
-##		exit 1;											\
-##	else 												\
-##		$(ECHO) $(GREEN_OK);							\
-##		$(RM) $${tmpfile};								\
-##	fi
 
 %.tab.cpp: %.y
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
@@ -817,10 +619,6 @@ $(TARGET_MODE)/%.o: %.cpp
 		$(ECHO) $(GREEN_OK);							\
 	fi
 
-NotImplemented.%:
-	@$(ECHO) $(call colour_text, RED, "$* Not Implemented Yet")
-
-
 .PHONY:	Print_Off Print_On
 PrintDebug:	Print_$(VERBOSE)
 Print_Off:
@@ -867,10 +665,15 @@ Print_On:
 	@$(ECHO) "DEFER_OBJ:            $(DEFER_OBJ)"
 	@echo    "ECHO:                 $(ECHO)"
 
-.PHONY: always
-always:
-	@$(ECHO)
-
-include $(BUILD_ROOT)/tools/lint.Makefile
-include $(BUILD_ROOT)/tools/Doc.Makefile
+tools:
+	@$(ECHO) "PLATFORM:         $(PLATFORM)  $(PLATFORMVER)"
+	@$(ECHO) "PLATFORM FLAGS:   $(PLATFORM_SPECIFIC_FLAGS)"
+	@$(ECHO) "COMPILER FLAGS:   $(COMPILER_SPECIFIC_FLAGS)"
+	@$(ECHO) "LANGUAGE FLAGS:   $(LANGUAGE_SPECIFIC_FLAGS)"
+	@$(ECHO) "YACC:             $(YACC)"
+	@$(ECHO) "LEX:              $(LEX)"
+	@$(ECHO) "GPERF:            $(GPERF)"
+	@$(ECHO) "CP:               $(CP)"
+	@$(ECHO) "CXX:              $(CXX)   :  Name: $(COMPILER_NAME) Version:$(COMPILER_VERSION) Language:$(CXXSTDVER)"
+	@$(ECHO) "COV:              $(COV)"
 

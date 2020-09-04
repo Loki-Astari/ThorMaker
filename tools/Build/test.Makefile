@@ -1,9 +1,9 @@
 
 # External
 .PHONY:	ActionRunUnitTest
+.PHONY:	test-% testrun.% debugrun.%
 # Internal
 .PHONY:	build_unit_test run_unit_test
-.PHONY:	test-% testrun.% debugrun.%
 
 TEST_FILES					= $(wildcard test/*.cpp test/*.h test/*.tpp)
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)

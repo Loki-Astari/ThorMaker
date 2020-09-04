@@ -4,4 +4,6 @@ include3rd
 lib
 share
 obj
+dobj
+dlib
 .build
