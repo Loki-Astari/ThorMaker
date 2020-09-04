@@ -43,8 +43,8 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES)
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
 			LOADLIBES="-L$(BASE)/coverage -l$(COVERAGE_LIB)"\
+			LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)"	\
 			LINK_LIBS="$(UNITTEST_LINK_LIBS)"				\
-			LDLIBS="$(UNITTEST_LDLIBS)"						\
 			EXLDLIBS="$(UNITTEST_LDLIBS)"					\
 			-C test											\
 			-f ../Makefile									\
