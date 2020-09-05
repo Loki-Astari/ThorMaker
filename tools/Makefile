@@ -206,6 +206,7 @@ YACC_SRC					= $(wildcard *.y)
 TMP_SRC						= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC))
 TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC))
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
+DEP							= $(patsubst %.cpp, dependency/%.d, $(SRC))
 HEAD						= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp)) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					= $(filter-out $(TEST_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
@@ -352,9 +353,9 @@ build:					test debug release
 	@$(MAKE) INSTALL_ACTIVE=NO		ActionInstall
 veryclean:				clean
 	@$(MAKE) INSTALL_ACTIVE=NO		ActionUInstall
-debug:
+debug:					dependency
 	@$(MAKE) TARGET_MODE=debug		item
-release:
+release:				dependency
 	@$(MAKE) TARGET_MODE=release	item
 lint:					doLint
 item:					PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ITEM)
@@ -364,15 +365,22 @@ buildDir:	| $(TARGET_MODE).Dir coverage.Dir
 testonly:				ActionRunUnitTest
 covonly:				ActionRunCoverage
 veraonly:				ActionRunVera
-test:					ActionRunUnitTest ActionRunCoverage ActionRunVera
+test:					dependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 clean:
 	$(RM) $(GCOV_OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
 	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
 	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
 	$(RM) $(LIBBASENAME_ACTUAL)TestMarker.cpp
-	$(RM) -rf debug release coverage profile report test/coverage $(TMP_SRC) $(TMP_HDR)
+	$(RM) -rf debug release coverage report dependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR)
 	$(RM) -rf *.gcov test/*.gcov
+
+.PHONY:	dependency
+
+dependency:				$(DEP)
+
+dependency/%.d:			%.cpp | dependency.Dir
+	@$(CXX) -MF"$@" -MG -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"
 
 
 include $(BUILD_ROOT)/tools/Build/install.Makefile
@@ -381,6 +389,7 @@ include $(BUILD_ROOT)/tools/Build/coverage.Makefile
 include $(BUILD_ROOT)/tools/Build/vera.Makefile
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
+-include dependency/*
 
 
 Note_%:

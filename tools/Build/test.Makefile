@@ -37,6 +37,14 @@ build_unit_test:	test/coverage/unittest.app
 
 test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/coverage.Dir
 	@touch test/unittest.cpp
+	# Make sure the test dependencies have been updated first.
+	@$(MAKE) TARGET_OVERRIDE=unittest.app					\
+			BASE=..											\
+			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
+			TEST_STATE=on									\
+			-C test											\
+			-f ../Makefile									\
+			dependency
 	@$(MAKE) TARGET_OVERRIDE=unittest.app					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
@@ -47,7 +55,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			EXLDLIBS="$(UNITTEST_LDLIBS)"					\
 			-C test											\
 			-f ../Makefile									\
-			item 
+			item
 	@rm test/unittest.cpp
 
 coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMock.h | coverage.Dir

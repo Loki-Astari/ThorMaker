@@ -28,7 +28,7 @@ report/coverage.show:
 	@cat report/coverage
 
 report/coverage: report/test Makefile | report.Dir
-	@$(ECHO) $(call section_title,Running Coverage) > report/coverage
+	@$(ECHO) $(call section_title,Running Coverage) | tee report/coverage
 	@if [[ -d test ]]; then $(MAKE) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_obj_coverage; fi
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_obj_coverage; fi
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_hed_coverage; fi
