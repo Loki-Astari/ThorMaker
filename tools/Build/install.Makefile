@@ -114,30 +114,26 @@ ActionUInstallDefer:		Note_Start_Clean_Defer             $(patsubst install_%, u
 ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, uninstall_%, $(INSTALL_DEFER_DIR))         Note_End_Clean_Defer_Root
 
 
-install_app_%:
-	@$(MKDIR) -p $(PREFIX_BIN)
+install_app_%: | $(PREFIX_BIN).Dir
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
 	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 
-install_shared_lib_%:
-	@$(MKDIR) -p $(PREFIX_LIB)
+install_shared_lib_%: | $(PREFIX_LIB).Dir
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
-install_static_lib_%:
-	@$(MKDIR) -p $(PREFIX_LIB)
+install_static_lib_%: | $(PREFIX_LIB).Dir
 	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
 	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 
-install_head_%:
-	@$(MKDIR) -p $(PREFIX_INC)/$*
+install_head_%: | $(PREFIX_INC)/%.Dir
 	@for head in $(HEAD); do $(CP) $${head} $(PREFIX_INC)/$*/;done
 	@$(ECHO) $(call subsection_title, Install Header $*)
 
 install_man_NO:
 install_man_YES: $(INSTALL_MAN_PAGE)
 
-$(PREFIX_MAN)/%.man:	man/%	$(INSTALL_MAN_DIR)
+$(PREFIX_MAN)/%.man:	man/% | $(INSTALL_MAN_DIR)
 	cp man/$* $(PREFIX_MAN)/$*
 
 install_defer_YES_%:
@@ -148,12 +144,9 @@ install_defer_YES_%:
 # When the deferred library is then build it will use these object to build the appropriate
 # library object.
 
-install_defer_NO_%:
-	@$(MKDIR) -p $(PREFIX_DEFER_OBJ)
-	@$(MKDIR) -p $(PREFIX_DEFER_LIB)
+install_defer_NO_%: | $(PREFIX_DEFER_LIB).Dir $(PREFIX_DEFER_OBJ)/%/$(TARGET_MODE).Dir
 	@$(CP) coverage/libUnitTest$*.a $(PREFIX_DEFER_LIB)/libUnitTest$*$(BUILD_EXTENSION).a
 	@$(ECHO) $(call subsection_title, Install Defer - $(TARGET_MODE) - libUnitTest$*$(BUILD_EXTENSION).a)
-	@$(MKDIR) -p $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)
 	@for obj in $(OBJ); do base=$$(basename $${obj});$(CP) $${obj} $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)/$${base}; done
 	@$(ECHO) $(call subsection_title, Install Defer $*)
 
@@ -182,7 +175,7 @@ uninstall_head_%:
 uninstall_man_NO:
 uninstall_man_YES: $(patsubst %.man, %.unman, $(INSTALL_MAN_PAGE))
 
-$(PREFIX_MAN)/%.unman:
+$(PREFIX_MAN)/%.unman: $(PREFIX_MAN).Dir
 	$(RM) $(PREFIX_MAN)/$*
 
 uninstall_defer_YES_%:

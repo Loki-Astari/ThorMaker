@@ -27,9 +27,8 @@ coverage-%:
 report/coverage.show:
 	@cat report/coverage
 
-report/coverage: report/test Makefile
+report/coverage: report/test Makefile | report.Dir
 	@$(ECHO) $(call section_title,Running Coverage) > report/coverage
-	@$(MKDIR) -p report
 	@if [[ -d test ]]; then $(MAKE) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_obj_coverage; fi
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_obj_coverage; fi
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_hed_coverage; fi
@@ -52,8 +51,7 @@ check_obj_coverage:	$(GCOV_OBJ_FILES)
 
 check_hed_coverage: $(GCOV_HED_FILES)
 
-coverage/%.out:			coverage/%.gcov
-	@$(MKDIR) -p $(Ignore)coverage/
+coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
 	@$(ECHO) $(call colour_text, GRAY,$*) | awk '{printf "\t%-80s", $$1}' | tee -a $(Ignore)coverage/$*.out
 	@if [[ "$(Ignore)" == "/tmp/" ]]; then	\
@@ -62,21 +60,20 @@ coverage/%.out:			coverage/%.gcov
 		$(ECHO) $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a coverage/$*.out;\
 	fi
 	
-coverage/%.cpp.gcov:	coverage/%.o
+coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
 	@$(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp > /dev/null 2>&1
 	@for file in $$(ls $*.cpp.gcov 2> /dev/null); do mv $${file} coverage/;done
 	@checkSubFile=$$(ls $*.cpp##*.gcov 2> /dev/null);				\
 	if [[ $${checkSubFile} != "" ]]; then							\
-		mkdir -p coverage/$*.cpp.coverage;							\
 		mv $*.cpp##*.gcov coverage/$*.cpp.coverage/;				\
 	fi
 
-coverage/%.tpp.gcov:	$(GCOV_ALL_FILES)
+coverage/%.tpp.gcov:	$(GCOV_ALL_FILES) | coverage.Dir
 	$(BUILD_ROOT)/tools/coverageBuild $*.tpp
-coverage/%.h.gcov:		$(GCOV_ALL_FILES)
+coverage/%.h.gcov:		$(GCOV_ALL_FILES) | coverage.Dir
 	$(BUILD_ROOT)/tools/coverageBuild $*.h
 
 
-#report/coverage: report.Dir $(SRC) $(HEAD) report/test
+#report/coverage: $(SRC) $(HEAD) report/test | report.Dir
 #	@$(MAKE) $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=NO run_coverage
 

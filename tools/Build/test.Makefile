@@ -24,19 +24,18 @@ debugrun.%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
 	@DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib lldb -- test/coverage/unittest.app --gtest_filter=$*
 
-report/test:  $(SRC) $(HEAD) $(TEST_FILES)
-	@$(MKDIR) -p report coverage
+report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		build_unit_test; fi
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		run_unit_test; fi
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  report/test; fi
 	@touch report/test.show
 
-report/test.show:
+report/test.show: | report.Dir
 	@cat report/test
 
 build_unit_test:	test/coverage/unittest.app
 
-test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES)
+test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/coverage.Dir
 	@touch test/unittest.cpp
 	@$(MAKE) TARGET_OVERRIDE=unittest.app					\
 			BASE=..											\
@@ -51,7 +50,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES)
 			item 
 	@rm test/unittest.cpp
 
-coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMock.h
+coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMock.h | coverage.Dir
 	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
@@ -66,8 +65,8 @@ run_unit_test:
 # Build the mock headers from the test/Mock.def file.
 # Allows for easy mocking of system calls for unit tests.
 #
-coverage/Mock.built:
-coverage/MockHeaders.h: coverage/Mock.built
+coverage/Mock.built:	| coverage.Dir
+coverage/MockHeaders.h: coverage/Mock.built | coverage.Dir
 	@touch coverage/Mock.built
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix coverage/MockHeaders.h
 	@if [[ -e test/Mock.def ]]; then \
@@ -79,7 +78,7 @@ coverage/MockHeaders.h: coverage/Mock.built
 	fi
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
 
-coverage/ThorMock.h: coverage/MockHeaders.h
+coverage/ThorMock.h: coverage/MockHeaders.h | coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/ThorMock.h.prefix coverage/ThorMock.h
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.preamb >> coverage/ThorMock.h
 	@if [ -e test/Mock.def ]; then		\
@@ -88,7 +87,7 @@ coverage/ThorMock.h: coverage/MockHeaders.h
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.median >> coverage/ThorMock.h
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.suffix >> coverage/ThorMock.h
 
-coverage/MockHeaders.cpp:: coverage/MockHeaders.h
+coverage/MockHeaders.cpp:: coverage/MockHeaders.h | coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.preamb >> coverage/MockHeaders.cpp
 	@if [ -e test/Mock.def ]; then		\

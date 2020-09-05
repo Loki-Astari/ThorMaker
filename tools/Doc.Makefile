@@ -183,19 +183,19 @@ docprint:	always
 	@echo "DOC_CLASS_FILES	$(DOC_CLASS_FILES)"
 	@echo "DOC_METHOD_FILES	$(DOC_METHOD_FILES)"
 
-$(DOC_DIR)/package/%.md: Note_BuildPackage_% $(DOC_DIR)/package.Dir $(DOC_CLASS_FILES) $(wildcard docs/package)
+$(DOC_DIR)/package/%.md: Note_BuildPackage_% $(DOC_CLASS_FILES) $(wildcard docs/package)	| $(DOC_DIR)/package.Dir
 	@echo "Building Package $* Document"
 	$(DOC_PACKAGE_TOOL) $* > $@
 
-$(DOC_DIR)/class/$(DOC_BASE).%.md: Note_BuildClass_% $(DOC_DIR)/class.Dir $(DOC_CLASS_FILES) $(wildcard docs/%)
+$(DOC_DIR)/class/$(DOC_BASE).%.md: Note_BuildClass_% $(DOC_CLASS_FILES) $(wildcard docs/%) | $(DOC_DIR)/class.Dir
 	@echo "Building Class $* Document"
 	@$(DOC_CLASS_TOOL) $(DOC_BASE) $(basename $*).h $(subst .,,$(suffix $*)) > $@
 
-$(DOC_DIR)/function/$(DOC_BASE).%.md: Note_BuildFunc_% $(DOC_DIR)/function.Dir $(DOC_CLASS_FILES) $(wildcard docs/%)
+$(DOC_DIR)/function/$(DOC_BASE).%.md: Note_BuildFunc_% $(DOC_CLASS_FILES) $(wildcard docs/%) | $(DOC_DIR)/function.Dir
 	@echo "Building Function $* Documentation"
 	@$(DOC_FUNCTION_TOOL) $(DOC_BASE) $(basename $*).h $(subst .,,$(suffix $*)) > $@
 
-$(DOC_DIR)/method/$(DOC_BASE).%.md: Note_BuildMethod_% $(DOC_DIR)/method.Dir $(DOC_METHOD_FILES) $(wildcard docs/%)
+$(DOC_DIR)/method/$(DOC_BASE).%.md: Note_BuildMethod_% $(DOC_METHOD_FILES) $(wildcard docs/%) | $(DOC_DIR)/method.Dir
 	@echo "Building Method $* Document"
 	@$(DOC_METHOD_TOOL) $(DOC_BASE) $(call DOC_METHOD_SOURCE,$*).h $(call DOC_METHOD_TYPE,$*) $(call DOC_METHOD_CLASS,$*) $(call DOC_METHOD_METHOD,$*) > $@
 

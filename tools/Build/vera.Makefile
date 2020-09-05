@@ -12,8 +12,7 @@ ActionRunVera:		report/vera	 report/vera.show
 vera-%:
 	@PATH="${PATH}:$(PREFIX_BIN)" $(VERA) --profile thor --show-rule --error --std-report - $*
 
-report/vera:  $(SRC) $(HEAD)
-	@$(MKDIR) -p report
+report/vera:  $(SRC) $(HEAD) | report.Dir
 	@$(ECHO) $(call section_title,Static Analysis) | tee report/vera
 	@if [[ "$(VERA)" != "off" ]]; then $(MAKE) TARGET_MODE=coverage $(VERA_OBJ); fi
 	@echo -n | cat - $$(ls coverage/*.vera 2> /dev/null) >> report/vera
@@ -22,7 +21,7 @@ report/vera:  $(SRC) $(HEAD)
 report/vera.show:
 	@cat report/vera
 
-coverage/%.vera: %
+coverage/%.vera: %	| coverage.Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*" | tee coverage/$*.vera; \
 	else												\
