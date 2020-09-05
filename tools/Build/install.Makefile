@@ -28,8 +28,13 @@
 .PHONY:	ActionUInstallApp ActionUInstallSlib ActionUInstallAlib ActionUInstallAHead ActionUInstallDefer ActionUInstallMan ActionUInstallDRoot
 .PHONY:	install_app_%   install_shared_lib_%   install_static_lib_%   install_head_%   install_defer_YES_%   install_defer_NO_%   install_defer_dir_YES_%   install_defer_dir_NO_%
 .PHONY:	uninstall_app_% uninstall_shared_lib_% uninstall_static_lib_% uninstall_head_% uninstall_defer_YES_% uninstall_defer_NO_% uninstall_defer_dir_YES_% uninstall_defer_dir_NO_%
-
 .PHONY:	root_clean_defer_YES_% root_clean_defer_NO_%
+.PHONY:	install_defer_lib install_defer_obj
+.PRECIOUS: $(PREFIX_BIN)/%$(BUILD_EXTENSION)
+.PRECIOUS: $(PREFIX_LIB)/lib%$(BUILD_EXTENSION).$(SO)
+.PRECIOUS: $(PREFIX_LIB)/lib%$(BUILD_EXTENSION).a
+
+
 
 # Variables used local only
 LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET_ALL)))	\
@@ -59,10 +64,12 @@ INSTALL_APP					= $(patsubst %.app,   install_app_%,		$(filter %.app,  $(TARGET_
 INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
 INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
 INSTALL_HEADER				= $(patsubst %,		  install_head_%,		$(LIBBASENAME))
-# TODO
 INSTALL_MAN					= $(if $(strip $(INSTALL_MAN_PAGE)), install_man_$(INSTALL_ACTIVE))
 INSTALL_DEFER				= $(patsubst %, install_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 INSTALL_DEFER_DIR			= $(patsubst %, install_defer_dir_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
+INSTALL_HEAD				= $(patsubst %, $(PREFIX_INC)/$(LIBBASENAME)/%, $(HEAD))
+INSTALL_DEFER_OBJ			= $(patsubst %, $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/%, $(OBJ)) 
+
 
 # This is the interface to this makefile.
 # Use either ActionInstall or ActionUInstall
@@ -113,62 +120,74 @@ ActionUInstallMan:			Note_Start_Clean_Man               $(patsubst install_%, un
 ActionUInstallDefer:		Note_Start_Clean_Defer             $(patsubst install_%, uninstall_%, $(INSTALL_DEFER))             Note_End_Clean_Defer
 ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, uninstall_%, $(INSTALL_DEFER_DIR))         Note_End_Clean_Defer_Root
 
-
-install_app_%: | $(PREFIX_BIN).Dir
-	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
-	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
-
-install_shared_lib_%: | $(PREFIX_LIB).Dir
-	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
-	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
-
-install_static_lib_%: | $(PREFIX_LIB).Dir
-	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
-	@$(ECHO) $(call subsection_title, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
-
-install_head_%: | $(PREFIX_INC)/%.Dir
-	@for head in $(HEAD); do $(CP) $${head} $(PREFIX_INC)/$*/;done
-	@$(ECHO) $(call subsection_title, Install Header $*)
-
+install_app_%:				$(PREFIX_BIN)/%$(BUILD_EXTENSION)
+	@# Don't know why I need this!
+install_shared_lib_%:		$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).$(SO)
+	@# Don't know why I need this!
+install_static_lib_%:		$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).a
+	@# Don't know why I need this!
+install_head_$(LIBBASENAME):$(INSTALL_HEAD)
+	@# Do nothng
 install_man_NO:
+	@# Do nothng
 install_man_YES: $(INSTALL_MAN_PAGE)
-
-$(PREFIX_MAN)/%.man:	man/% | $(INSTALL_MAN_DIR)
-	cp man/$* $(PREFIX_MAN)/$*
-
+	@# Do nothng
 install_defer_YES_%:
 	@# Do nothng
-#
-# Deferred objects are not installed into the main system.
-# They are only installed when INSTALL_ACTIVE is not set and thus built into the build directory
-# When the deferred library is then build it will use these object to build the appropriate
-# library object.
-
-install_defer_NO_%: | $(PREFIX_DEFER_LIB).Dir $(PREFIX_DEFER_OBJ)/%/$(TARGET_MODE).Dir
-	@$(CP) coverage/libUnitTest$*.a $(PREFIX_DEFER_LIB)/libUnitTest$*$(BUILD_EXTENSION).a
-	@$(ECHO) $(call subsection_title, Install Defer - $(TARGET_MODE) - libUnitTest$*$(BUILD_EXTENSION).a)
-	@for obj in $(OBJ); do base=$$(basename $${obj});$(CP) $${obj} $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)/$${base}; done
-	@$(ECHO) $(call subsection_title, Install Defer $*)
-
+install_defer_NO_$(DEFER_NAME):		install_defer_lib install_defer_obj
+	@# Do nothng
 install_defer_dir_YES_%:
 	@# Do nothng
 install_defer_dir_NO_%:
 	@# Do nothng
 
+install_defer_lib:		$(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a
+install_defer_obj:		$(INSTALL_DEFER_OBJ)
+
+
+$(PREFIX_BIN)/%$(BUILD_EXTENSION):				$(TARGET_MODE)/%.app		| $(PREFIX_BIN).Dir
+	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
+	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
+
+$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).$(SO):		$(TARGET_MODE)/lib%.$(SO)	| $(PREFIX_LIB).Dir
+	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
+	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
+
+$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).a:			$(TARGET_MODE)/lib%.a		| $(PREFIX_LIB).Dir
+	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
+	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
+
+$(PREFIX_INC)/$(LIBBASENAME)/%:	%											| $(PREFIX_INC)/$(LIBBASENAME).Dir
+	@#for head in $(HEAD); do $(CP) $${head} $(PREFIX_INC)/$*/;done
+	@$(CP) $* $(PREFIX_INC)/$(LIBBASENAME)/$*
+	@$(ECHO) $(call paragraph, Install Header $*)
+
+$(PREFIX_MAN)/%.man:	man/% | $(INSTALL_MAN_DIR)
+	cp man/$* $(PREFIX_MAN)/$*
+
+$(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a:	coverage/libUnitTest$(DEFER_NAME).a	| $(PREFIX_DEFER_LIB).Dir
+	@$(CP) coverage/libUnitTest$(DEFER_NAME).a $(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a
+	@$(ECHO) $(call paragraph, Install Defer - $(TARGET_MODE) - libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a)
+
+$(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/$(TARGET_MODE)/%:	%								| $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/$(TARGET_MODE).Dir
+	@#for obj in $(OBJ); do base=$$(basename $${obj});$(CP) $${obj} $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)/$${base}; done
+	@$(CP) $* $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/$(TARGET_MODE)/
+	@$(ECHO) $(call paragraph, Install Defer $*)
+
 uninstall_app_%:
-	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
+	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 	@$(RM) $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
 
 uninstall_shared_lib_%:
-	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
+	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
 
 uninstall_static_lib_%:
-	@$(ECHO) $(call subsection_title, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
+	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
 
 uninstall_head_%:
-	@$(ECHO) $(call subsection_title, Clean Header $*)
+	@$(ECHO) $(call paragraph, Clean Header $*)
 	@for head in $(HEAD); do $(RM) -f $(PREFIX_INC)/$*/$${head};done
 	@if [[ -e $(PREFIX_INC)/$*/ ]]; then $(RMDIR) $(PREFIX_INC)/$*/; fi
 
@@ -182,9 +201,9 @@ uninstall_defer_YES_%:
 	@# nothing to do
 
 uninstall_defer_NO_%:
-	@$(ECHO) $(call subsection_title, Clean Defer $(TARGET_MODE) libUnitTest$*$(BUILD_EXTENSION).a)
+	@$(ECHO) $(call paragraph, Clean Defer $(TARGET_MODE) libUnitTest$*$(BUILD_EXTENSION).a)
 	@$(RM) $(PREFIX_DEFER_LIB)/libUnitTest$*$(BUILD_EXTENSION).a
-	@$(ECHO) $(call subsection_title, Clean Defer $(TARGET_MODE) $*)
+	@$(ECHO) $(call paragraph, Clean Defer $(TARGET_MODE) $*)
 	@for obj in $(OBJ); do base=$$(basename $${obj});$(RM) -f $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE)/$${base}; done
 	@if [[ -e $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE) ]]; then $(RMDIR) $(PREFIX_DEFER_OBJ)/$*/$(TARGET_MODE); fi
 
@@ -192,7 +211,7 @@ uninstall_defer_dir_YES_%:
 	@# nothing to do
 
 uninstall_defer_dir_NO_%:
-	@$(ECHO) $(call subsection_title, Clean Defer $* ROOT)
+	@$(ECHO) $(call paragraph, Clean Defer $* ROOT)
 	@if [[ -e $(PREFIX_DEFER_OBJ)/$*/ ]]; then $(RMDIR) $(PREFIX_DEFER_OBJ)/$*/; fi
 
 

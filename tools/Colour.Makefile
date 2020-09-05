@@ -31,6 +31,7 @@ GREEN_OK						= $(call colour_text, GREEN, OK)
 RED_ERROR						= $(call colour_text, RED, ERROR)
 section_title					= $(call colour_text, BLUE, $(1))
 subsection_title				= $(call colour_text, CYAN, "  $(1)")
+paragraph						= $(call colour_text, GRAY, "      $(1)")
 
 
 toInt							= $(shell $(ECHO) "$(1)" | awk -F. '{print $$1+0}')

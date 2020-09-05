@@ -329,7 +329,7 @@ BUILD_EXTENSION_TYPE_profile	=	P
 
 RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIME_SHARED_PATH_SET))| sed '-e s/ /:/')
 
-DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
+DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))))
 
 #
 # For reference the default rules are
@@ -378,6 +378,8 @@ dependency:				$(DEP)
 
 dependency/%.d:		%.cpp | dependency.Dir
 	@$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> /dev/null
+
+.SECONDARY: dependency/%.d
 
 
 include $(BUILD_ROOT)/tools/Build/install.Makefile
