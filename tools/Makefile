@@ -337,11 +337,15 @@ DEFER_NAME					= $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL)))
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
 .PHONY:	all install uninstall build veryclean debug release lint item
-.PHONY: buildDir %.Dir
+.PHONY: buildDir
 .PHONY:	testonly covonly
 .PHONY:	test
 .PHONY:	tools
 .PHONY:	coverage coveragetest veraonly
+.PHONY:	dependency
+
+
+.PRECIOUS: %.Dir
 
 
 all:					build
@@ -361,26 +365,19 @@ lint:					doLint
 item:					PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ITEM)
 buildDir:	| $(TARGET_MODE).Dir coverage.Dir
 %.Dir:
-	$(MKDIR) -p $*
+	@$(MKDIR) -p $*
 testonly:				ActionRunUnitTest
 covonly:				ActionRunCoverage
 veraonly:				ActionRunVera
 test:					dependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 clean:
-	$(RM) $(GCOV_OBJ) $(GCOV_SRC) $(GCOV_HEAD) $(TMP_SRC) $(TMP_HDR) makefile_tmp
-	$(RM) $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC)) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CLEAN_EXTRA)
-	$(RM) $(TARGET_ALL) $(patsubst %.app,%,$(filter %.app,$(TARGET_ALL))) $(patsubst %,$(TARGET_MODE)/%,$(filter %.app,$(TARGET_ALL)))
-	$(RM) $(LIBBASENAME_ACTUAL)TestMarker.cpp
-	$(RM) -rf debug release coverage report dependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR)
-	$(RM) -rf *.gcov test/*.gcov
-
-.PHONY:	dependency
+	$(RM) -rf debug release coverage report dependency test/coverage test/dependency
 
 dependency:				$(DEP)
 
-dependency/%.d:			%.cpp | dependency.Dir
-	@$(CXX) -MF"$@" -MG -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"
+dependency/%.d:		%.cpp | dependency.Dir
+	@$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> /dev/null
 
 
 include $(BUILD_ROOT)/tools/Build/install.Makefile
@@ -395,8 +392,6 @@ include $(BUILD_ROOT)/tools/Doc.Makefile
 Note_%:
 	@$(ECHO) $(call section_title, $(subst _, ,$*))
 
-%.cpp:	%.h
-	
 .PRECIOUS:	$(OBJ)
 .PRECIOUS:	$(GCOV_OBJ)
 .PRECIOUS:	$(TARGET_MODE)/%.app
