@@ -51,6 +51,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			TEST_STATE=on									\
 			LOADLIBES="-L$(BASE)/coverage -l$(COVERAGE_LIB)"\
 			LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)"	\
+			UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)"		\
 			LINK_LIBS="$(UNITTEST_LINK_LIBS)"				\
 			EXLDLIBS="$(UNITTEST_LDLIBS)"					\
 			-C test											\
@@ -64,6 +65,7 @@ coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMoc
 
 run_unit_test:
 	@$(ECHO) $(call section_title,Running Unit Tests)
+	-@$(RM) coverage/*gcda coverage/*gcov test/coverage/*gcda test/coverage/*gcov
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME)"
 	@($(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) || \
 						($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1)) | tee report/test

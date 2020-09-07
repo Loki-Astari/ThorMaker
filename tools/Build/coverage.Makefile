@@ -53,7 +53,7 @@ check_hed_coverage: $(GCOV_HED_FILES)
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
-	@$(ECHO) $(call colour_text, GRAY,$*) | awk '{printf "\t%-80s", $$1}' | tee -a $(Ignore)coverage/$*.out
+	@$(ECHO) $(call colour_text, GRAY,$*) | awk '{printf "\t%-80s", $$1}' | tee $(Ignore)coverage/$*.out
 	@if [[ "$(Ignore)" == "/tmp/" ]]; then	\
 		$(ECHO) "Ignore Test File"; \
 	else \
