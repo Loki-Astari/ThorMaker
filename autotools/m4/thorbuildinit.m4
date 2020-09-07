@@ -29,8 +29,8 @@ AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
         [
             AS_IF([test "$with_cryptoroot" != ""],
                   [
-                    AC_SUBST([crypto_ROOT_LIBDIR], ["-L $with_cryptoroot/lib"])
-                    AC_SUBST([crypto_ROOT_INCDIR], ["-I $with_cryptoroot/include"])
+                    AC_SUBST([crypto_ROOT_DIR], [$with_cryptoroot])
+                    AC_SUBST([crypto_ROOT_LIB], [crypto])
                   ])
         ],
         [AC_MSG_ERROR([
@@ -198,8 +198,8 @@ Eg.
 
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
 [
-    AC_SUBST(thors$1_ROOT_LIBDIR)
-    AC_SUBST(thors$1_ROOT_INCDIR)
+    AC_SUBST(Thors$1_ROOT_DIR)
+    AC_SUBST(Thors$1_ROOT_LIB)
     AC_SUBST(HAVE_Thors$1)
     AC_ARG_WITH(
         [Thors$1root],
@@ -231,8 +231,8 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
             [$5],
             [
                 AC_DEFINE([HAVE_Thors$1], 1, [When on code that uses Thors$1 will be compiled.])
-                thors$1_ROOT_LIBDIR=-L${with_Thors$1root}/lib
-                thors$1_ROOT_INCDIR=-I${with_Thors$1root}/include
+                AC_SUBST(Thors$1_ROOT_DIR, ${with_Thors$1root})
+                AC_SUBST(Thors$1_ROOT_LIB, $4)
                 HAVE_Thors$1=yes
             ],
             [AC_MSG_ERROR([
@@ -259,7 +259,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
 [
     AX_THOR_FUNC_USE_THORS_LIB(DB, $1, ThorsDB, [ThorsDB$1D], [_ZN10ThorsAnvil2DB6Access3Lib15ConnectionProxyD2Ev], [https://github.com/Loki-Astari/ThorsDB])
 ])
-AC_DEFUN([AX_THOR_FUC_USE_THORS_LIB_SERIALIZE],
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],
 [
     AX_THOR_FUNC_USE_THORS_LIB(Serialize, $1, ThorSerialize, [ThorSerialize$1D], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv], [https://github.com/Loki-Astari/ThorsSerializer])
 ])
