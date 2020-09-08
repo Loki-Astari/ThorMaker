@@ -376,9 +376,6 @@ clean:
 
 dependency:				$(DEP)
 
-dependency/%.d:		%.cpp | dependency.Dir
-	@$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> /dev/null
-
 .SECONDARY: dependency/%.d
 
 
@@ -486,6 +483,21 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
 		$(RM) makefile_tmp;								\
+	fi
+
+dependency/%.d:		%.cpp | dependency.Dir
+	@if ( test "$(VERBOSE)" = "On" ); then				\
+		$(ECHO) '$(CXX) -MM -MT"coverage/$(<:.cpp=.o)" "$<"';\
+	fi
+	@export tmpfile=$(shell $(MKTEMP));					\
+	$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
+	if [ $$? != 0 ];									\
+	then												\
+		$(ECHO) $(RED_ERROR);							\
+		$(ECHO) '$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
+		$(ECHO) "========================================";\
+		cat $${tmpfile};								\
+		exit 1;											\
 	fi
 
 $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
