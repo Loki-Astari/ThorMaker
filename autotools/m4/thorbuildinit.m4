@@ -269,13 +269,6 @@ AC_DEFUN([AX_THOR_FUNC_USE_YAML],
         [yamlroot],
         AS_HELP_STRING([--with-yamlroot=<location>], [Directory of YAML_ROOT])
     )
-    AC_ARG_ENABLE(
-        [yaml],
-        AS_HELP_STRING([--disable-yaml], [Disable yaml serialization])
-    )
-    AS_IF(
-        [test "x$enable_yaml" != "xno"],
-
         if test "${with_yamlroot}" == ""; then
             with_yamlroot="/usr/local"
         fi
@@ -308,7 +301,6 @@ can be disabled with:
         )
 
         LDFLAGS="${ORIG_LDFLAGS}"
-    )
 ])
 
 AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
