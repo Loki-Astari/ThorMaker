@@ -56,7 +56,9 @@ These build files allow the following easy targets:
         test-X.Y    =>  Make sure the unit test executable is upto date.
                         Run only test X.Y
  
-        cov-Z       =>  Show detailed coverage for file Z.
+        coverage-Z  =>  Make sure the test exectuable is upto-date
+                        If it is rebuily then re-run the test.
+                        Show detailed coverage for file Z.
 
 
 
@@ -86,130 +88,146 @@ These build files allow the following easy targets:
         ./Notes MyProj
         git commit -a -m "First Commit"
 
-## Simplified Makefile
+## HowToUse
 
-Each project directory you will need a makefile that looks like this:
+#### Notes:
 
-           
-            #
-            # The directory where you installed build (see the git clone above)
-            PROJECT_ROOT         = $(realpath ../../)
+The Makefiles documented in this section load the master makefile from: `$(THORSANVIL_ROOT)/build/tools/<Makefile>`. This implies that the `build` directory is this `ThorMaker` project. If you look at the scrip `Notes` from the "SetUp" section you will see that it adds this (ThorMaker) project as a submdule of the current project in the build directory:
 
-            #
-            # The targets you want to build
-            # There are three types of target static-lib/shared-lib/application
-            # A TARGET may specify more than one thing to build (but only one lib per directory)
-            # See features for details.
-            TARGET               ?= MyLibName.slib
+    git submodule add https://github.com/Loki-Astari/ThorMaker.git .build
+    ln -s .build build
 
-            include $(CLOUD_ROOT)/build/tools/Makefile
+----
 
+There are two types of Makefile:
 
-## Features:
+* A makefile for simply building all sub directories.
+* A makefile for building a project
 
-### 1: Integration with autotools
+### SubDirectory Makefile
 
-Automatically includes $(PROJECT_ROOT)/Makefile.cfg (if it exists)
-Thus making it easy to use with Makefile generators like autotools (Autoconf, Automake and Libtool)
+This makefile contains three lines:
 
-### 2: Target Specific Extensions
+    THORSANVIL_ROOT             = $(realpath ../)
 
-Target are automatically suffixed to make them unique. Thus all versions can be installed simultaneously.
+    TARGET                      = ThorsIOUtil ThorsCrypto ThorsSocket ThorsDB ThorsDBCommon MySQL Postgres Mongo ThorsDBBuild ThorsDBBuildTest
 
-        03          => C++ 03 release binary
-        03D         => C++ 03 debug binary
-        11          => C++ 11 release binary
-        11D         => C++ 11 debug binary
-
- (Support for specifically single threaded code is planned with the `S` suffix)
-
- When specifying libraries to link against:
-
-            LDLIBS      specifies generic system libraries.
-            LINK_LIBS   specifies Thor libraries.
-                        The makefile will automatically suffix these library names with the correct
-                        suffix to match the current build so that they link correctly.
-
- ### 3: Platform  Specific Extensions
-
- The library will use the platform specific extension required for shared libraries.
+    include $(THORSANVIL_ROOT)/build/tools/Project.Makefile
 
 
-### 4: Neat Easy to read output
+What each line means:
 
-When compiling and no error are encountered then only the compiler file-name are printed
--- I hate having all the compiler arguments taking up screen real-estate when not required.
-When an error is encountered for command line parameters are displayed.
-Also on colour terminals (the output is colour coded to make reading easy)
+The `THORSANVIL_ROOT` is a variable used within the makefiles and points to the directory that contains the "build" directory. This directory contains all the build tools you need and any intermediate objects will be built into the "$(THORSANVIL_ROOT)/build" direcotory.
 
-        Example:    Working:
+The `TARGET` is a list of sub directories. It will execute the `Makefile` in each of these subdirectories.
 
-            $ make
-            Building debug
-            g++ -c CloudStream.cpp                                               OK
-            g++ -c ConfigFileLoader.cpp                                          OK
-            g++ -c Logger.cpp                                                    OK
-            g++ -shared -o debug/libCloudUtil.so                                 OK
-            Done Building debug/libCloudUtil.so
+The `include` line simply includes a generic Makefile that will expand the `TARGET` variable and provides all the target information.
 
-        Example Failure:
+### Project Makefile
 
-            $ make
-            Building debug
-            g++ -c CloudStream.cpp                                               OK
-            g++ -c ConfigFileLoader.cpp                                          ERROR
-            g++ -c ConfigFileLoader.cpp -o debug/ConfigFileLoader.o -std=c++0x -Wno-deprecated-declarations -fPIC -Wall -Wextra -Wstrict-aliasing -ansi -pedantic -Werror -Wunreachable-code -Wno-long-long -I/home/Loki/Clean/Cloud/build/include -isystem /home/Loki/Clean/Cloud/build/include3rd -g -std=c++0x
-            ========================================
-            ConfigFileLoader.cpp: In member function ‘void Moz::Cloud::CloudUtil::ConfigFileLoader::convertCommandLineToJsonMap(const std::vector<std::basic_string<char> >&)’:
-            ConfigFileLoader.cpp:175:13: error: expected ‘;’ before ‘}’ token
-            make: *** [debug/ConfigFileLoader.o] Error 1
+The standard Makefile contains only three lines.
 
-        3:Unit-Test and code coverage
-        -----------------------------
+    THORSANVIL_ROOT				?= $(realpath ../../)
 
-        No extra work is required.
-        Just create a directory called test (in the same directory as your code) and add unit test files in this directory.
-        Currently only google's unit test framework is supported.
+    TARGET						= Apolication.app
 
-## TARGET:
+    include $(THORSANVIL_ROOT)/build/tools/Makefile
 
-        To build a static-library specify the *.a extension
-        To build a shared-library specify the *.slib extension
-        To build an application specify the *.app extension.
+You will notice the difference in two lines. The Target is the name of what you want to build and the include line contains the name of the master makefile (rather than the simpler one to handle sub directories only).
 
-        Note: For applications the .app is not placed on the final executable.
+The above Makefile is for building an application but you can build application / library / header only libraries using this makefile.  
+Lots of details can be found at the top of the `build/tools/Makefile` about how it works. If I implement something then can't remember how it works next time around I add notes at the top of this file to remind myself. This page will be periodically updated with details about the commands as they become well used. But I try not to break backward compatibility when I make changes.
 
-        For libraries       All *.c *.cpp *.lex *.yacc files are compiled into the libraies.
-                            Except any files that have the same name as an application target in the same directory.
+#### Building an Application
 
-        For Applications    If the application is the only target then all files (just like a library are used).
-                            If the application is NOT the only target then only the source file with the same name as the application is used.
+    TARGET  = Executable.app
 
-        FLAGS automatically used:
+This will build the application "Executable" (for release) and "ExecutableD" (for debug).  
+This will be built into the directory `$(THORSANVIL_ROOT)/build/bin` for "build" target.  
+This will be built into the directory `/usr/local/bin` for "install" target.  
+
+The file `Executable.cpp` is assumed to have the `main()` function and will not be build into the test executable.
+All `*.cpp` fill will be used to build the application.
+
+If there is a test directory all `*.cpp` files (except `Executable.cpp`) will be built into the test executable and all the unit tests will be run against this executable that does code coverage on these source files.
+
+#### Building a Header Only Library
+
+    TARGET = LibraryAlpha.head
+
+This will be create the directory `$(THORSANVIL_ROOT)/build/include/LibraryAlpha` and copy all `*.h` files into it for "build" target.  
+This will be create the directory `/usr/local/include/LibraryAlpha` and copy all `*.h` files into it for "install" target.  
+
+If there is a test directory this will be used to build the test executable and all the unit tests will be run against this executable that does code coverage on these source files.
+
+#### Building a Library
+
+There are two types of library (static and dynamic). Conversely there are two suffix you can use to specify the type of library you want to build `*.a` static or `*.slib` for dynamic. If you don't want to be specific use the `*.lib` suffix. By default this will create a shared library but can be configured by the `configure.ac` file to be static/dynamic or both. So usually you want to use the `*.lib` suffix and allow the person building your library to make a specific choice.
+
+Note: Building a shared library will result in the library suffix being selected based on platform. (So Mac=>dylib, Linux=>so, etc)
+
+    TARGET  = MyCrypto.lib
+
+The will build the library "libMyCrypto17.dylib" (for relase) and "lib/MyCrypto17D.dylib" (for debug).
+Notice that we add `17` to the name of the library in case you build multiple versions with difference versions of the standard. I wanted to be able to make sure I did not link versions built against difference version of the library. The version of the library that is used is specified in the `configure.ac` file.
+
+For the "build" target this will:
+    * install the library into the directory `$(THORSANVIL_ROOT)/build/lib`
+    * create the directory `$(THORSANVIL_ROOT)/build/include/MyCrypto` and copy all `*.h` files into it for "build" target.  
+For the "install" target this will:
+    * install the library into the directory `/usr/local/lib`
+    * create the directory `/usr/local/include/MyCrypto` and copy all `*.h` files into it for "build" target.  
+
+If there is a test directory all `*.cpp` files will be built into the test executable and all the unit tests will be run against this executable that does code coverage on these source files.
+
+### Other Options
+
+You can use any standard flags that are used by MAKE.
+eg.
+
+    CXXFLAGS        += <Any Flags You Want to Add>
+    LDLIBS          += Add any libraries you want to link with.
 
 
-            CXXSTDVER           03/11   Default     03      Builds C++ 03 version of the executable.
-            VERBOSE				Off/On  Default     Off     Dumps extra debug information about the make processes.
+Normally you want to use the `+=` to add extra flags and not override anything on the command line.   
+The master build file also sets a lot of extra flags they consider essential. `-Wall -Wextra` etc. For debug/release build it will add `-g` or `-O3` respectively etc.
 
-            LINK_LIBS                                       Like LDLIBS (bug suffix automatically applied)
+Some custom options are:
 
-        Flags used as normal by Make (Should probably use += with these)
-            CPPFLAGS
-            CXXFLAGS
-            LDFLAGS
+    COVERAGE_REQUIRED   = By default a code coverage of 80% is required to build/install to complete.
+                          You can override this default by adding this to the Makefile.
+    FILE_WARNING_FLAGS  = Special as it is added after all other flags.
+    CXXSTDVER           = 03/11/14/17/20 // One of those    overides the default set in `configure.ac`
+    LINK_LIBS           += Special version of LDLIBS.
+                           This is for linking against libraries built with `ThorMaker`.
+                           It will correctly add the appropriate suffix to the library name (eg. 17D for version 17 Debug libraries).
 
-            LOADLIBES
-            LDLIBS
+### Specific Target
 
-        Target Specific FLAGS (libs applied only to target)
-            UNITTEST_LINK_LIBS
-            <TargetName>_LDLIBS
-            <TargetName>_LINK_LIBS
+If you want to add flags to specific files you can use the following form:
 
-    Example:
-    ========
-        All these features are used in several libraries.
-        A publicly available one that I have also built is ThorsSerializer (please check it out for example usages)
+    %/File.o:       CXXFLAGS += -Wno-depricated-warnings
+
+For the file "File.cpp" we all add extra flags when building it into "File.o". You can be more specific and do this only for debug or release like this:
+
+    debug/File.o:   CXXFLAGS += -gExtra
+    release/File.o: CXXFLAGS += -OMyFlag
+
+### Unit Test Options
+
+    UNITTEST_CXXFLAGS               += -Wno-special
+    UNITTEST_LDLIBS                 += -lsync
+    UNITTEST_LINK_LIBS              += ThorsDB
+    UNITTEST_FILE_WARNING_FLAGS     += -Wno-problems
+
+
+
+
+
+
+
+
+    
 
 
 
