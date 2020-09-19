@@ -14,15 +14,15 @@ ActionRunUnitTest:		report/test	 report/test.show
 	@rm -f report/test.show
 test-%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
-	@TESTNAME=$* make TARGET_MODE=coverage run_unit_test
+	@TESTNAME=$* THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} make TARGET_MODE=coverage run_unit_test
 
 testrun.%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
-	@DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib test/coverage/unittest.app --gtest_filter=$*
+	@DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.app --gtest_filter=$*
 
 debugrun.%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
-	@DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib lldb -- test/coverage/unittest.app --gtest_filter=$*
+	@DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} lldb -- test/coverage/unittest.app --gtest_filter=$*
 
 report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		build_unit_test; fi
@@ -67,7 +67,7 @@ run_unit_test:
 	@$(ECHO) $(call section_title,Running Unit Tests)
 	-@$(RM) coverage/*gcda coverage/*gcov test/coverage/*gcda test/coverage/*gcov
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME)"
-	@($(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) || \
+	@($(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) || \
 						($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1)) | tee report/test
 
 
