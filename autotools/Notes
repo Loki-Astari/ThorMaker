@@ -168,7 +168,6 @@ checkForBuildTools () {
         git submodule add https://github.com/Loki-Astari/ThorMaker.git .build
         ln -s .build build
         ln -s .build/autotools/Notes .
-        git add build
         git add Notes
     fi
 }
