@@ -4,14 +4,14 @@
 .PHONY:	test-% testrun.% debugrun.%
 # Internal
 .PHONY:	build_unit_test run_unit_test
+.PHONY:	reportErrorCheck
 
 TEST_FILES					= $(wildcard test/*.cpp test/*.h test/*.tpp)
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 COVERAGE_LIB				= UnitTest$(strip $(DEFER_NAME))
 
 
-ActionRunUnitTest:		report/test	 report/test.show
-	@rm -f report/test.show
+ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
 test-%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
 	@TESTNAME=$* THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} make TARGET_MODE=coverage run_unit_test
@@ -32,6 +32,12 @@ report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 
 report/test.show: | report.Dir
 	@cat report/test
+
+reportErrorCheck:
+	@rm -f report/test.show
+	@count=$$(grep '\[  FAILED  \]' report/test | wc -l | awk '{print $$1}');	\
+	if [[ $${count} != 0 ]]; then $(ECHO) $(RED_ERROR); $(ECHO) $${count} tests failed;exit 1; fi
+
 
 build_unit_test:	test/coverage/unittest.app
 
