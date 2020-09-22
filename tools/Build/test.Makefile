@@ -44,14 +44,14 @@ build_unit_test:	test/coverage/unittest.app
 test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/coverage.Dir
 	@touch test/unittest.cpp
 	# Make sure the test dependencies have been updated first.
-	@$(MAKE) TARGET_OVERRIDE=unittest.app					\
+	$(MAKE) TARGET_OVERRIDE=unittest.app					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
 			-C test											\
 			-f ../Makefile									\
 			dependency
-	@$(MAKE) TARGET_OVERRIDE=unittest.app					\
+	$(MAKE) TARGET_OVERRIDE=unittest.app					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
