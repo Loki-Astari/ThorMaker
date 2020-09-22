@@ -30,7 +30,6 @@ AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
             AS_IF([test "$with_cryptoroot" != ""],
                   [
                     AC_SUBST([crypto_ROOT_DIR], [$with_cryptoroot])
-                    AC_SUBST([crypto_ROOT_LIB], ["ssl crypto"])
                   ])
         ],
         [AC_MSG_ERROR([
@@ -50,6 +49,7 @@ Error: Could not find libcrypto
 
                 ], [1])]
     )
+    AC_SUBST([crypto_ROOT_LIB], ["ssl crypto"])
 
     LDFLAGS="${ORIG_LDFLAGS}"
 ])
