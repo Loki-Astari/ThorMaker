@@ -476,8 +476,9 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
+		$(ECHO) "";										\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(LDLIBS_EXTERN_RPATH) $(CXX) -shared -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL); \
+		$(ECHO) "$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)"; \
 		$(ECHO) "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
