@@ -29,7 +29,8 @@ AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
         [
             AS_IF([test "$with_cryptoroot" != ""],
                   [
-                    AC_SUBST([crypto_ROOT_DIR], [$with_cryptoroot])
+                    AC_SUBST([crypto_ROOT_LIBDIR], [$with_cryptoroot/lib])
+                    AC_SUBST([crypto_ROOT_INCDIR], [$with_cryptoroot/include])
                   ])
         ],
         [AC_MSG_ERROR([
@@ -49,7 +50,19 @@ Error: Could not find libcrypto
 
                 ], [1])]
     )
-    AC_SUBST([crypto_ROOT_LIB], ["ssl crypto"])
+    # AC_CANONICAL_HOST is needed to access the 'host_os' variable
+    AC_CANONICAL_HOST
+    case "${host_os}" in
+        linux*)
+            AC_SUBST([crypto_ROOT_LIB], ["ssl crypto"])
+            ;;
+        darwin*)
+            AC_SUBST([crypto_ROOT_LIB], [""])
+            ;;
+        *)
+            AC_MSG_ERROR(["OS $host_os is not supported"])
+            ;;
+    esac
 
     LDFLAGS="${ORIG_LDFLAGS}"
 ])
