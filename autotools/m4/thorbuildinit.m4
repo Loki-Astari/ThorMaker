@@ -29,8 +29,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
         [
             AS_IF([test "$with_cryptoroot" != ""],
                   [
-                    AC_SUBST([crypto_ROOT_LIBDIR], [$with_cryptoroot/lib])
-                    AC_SUBST([crypto_ROOT_INCDIR], [$with_cryptoroot/include])
+                    AC_SUBST([crypto_ROOT_DIR], [$with_cryptoroot])
                   ])
         ],
         [AC_MSG_ERROR([
@@ -54,7 +53,7 @@ Error: Could not find libcrypto
     AC_CANONICAL_HOST
     case "${host_os}" in
         linux*)
-            AC_SUBST([crypto_ROOT_LIB], ["ssl crypto"])
+            AC_SUBST([crypto_ROOT_LIB], ["-lssl -lcrypto"])
             ;;
         darwin*)
             AC_SUBST([crypto_ROOT_LIB], [""])
@@ -226,6 +225,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
         flag=enable_Thors$1
         [test "x${!flag}" != "xno"],
 
+        AC_LANG_PUSH([C++])
         AC_MSG_NOTICE([Got HERE])
         AC_MSG_NOTICE([Name: $1])
         AC_MSG_NOTICE([With: ${with_Thors$1root}])
@@ -234,7 +234,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
             declare with_Thors$1root="/usr/local"
         fi
         ORIG_LDFLAGS="${LDFLAGS}"
-        LDFLAGS="$LDFLAGS -L${with_Thors$1root}/lib"
+        LDFLAGS="-std=c++17 $LDFLAGS -L${with_Thors$1root}/lib"
         AC_MSG_NOTICE([LDFLAGS: ${LDFLAGS}])
         AC_MSG_NOTICE([LIB: $4])
         AC_MSG_NOTICE([Meth: $5])
@@ -262,19 +262,20 @@ If you do not want to use features that need Thor$1 then it
 can be disabled with:
     --disable-Thors$1
 
-                ], [1])]
+                ], [1])],
+                [$7]
         )
-
         LDFLAGS="${ORIG_LDFLAGS}"
+        AC_LANG_POP([C++])
     )
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
 [
-    AX_THOR_FUNC_USE_THORS_LIB(DB, $1, ThorsDB, [ThorsDB$1], [_ZN10ThorsAnvil2DB6Access3Lib15ConnectionProxyD2Ev], [https://github.com/Loki-Astari/ThorsDB])
+    AX_THOR_FUNC_USE_THORS_LIB(DB, $1, ThorsDB, [ThorsDB$1], [_ZN10ThorsAnvil2DB6Access3Lib15ConnectionProxyD2Ev], [https://github.com/Loki-Astari/ThorsDB], [])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],
 [
-    AX_THOR_FUNC_USE_THORS_LIB(Serialize, $1, ThorSerialize, [ThorSerialize$1], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv], [https://github.com/Loki-Astari/ThorsSerializer])
+    AX_THOR_FUNC_USE_THORS_LIB(Serialize, $1, ThorSerialize, [ThorSerialize$1], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv], [https://github.com/Loki-Astari/ThorsSerializer], [-ldl])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
