@@ -16,6 +16,9 @@ AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
 [
+    crypto_ROOT_LIB=""
+    crypto_ROOT_DIR=""
+
     AC_ARG_WITH(
         [cryptoroot],
         AS_HELP_STRING([--with-cryptoroot=<location>], [Directory of CRYPTO_ROOT])
@@ -29,7 +32,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
         [
             AS_IF([test "$with_cryptoroot" != ""],
                   [
-                    AC_SUBST([crypto_ROOT_DIR], [$with_cryptoroot])
+                    crypto_ROOT_DIR="$with_cryptoroot"
                   ])
         ],
         [AC_MSG_ERROR([
@@ -53,10 +56,10 @@ Error: Could not find libcrypto
     AC_CANONICAL_HOST
     case "${host_os}" in
         linux*)
-            AC_SUBST([crypto_ROOT_LIB], ["-lssl -lcrypto"])
+            crypto_ROOT_LIB="ssl crypto"
             ;;
         darwin*)
-            AC_SUBST([crypto_ROOT_LIB], [""])
+            crypto_ROOT_LIB=""
             ;;
         *)
             AC_MSG_ERROR(["OS $host_os is not supported"])
@@ -64,6 +67,8 @@ Error: Could not find libcrypto
     esac
 
     LDFLAGS="${ORIG_LDFLAGS}"
+    AC_SUBST([crypto_ROOT_LIB], [${crypto_ROOT_LIB}])
+    AC_SUBST([crypto_ROOT_DIR], [${crypto_ROOT_DIR}])
 ])
 AC_DEFUN([AX_THOR_LIB_SELECT],
 [
@@ -210,8 +215,8 @@ Eg.
 
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
 [
-    AC_SUBST(Thors$1_ROOT_DIR)
-    AC_SUBST(Thors$1_ROOT_LIB)
+    local_ROOT_DIR=""
+    local_ROOT_LIB=""
     AC_SUBST(HAVE_Thors$1)
     AC_ARG_WITH(
         [Thors$1root],
@@ -244,8 +249,8 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
             [$5],
             [
                 AC_DEFINE([HAVE_Thors$1], 1, [When on code that uses Thors$1 will be compiled.])
-                AC_SUBST(Thors$1_ROOT_DIR, ${with_Thors$1root})
-                AC_SUBST(Thors$1_ROOT_LIB, $3)
+                local_ROOT_DIR="${with_Thors$1root}"
+                local_ROOT_LIB="$3"
                 HAVE_Thors$1=yes
             ],
             [AC_MSG_ERROR([
@@ -268,6 +273,8 @@ can be disabled with:
         LDFLAGS="${ORIG_LDFLAGS}"
         AC_LANG_POP([C++])
     )
+    AC_SUBST(Thors$1_ROOT_DIR, [${local_ROOT_DIR}])
+    AC_SUBST(Thors$1_ROOT_LIB, [${local_ROOT_LIB}])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
 [
@@ -279,25 +286,27 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
+    yaml_ROOT_DIR=""
+    yaml_ROOT_LIB=""
     AC_ARG_WITH(
         [yamlroot],
         AS_HELP_STRING([--with-yamlroot=<location>], [Directory of YAML_ROOT])
     )
-        if test "${with_yamlroot}" == ""; then
-            with_yamlroot="/usr/local"
-        fi
-        ORIG_LDFLAGS="${LDFLAGS}"
-        LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
+    if test "${with_yamlroot}" == ""; then
+        with_yamlroot="/usr/local"
+    fi
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
 
-        AC_CHECK_LIB(
-            [yaml],
-            [yaml_parser_initialize],
-            [
-                AC_DEFINE([HAVE_YAML], 1, [When on Yaml Serialization code will be compiled])
-                AC_SUBST([yaml_ROOT_DIR], [$with_yamlroot])
-                AC_SUBST([yaml_ROOT_LIB], [yaml])
-            ],
-            [AC_MSG_ERROR([
+    AC_CHECK_LIB(
+        [yaml],
+        [yaml_parser_initialize],
+        [
+            AC_DEFINE([HAVE_YAML], 1, [When on Yaml Serialization code will be compiled])
+            yaml_ROOT_DIR="${with_yamlroot}"
+            yaml_ROOT_LIB="yaml"
+        ],
+        [AC_MSG_ERROR([
  
 Error: Could not find libyaml
 
@@ -311,14 +320,18 @@ If you do not want to use yaml serialization then it
 can be disabled with:
     --disable-yaml
 
-                ], [1])]
-        )
+            ], [1])]
+    )
 
-        LDFLAGS="${ORIG_LDFLAGS}"
+    LDFLAGS="${ORIG_LDFLAGS}"
+    AC_SUBST([yaml_ROOT_DIR], [${yaml_ROOT_DIR}])
+    AC_SUBST([yaml_ROOT_LIB], [${yaml_ROOT_LIB}])
 ])
 
 AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
 [
+    event_ROOT_DIR=""
+    event_ROOT_LIB=""
     AC_ARG_WITH(
         [eventroot],
         AS_HELP_STRING([--with-eventroot=<location>], [Directory of EVENT_ROOT])
@@ -334,8 +347,8 @@ AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
         [event_dispatch],
         [
             AC_DEFINE([HAVE_EVENT], 1, [We have found libevent library])
-            AC_SUBST([event_ROOT_DIR], [$with_eventroot])
-            AC_SUBST([event_ROOT_LIB], [event])
+            event_ROOT_DIR="${with_eventroot}"
+            event_ROOT_LIB="event"
         ],
         [AC_MSG_ERROR([
 
@@ -351,6 +364,8 @@ If libevent is not installed in the default location (/usr/local) then you will 
     )
 
     LDFLAGS="${ORIG_LDFLAGS}"
+    AC_SUBST([event_ROOT_DIR], [${event_ROOT_DIR}])
+    AC_SUBST([event_ROOT_LIB], [${event_ROOT_LIB}])
 ])
 
 AC_DEFUN(
