@@ -52,19 +52,7 @@ Error: Could not find libcrypto
 
                 ], [1])]
     )
-    # AC_CANONICAL_HOST is needed to access the 'host_os' variable
-    AC_CANONICAL_HOST
-    case "${host_os}" in
-        linux*)
-            crypto_ROOT_LIB="ssl crypto"
-            ;;
-        darwin*)
-            crypto_ROOT_LIB=""
-            ;;
-        *)
-            AC_MSG_ERROR(["OS $host_os is not supported"])
-            ;;
-    esac
+    crypto_ROOT_LIB="ssl crypto"
 
     LDFLAGS="${ORIG_LDFLAGS}"
     AC_SUBST([crypto_ROOT_LIB], [${crypto_ROOT_LIB}])
