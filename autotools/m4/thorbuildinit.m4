@@ -275,6 +275,7 @@ can be disabled with:
     )
     AC_SUBST(Thors$1_ROOT_DIR, [${local_ROOT_DIR}])
     AC_SUBST(Thors$1_ROOT_LIB, [${local_ROOT_LIB}])
+    AC_SUBST($1_ISTHOR, [yes])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
 [
