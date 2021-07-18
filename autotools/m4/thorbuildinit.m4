@@ -141,8 +141,16 @@ AC_DEFUN([THOR_USE_HOST_BUILD],
     )
 ])
 
+AC_DEFUN([AX_THOR_PYTHON_VERSION],
+[
+    export PYTHON_VERSION=3.9
+])
+
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
+AC_REQUIRE([AX_THOR_PYTHON_VERSION])dnl
+AC_REQUIRE([AX_PYTHON_DEVEL])dnl
+
     AC_CHECK_PROGS([UNZIP], [unzip], [:])
     if test "$UNZIP" = :; then
         AC_MSG_ERROR([The build tools needs unzip. Please install it.])
