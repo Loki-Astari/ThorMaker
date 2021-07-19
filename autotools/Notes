@@ -219,7 +219,7 @@ fi
 echo "Configuring"
 autoreconf --install
 echo "THOR PREFIX"
-mv configure configure.tmp
+cp configure configure.tmp
 cat <<CONFIG_INIT - configure.tmp > configure
 #!/bin/sh
 # Set up the build system
