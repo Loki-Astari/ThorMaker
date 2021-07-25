@@ -181,11 +181,13 @@ AC_DEFUN([THOR_CHECK_THIRD_PARTY_LIBS],
     if [[ $? == 0 ]]; then
         for third in $(ls); do
             pushd ${third}
-            echo "${third}:  ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build"
-            ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build
-            if [[ $? != 0 ]]; then
-                "Failed to configure: ${third}"
-                exit 1
+            if [[ -e ./configure ]]; then
+                echo "${third}:  ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build"
+                ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build
+                if [[ $? != 0 ]]; then
+                    "Failed to configure: ${third}"
+                    exit 1
+                fi
             fi
             echo "================ DONE ================="
             popd
