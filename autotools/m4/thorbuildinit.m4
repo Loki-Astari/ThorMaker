@@ -156,10 +156,12 @@ AC_DEFUN([AX_THOR_PYTHON_VERSION],
         [
             # Do nothing
             # The default action on most systems is to use python 2
+            # This is used by third/vera-install
+            export PYTHON_MIN_VERSION=2.0
         ],
         [
             export PYTHON_VERSION=3.9
-            export PY_VERSION_HEX=0x03000000
+            export PYTHON_MIN_VERSION=3.9
         ]
     )
 ])
