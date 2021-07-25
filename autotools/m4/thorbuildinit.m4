@@ -143,8 +143,10 @@ AC_DEFUN([THOR_USE_HOST_BUILD],
     AS_IF(
         [test "x${with_hostbuild}" != "x"],
         [
+            echo "Using Existing Host Build Tools: ${with_hostbuild}"
             rm build
             ln -s ${with_hostbuild} build
+            ls -la build
         ]
     )
 ])
