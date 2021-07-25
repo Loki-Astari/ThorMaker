@@ -37,11 +37,17 @@ ar -rv libgtest.a gtest-all.o gtest_main.o
 popd
 
 echo "Installing google test"
+echo pushd ${THORSANVIL_ROOT}
 pushd ${THORSANVIL_ROOT}
+echo mkdir -p bin include include3rd lib share/man
 mkdir -p bin include include3rd lib share/man
+echo rm -f lib/libgtest.*
 rm -f lib/libgtest.*
+echo cp ${GTEST_DIR}/libgtest.a lib/
 cp ${GTEST_DIR}/libgtest.a lib/
+echo rm -f include3rd/gtest
 rm -f include3rd/gtest
+echo ln -s ${GTEST_DIR}/include/gtest include3rd/gtest
 ln -s ${GTEST_DIR}/include/gtest include3rd/gtest
 popd
 
