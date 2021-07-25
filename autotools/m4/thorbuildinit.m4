@@ -83,6 +83,12 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA_PYTHON2],
         [verapython2],
         AS_HELP_STRING([--enable-verapython2], [Set up building for the travis environment])
     )
+    AS_IF(
+        [test "x$enable_verapython2" == "xyes"],
+        [
+            subconfigure="${subconfigure} --enable-verapython2"
+        ]
+    )
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
 [
@@ -92,12 +98,11 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
     )
 
     VERATOOL="";
-    subconfigvera=""
     AS_IF(
         [test "x$enable_vera" == "xno"],
         [
             VERATOOL='off';
-            subconfigvera="--disable-vera";
+            subconfigure="${subconfigure} --disable-vera";
         ],
         [
             VERATOOL='vera++';
@@ -168,6 +173,27 @@ AC_DEFUN([AX_THOR_PYTHON_VERSION],
     )
 ])
 
+AC_DEFUN([THOR_CHECK_THIRD_PARTY_LIBS],
+[
+    export cwd=$(pwd)
+
+    pushd third
+    if [[ $? == 0 ]]; then
+        for third in $(ls); do
+            pushd ${third}
+            echo "${third}:  ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build"
+            ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build
+            if [[ $? != 0 ]]; then
+                "Failed to configure: ${third}"
+                exit 1
+            fi
+            echo "================ DONE ================="
+            popd
+        done
+        popd
+    fi
+])
+
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
 AC_REQUIRE([AX_THOR_PYTHON_VERSION])dnl
@@ -196,11 +222,12 @@ AC_REQUIRE([AX_PYTHON_DEVEL])dnl
 
     AC_PROG_CXX
 
-
+    subconfigure=""
     git submodule update --init --recursive
     AX_THOR_FUNC_USE_VERA_PYTHON2
     AX_THOR_FUNC_USE_VERA_INIT
     THOR_USE_HOST_BUILD
+    THOR_CHECK_THIRD_PARTY_LIBS
 
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
