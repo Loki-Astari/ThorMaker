@@ -76,6 +76,14 @@ AC_DEFUN([AX_THOR_LIB_SELECT],
 
     AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
 ])
+
+AC_DEFUN([AX_THOR_FUNC_USE_VERA_PYTHON2],
+[
+    AC_ARG_ENABLE(
+        [verapython2],
+        AS_HELP_STRING([--enable-verapython2], [Set up building for the travis environment])
+    )
+])
 AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
 [
     AC_ARG_ENABLE(
@@ -143,7 +151,17 @@ AC_DEFUN([THOR_USE_HOST_BUILD],
 
 AC_DEFUN([AX_THOR_PYTHON_VERSION],
 [
-    export PYTHON_VERSION=3.9
+    AS_IF(
+        [test "x$enable_verapython2" == "xyes"],
+        [
+            # Do nothing
+            # The default action on most systems is to use python 2
+        ],
+        [
+            export PYTHON_VERSION=3.9
+            export PY_VERSION_HEX=0x03000000
+        ]
+    )
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],
@@ -176,6 +194,7 @@ AC_REQUIRE([AX_PYTHON_DEVEL])dnl
 
 
     git submodule update --init --recursive
+    AX_THOR_FUNC_USE_VERA_PYTHON2
     AX_THOR_FUNC_USE_VERA_INIT
     THOR_USE_HOST_BUILD
 

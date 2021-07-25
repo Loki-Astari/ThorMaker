@@ -11,9 +11,10 @@ echo "Setting up G++"
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9 > /dev/null
 
 echo "Building Boost Co-Routines"
-wget -O boost_1_71_0.tar.gz https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz       > /dev/null
+wget -O boost_1_71_0.tar.bz2 https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/boost_1_71_0.tar.bz2     > /dev/null
 
-tar xzf boost_1_71_0.tar.gz             > /dev/null
+bzip2 -d boost_1_71_0.tar.bz2           > /dev/null
+tar xf boost_1_71_0.tar                 > /dev/null
 cd boost_1_71_0/                        > /dev/null
 mkdir -p /tmp/extra                     > /dev/null
 ./bootstrap.sh --prefix=/tmp/extra      > /dev/null
