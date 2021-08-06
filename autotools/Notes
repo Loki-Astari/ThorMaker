@@ -217,6 +217,7 @@ if [[ ! -e configure.ac ]]; then
 fi
 
 echo "Configuring"
+rm configure
 autoreconf --install
 echo "THOR PREFIX"
 cp configure configure.tmp
