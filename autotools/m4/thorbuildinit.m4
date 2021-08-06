@@ -206,8 +206,8 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AS_IF(
         [test "x${enable_vera}" != "xno"],
         [
-            AC_REQUIRE([AX_THOR_PYTHON_VERSION])dnl
-            AC_REQUIRE([AX_PYTHON_DEVEL])dnl
+            AX_THOR_PYTHON_VERSION
+            AX_PYTHON_DEVEL
 
             AC_CHECK_PROGS([CMAKE], [cmake], [:])
             if test "$CMAKE" = :; then
