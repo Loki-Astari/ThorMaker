@@ -199,9 +199,9 @@ AC_DEFUN([THOR_CHECK_THIRD_PARTY_LIBS],
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
 
-    AC_CHECK_PROGS([UNZIP], [unzip], [:])
+    AC_CHECK_PROGS([UNZIP], [bzip2], [:])
     if test "$UNZIP" = :; then
-        AC_MSG_ERROR([The build tools needs unzip. Please install it.])
+        AC_MSG_ERROR([The build tools needs bzip2. Please install it.])
     fi
     AS_IF(
         [test "x${enable_vera}" != "xno"],
