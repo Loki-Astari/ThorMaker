@@ -109,7 +109,6 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
         ]
     )
     AC_SUBST([VERATOOL], [${VERATOOL}])
-    AX_THOR_LIB_SELECT
 ])
 
 AC_DEFUN([AX_THOR_FUNC_USE_VERA_BUILD],
@@ -198,8 +197,6 @@ AC_DEFUN([THOR_CHECK_THIRD_PARTY_LIBS],
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
-AC_REQUIRE([AX_THOR_PYTHON_VERSION])dnl
-AC_REQUIRE([AX_PYTHON_DEVEL])dnl
 
     AC_CHECK_PROGS([UNZIP], [unzip], [:])
     if test "$UNZIP" = :; then
@@ -208,6 +205,9 @@ AC_REQUIRE([AX_PYTHON_DEVEL])dnl
     AS_IF(
         [test "x${enable_vera}" != "xno"],
         [
+            AC_REQUIRE([AX_THOR_PYTHON_VERSION])dnl
+            AC_REQUIRE([AX_PYTHON_DEVEL])dnl
+
             AC_CHECK_PROGS([CMAKE], [cmake], [:])
             if test "$CMAKE" = :; then
                 AC_MSG_ERROR([The build tools needs cmake. Please install it.])
@@ -228,6 +228,7 @@ AC_REQUIRE([AX_PYTHON_DEVEL])dnl
     git submodule update --init --recursive
     AX_THOR_FUNC_USE_VERA_PYTHON2
     AX_THOR_FUNC_USE_VERA_INIT
+    AX_THOR_LIB_SELECT
     THOR_USE_HOST_BUILD
     THOR_CHECK_THIRD_PARTY_LIBS
 
