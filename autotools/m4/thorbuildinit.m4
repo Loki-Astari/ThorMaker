@@ -103,6 +103,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
         [
             VERATOOL='off';
             subconfigure="${subconfigure} --disable-vera";
+            PYTHON_VERSION=IGNORE
         ],
         [
             VERATOOL='vera++';

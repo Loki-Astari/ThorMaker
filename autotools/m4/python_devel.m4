@@ -71,6 +71,13 @@
 
 AU_ALIAS([AC_PYTHON_DEVEL], [AX_PYTHON_DEVEL])
 AC_DEFUN([AX_PYTHON_DEVEL],[
+
+    AS_IF([test "$PYTHON_VERSION" != "IGNORE"],[
+        AX_PYTHON_DEVELOPT
+    ])
+])
+
+AC_DEFUN([AX_PYTHON_DEVELOPT],[
 	#
 	# Allow the use of a (user set) custom python version
 	#
