@@ -33,6 +33,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
             AS_IF([test "$with_cryptoroot" != ""],
                   [
                     crypto_ROOT_DIR="$with_cryptoroot"
+                    subconfigure="${subconfigure} --with-cryptoroot=$with_cryptoroot"
                   ])
         ],
         [AC_MSG_ERROR([
@@ -173,7 +174,7 @@ AC_DEFUN([AX_THOR_PYTHON_VERSION],
     )
 ])
 
-AC_DEFUN([THOR_CHECK_THIRD_PARTY_LIBS],
+AC_DEFUN([AX_THOR_CHECK_THIRD_PARTY_LIBS],
 [
     export cwd=$(pwd)
 
@@ -231,7 +232,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AX_THOR_FUNC_USE_VERA_INIT
     AX_THOR_LIB_SELECT
     THOR_USE_HOST_BUILD
-    THOR_CHECK_THIRD_PARTY_LIBS
 
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
