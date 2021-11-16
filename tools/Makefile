@@ -200,17 +200,17 @@ TARGET_ITEM					= $(if $(TARGET_OVERRIDE), $(TARGET_OVERRIDE), $(TARGET_ALL))
 APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET_ALL)))
 APP_HEAD					= $(filter %.h,$(patsubst %.app,%.h,$(TARGET_ALL)))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
-CPP_HDR						= $(filter-out %.lex.h   %.tab.h   %.gperf.h             ,$(wildcard *.h *.hpp))
+CPP_HDR						= $(filter-out %.lex.h   %.tab.h %.tab.hpp  %.gperf.h             ,$(wildcard *.h *.hpp))
 LEX_SRC						= $(wildcard *.l)
 GPERF_SRC					= $(wildcard *.gperf)
 YACC_SRC					= $(wildcard *.y)
 TMP_SRC						= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC))
-TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC))
+TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.hpp,$(LEX_SRC))
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
 DEP							= $(patsubst %.cpp, dependency/%.d, $(SRC))
 HEAD						= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp *.hpp)) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
-VERA_SRC					= $(filter-out $(TEST_IGNORE), $(CPP_SRC) $(APP_SRC) $(filter-out %Config.h, $(CPP_HDR)) $(wildcard *.tpp))
+VERA_SRC					= $(filter-out $(TEST_IGNORE) $(TMP_SRC), $(CPP_SRC) $(APP_SRC)) $(filter-out %Config.h $(TMP_HDR), $(CPP_HDR)) $(wildcard *.tpp)
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
 GCOV_BASIC_SRC				= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(filter-out $(MOCK_OBJECT) $(APP_SRC) ,$(GCOV_OBJ))) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_BASIC_HEAD				= $(patsubst %, coverage/%.gcov, $(filter-out $(APP_HEAD) %Config.h,$(wildcard *.h *.hpp)))
@@ -373,7 +373,7 @@ veraonly:				ActionRunVera
 test:					dependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 clean:
-	$(RM) -rf debug release coverage report dependency test/coverage test/dependency
+	$(RM) -rf debug release coverage report dependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh
 
 dependency:				$(DEP)
 
@@ -531,21 +531,25 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 		$(ECHO) '$(YACC) -o $@ -d $<' ;					\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(YACC) -o $@ -d $< 2>$${tmpfile};				    \
+	export errorFile=$(shell $(MKTEMP));				\
+	$(YACC) -o $@ -d $< 2>$${errorFile};			    \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) "Failed in Parser Generator";			\
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(YACC) -o $@ -d $<;					\
 		$(ECHO) "========================================";\
-		cat $${tmpfile};								\
+		cat $${errorFile};								\
 		exit 1;											\
 	else 												\
+		mv $@ $${tmpfile};								\
+		sed -e 's/semantic_type yylval;/semantic_type yylval{};/'	\
+			$${tmpfile} > $@;							\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
 			$(ECHO) $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
 		fi;												\
 		$(ECHO) $(GREEN_OK);							\
-		$(RM) $${tmpfile};								\
+		$(RM) $${errorFile} $${tmpfile};				\
 	fi
 
 %.lex.cpp: %.l
@@ -566,12 +570,17 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 		cat $${errorFile};								\
 		exit 1;											\
 	else 												\
-		cat $${tmpfile} | sed -e 's/<stdout>/$*.lex.cpp/' -e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' -e 's/max_size )) < 0 )/max_size )) == std::size_t(-1) )/' > $@;	\
+		cat $${tmpfile} |								\
+			sed -e 's/<stdout>/$*.lex.cpp/'				\
+				-e 's/extern "C" int isatty/\/\/ Removed extern "C" int isatty/' -e 's/max_size )) < 0 )/max_size )) == std::size_t(-1) )/'	\
+				-e 's/(int)(result = LexerInput/(std::size_t)(result = LexerInput/'	\
+				-e 's/int yy_buf_size;/std::size_t yy_buf_size;/'	\
+				> $@;									\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
 			$(ECHO) $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
 		fi;												\
 		$(ECHO) $(GREEN_OK);							\
-		$(RM) $${tmpfile};								\
+		$(RM) $${errorFile} $${tmpFile};				\
 	fi
 
 %.gperf.cpp: %.gperf
