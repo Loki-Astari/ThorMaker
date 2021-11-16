@@ -10,9 +10,9 @@
 .PRECIOUS:	coverage/%.tpp.gcov
 .PRECIOUS:	coverage/%.h.gcov
 
-GCOV_OBJ_FILES			= $(patsubst coverage/%.o, coverage/%.cpp.out, $(filter-out $(MOCK_OBJECT) $(APP_SRC) ,$(GCOV_OBJ)))
-GCOV_HED_FILES			= $(patsubst %, coverage/%.out, $(filter-out $(APP_HEAD) %Config.h,$(wildcard *.h))) $(patsubst %.tpp,coverage/%.tpp.out, $(wildcard *.tpp))
-GCOV_ALL_FILES			= $(filter-out $(MOCK_OBJECT) $(APP_SRC) ,$(GCOV_OBJ)) $(filter-out $(MOCK_OBJECT), $(wildcard test/*.cpp test/*.tpp test/*.h))
+GCOV_OBJ_FILES			= $(patsubst coverage/%.o, coverage/%.cpp.out, $(filter-out $(MOCK_OBJECT) $(patsubst %.cpp,coverage/%.o, $(TMP_SRC)) $(APP_SRC) ,$(GCOV_OBJ)))
+GCOV_HED_FILES			= $(patsubst %, coverage/%.out, $(filter-out $(APP_HEAD) $(TMP_HDR) %Config.h,$(wildcard *.h))) $(patsubst %.tpp,coverage/%.tpp.out, $(wildcard *.tpp))
+GCOV_ALL_FILES			= $(filter-out $(MOCK_OBJECT) $(TMP_SRC) $(TMP_HDR) $(APP_SRC) ,$(GCOV_OBJ)) $(filter-out $(MOCK_OBJECT), $(wildcard test/*.cpp test/*.tpp test/*.h))
 
 ActionRunCoverage:		report/coverage report/coverage.show
 	@rm -f report/coverage.show

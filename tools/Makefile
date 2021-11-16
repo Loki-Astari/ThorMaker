@@ -161,12 +161,12 @@ endif
 
 COVERAGE_REQUIRED	?= 80
 
-YACC			= bison
-LEX				= flex
-GPERF			= gperf --ignore-case
-CP				= cp
-MKDIR			= mkdir
-RMDIR			= rmdir
+YACC			?= bison
+LEX				?= flex
+GPERF			?= gperf --ignore-case
+CP				?= cp
+MKDIR			?= mkdir
+RMDIR			?= rmdir
 
 CXX				?= g++
 COV				?= gcov
@@ -212,7 +212,7 @@ HEAD						= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp *.hpp)) $(EXTR
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					= $(filter-out $(TEST_IGNORE) $(TMP_SRC), $(CPP_SRC) $(APP_SRC)) $(filter-out %Config.h $(TMP_HDR), $(CPP_HDR)) $(wildcard *.tpp)
 GCOV_OBJ					= $(filter-out coverage/main.o,$(OBJ)) $(MOCK_OBJECT)
-GCOV_BASIC_SRC				= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(filter-out $(MOCK_OBJECT) $(APP_SRC) ,$(GCOV_OBJ))) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
+GCOV_BASIC_SRC				= $(patsubst coverage/%.o, coverage/%.cpp.gcov, $(filter-out $(MOCK_OBJECT) $(TMP_SRC) $(TMP_HDR) $(APP_SRC) ,$(GCOV_OBJ))) $(patsubst %.tpp,coverage/%.tpp.gcov, $(wildcard *.tpp))
 GCOV_BASIC_HEAD				= $(patsubst %, coverage/%.gcov, $(filter-out $(APP_HEAD) %Config.h,$(wildcard *.h *.hpp)))
 GCOV_SRC					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_SRC))
 GCOV_HEAD					= $(filter-out $(foreach nocoverage,$(TEST_IGNORE),coverage/$(nocoverage).gcov), $(GCOV_BASIC_HEAD))
