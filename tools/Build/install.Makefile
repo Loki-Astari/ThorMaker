@@ -31,8 +31,8 @@
 .PHONY:	root_clean_defer_YES_% root_clean_defer_NO_%
 .PHONY:	install_defer_lib install_defer_obj
 .PRECIOUS: $(PREFIX_BIN)/%$(BUILD_EXTENSION)
-.PRECIOUS: $(PREFIX_LIB)/lib%$(BUILD_EXTENSION).$(SO)
-.PRECIOUS: $(PREFIX_LIB)/lib%$(BUILD_EXTENSION).a
+.PRECIOUS: $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).$(SO)
+.PRECIOUS: $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).a
 
 
 
@@ -122,9 +122,9 @@ ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, u
 
 install_app_%:				$(PREFIX_BIN)/%$(BUILD_EXTENSION)
 	@# Don't know why I need this!
-install_shared_lib_%:		$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).$(SO)
+install_shared_lib_%:		$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).$(SO)
 	@# Don't know why I need this!
-install_static_lib_%:		$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).a
+install_static_lib_%:		$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).a
 	@# Don't know why I need this!
 install_head_$(LIBBASENAME):$(INSTALL_HEAD)
 	@# Do nothng
@@ -149,12 +149,12 @@ $(PREFIX_BIN)/%$(BUILD_EXTENSION):				$(TARGET_MODE)/%.app		| $(PREFIX_BIN).Dir
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
 	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 
-$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).$(SO):		$(TARGET_MODE)/lib%.$(SO)	| $(PREFIX_LIB).Dir
-	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
+$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).$(SO):		$(TARGET_MODE)/lib%.$(SO)	| $(PREFIX_LIB)$(PREFIX_LIB_SUB).Dir
+	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
-$(PREFIX_LIB)/lib%$(BUILD_EXTENSION).a:			$(TARGET_MODE)/lib%.a		| $(PREFIX_LIB).Dir
-	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
+$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).a:			$(TARGET_MODE)/lib%.a		| $(PREFIX_LIB)$(PREFIX_LIB_SUB).Dir
+	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a
 	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 
 $(PREFIX_INC)/$(LIBBASENAME)/%:	%											| $(PREFIX_INC)/$(LIBBASENAME).Dir
@@ -180,11 +180,11 @@ uninstall_app_%:
 
 uninstall_shared_lib_%:
 	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
-	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).$(SO)
+	@$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO)
 
 uninstall_static_lib_%:
 	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
-	@$(RM) $(PREFIX_LIB)/lib$*$(BUILD_EXTENSION).a
+	@$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a
 
 uninstall_head_%:
 	@$(ECHO) $(call paragraph, Clean Header $*)
