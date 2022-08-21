@@ -78,19 +78,6 @@ AC_DEFUN([AX_THOR_LIB_SELECT],
     AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
 ])
 
-AC_DEFUN([AX_THOR_FUNC_USE_VERA_PYTHON2],
-[
-    AC_ARG_ENABLE(
-        [verapython2],
-        AS_HELP_STRING([--enable-verapython2], [Set up building for the travis environment])
-    )
-    AS_IF(
-        [test "x$enable_verapython2" == "xyes"],
-        [
-            subconfigure="${subconfigure} --enable-verapython2"
-        ]
-    )
-])
 AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
 [
     AC_ARG_ENABLE(
@@ -104,30 +91,21 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
         [
             VERATOOL='off';
             subconfigure="${subconfigure} --disable-vera";
-            PYTHON_VERSION=IGNORE
         ],
         [
-            VERATOOL='vera++';
-        ]
-    )
-    AC_SUBST([VERATOOL], [${VERATOOL}])
-])
-
-AC_DEFUN([AX_THOR_FUNC_USE_VERA_BUILD],
-[
-    AS_IF(
-        [test "x$enable_vera" != "xno"],
-        [
-            ./build/third/vera-install
-            AC_CHECK_PROGS([TestVera], [vera++], [:], ${PATH}:./build/bin)
+            AC_CHECK_PROGS([TestVera], [vera++], [:])
             AS_IF(
                 [test "$TestVera" == ":"],
                 [
-                    AC_MSG_ERROR([
+                AC_MSG_ERROR([
 
 By default the build tools use vera++ for static analysis of C++ code to ensure the project
 maintains a consistent style when people add pull requests. The configuration tests have
 detected that "vera++" (the static analysis tool) is not currently installed.
+
+The easy way to install vera++ is using brew:
+
+    > brew install vera++
 
 
 ])
@@ -135,8 +113,10 @@ detected that "vera++" (the static analysis tool) is not currently installed.
                 [
                 ]
             )
+            VERATOOL='vera++';
         ]
     )
+    AC_SUBST([VERATOOL], [${VERATOOL}])
 ])
 
 AC_DEFUN([THOR_USE_HOST_BUILD],
@@ -153,23 +133,6 @@ AC_DEFUN([THOR_USE_HOST_BUILD],
             rm build
             ln -s ${with_hostbuild} build
             ls -la build
-        ]
-    )
-])
-
-AC_DEFUN([AX_THOR_PYTHON_VERSION],
-[
-    AS_IF(
-        [test "x$enable_verapython2" == "xyes"],
-        [
-            # Do nothing
-            # The default action on most systems is to use python 2
-            # This is used by third/vera-install
-            export PYTHON_MIN_VERSION=2.0
-        ],
-        [
-            export PYTHON_VERSION=3.9
-            export PYTHON_MIN_VERSION=3.9
         ]
     )
 ])
@@ -204,31 +167,11 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     if test "$UNZIP" = :; then
         AC_MSG_ERROR([The build tools needs bzip2. Please install it.])
     fi
-    AS_IF(
-        [test "x${enable_vera}" != "xno"],
-        [
-            AX_THOR_PYTHON_VERSION
-            AX_PYTHON_DEVEL
-
-            AC_CHECK_PROGS([CMAKE], [cmake], [:])
-            if test "$CMAKE" = :; then
-                AC_MSG_ERROR([The build tools needs cmake. Please install it.])
-            fi
-            AC_CHECK_LIB([tcl],    [Tcl_Init], [], [AC_MSG_ERROR([The build tools needs libtcl. Please install it.])])
-            AC_CHECK_LIB([tk],     [Tk_Init],  [], [AC_MSG_ERROR([The build tools needs libtk. Please install it.])])
-            AX_BOOST_BASE([1.54], [], [AC_MSG_ERROR([The build tools needs libboost. Please install it.])])
-            AX_BOOST_PYTHON
-            if test "x$BOOST_PYTHON_LIB" = "x"; then
-                AC_MSG_ERROR([The build tools needs boost-python. Please install it.])
-            fi
-        ]
-    )
 
     AC_PROG_CXX
 
     subconfigure=""
     git submodule update --init --recursive
-    AX_THOR_FUNC_USE_VERA_PYTHON2
     AX_THOR_FUNC_USE_VERA_INIT
     AX_THOR_LIB_SELECT
     THOR_USE_HOST_BUILD
@@ -236,7 +179,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
         [
-            AX_THOR_FUNC_USE_VERA_BUILD
             pushd build/third
             ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
             popd

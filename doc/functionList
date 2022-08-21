@@ -30,4 +30,4 @@ AWK_PROGRAM
 )
 program="${program}/@function${marker}[ \t]*$/ {FOUND=1}"
 
-awk "${program}" ${file}
+awk "${program}" ${file} 2> /dev/null
