@@ -4,8 +4,7 @@ echo "Installing G++"
 sudo apt-get install -qq g++-9 -y           > /dev/null
 
 echo "Installing Dependencies"
-sudo apt-get install python-dev -y          > /dev/null
-sudo apt-get install -qq libboost-all-dev   > /dev/null
+sudo apt-get install vera++
 
 echo "Setting up G++"
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9 > /dev/null
