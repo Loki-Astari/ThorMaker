@@ -361,6 +361,18 @@ If libevent is not installed in the default location (/usr/local) then you will 
 ])
 
 AC_DEFUN(
+    [AX_THOR_BOOST_BASE],
+    [
+        AC_ARG_WITH(
+            [boost],
+            AS_HELP_STRING([--with-boost=<dir>], [Directory of Boost Headers])
+        )
+        BOOST_CPPFLAGS="-I$with_boost"
+        AC_SUBST([BOOST_CPPFLAGS], [${BOOST_CPPFLAGS}])
+    ]
+)
+
+AC_DEFUN(
     [AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION],
     [
         AC_LANG_PUSH([C++])
