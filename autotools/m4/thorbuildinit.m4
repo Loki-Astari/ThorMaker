@@ -280,25 +280,34 @@ AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
     yaml_ROOT_DIR=""
     yaml_ROOT_LIB=""
+    ORIG_LDFLAGS="${LDFLAGS}"
     AC_ARG_WITH(
         [yamlroot],
         AS_HELP_STRING([--with-yamlroot=<location>], [Directory of YAML_ROOT])
     )
-    if test "${with_yamlroot}" == ""; then
-        with_yamlroot="/usr/local"
-    fi
-    ORIG_LDFLAGS="${LDFLAGS}"
-    LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
-
-    AC_CHECK_LIB(
+    AC_ARG_ENABLE(
         [yaml],
-        [yaml_parser_initialize],
+        AS_HELP_STRING([--disable-yaml], [Disable linking with YAML])
+    )
+    AS_IF(
+        USING_YAML=0
+        [test "x$enable_yaml" != "xno"],
         [
-            AC_DEFINE([HAVE_YAML], 1, [When on Yaml Serialization code will be compiled])
-            yaml_ROOT_DIR="${with_yamlroot}"
-            yaml_ROOT_LIB="yaml"
-        ],
-        [AC_MSG_ERROR([
+            USING_YAML=1
+            if test "${with_yamlroot}" == ""; then
+                with_yamlroot="/usr/local"
+            fi
+            LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
+
+            AC_CHECK_LIB(
+                [yaml],
+                [yaml_parser_initialize],
+                [
+                    AC_DEFINE([HAVE_YAML], 1, [When on Yaml Serialization code will be compiled])
+                    yaml_ROOT_DIR="${with_yamlroot}"
+                    yaml_ROOT_LIB="yaml"
+                ],
+                [AC_MSG_ERROR([
  
 Error: Could not find libyaml
 
@@ -312,7 +321,9 @@ If you do not want to use yaml serialization then it
 can be disabled with:
     --disable-yaml
 
-            ], [1])]
+                ], [1])]
+            )
+        ]
     )
 
     LDFLAGS="${ORIG_LDFLAGS}"
