@@ -171,6 +171,7 @@ RMDIR			?= rmdir
 CXX				?= g++
 COV				?= gcov
 VERA			?= $(if $(VERATOOL),$(VERATOOL), vera++)
+VERA_ROOT		= --root=$(THORSANVIL_ROOT)/build/vera-plusplus
 MKTEMP			= $(MKTEMP_$(PLATFORM))
 MAKE			= make --silent
 

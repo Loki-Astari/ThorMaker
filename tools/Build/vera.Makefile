@@ -12,7 +12,7 @@ ActionRunVera:		report/vera	 report/vera.show
 VERA_PROFILE	= $(if $(VERA_PROFILE_$(1)),$(VERA_PROFILE_$(1)),thor)
 
 vera-%:
-	@$(VERA) --profile $(call VERA_PROFILE,$*) --show-rule --error --std-report - $*
+	@$(VERA) $(VERA_ROOT) --profile $(call VERA_PROFILE,$*) --show-rule --error --std-report - $*
 
 report/vera:  $(SRC) $(HEAD) | report.Dir
 	@$(ECHO) $(call section_title,Static Analysis) | tee report/vera
@@ -29,10 +29,10 @@ coverage/%.vera: %	| coverage.Dir
 	else												\
 		$(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' | tee -a coverage/$*.vera;	\
 	fi
-	@$(VERA) --profile $(call VERA_PROFILE,$*) --show-rule --error --std-report $@.report $*;\
+	@$(VERA) $(VERA_ROOT) --profile $(call VERA_PROFILE,$*) --show-rule --error --std-report $@.report $*;\
 	if [ $$? != 0 ]; then								\
 		$(ECHO) $(RED_ERROR) | tee -a coverage/$*.vera;	\
-		$(ECHO) "$(VERA) --profile $(call VERA_PROFILE,$*) --show-rule --error --std-report $@.report $*";	\
+		$(ECHO) "$(VERA) $(VERA_ROOT) --profile $(call VERA_PROFILE,$*) --show-rule --error --std-report $@.report $*";	\
 		$(ECHO) "==================================================="; \
 		cat $@.report;									\
 		exit 1;											\
