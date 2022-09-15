@@ -14,6 +14,14 @@ AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
         [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[-Wl,--no-whole-archive])]
     )
 ])
+
+AC_DEFUN([AX_THOR_LOCAL_DIR],
+[
+    DefaultLinkDir="/usr/local"
+    host=$(uname -p)
+    AS_IF([test ${host} == "arm" ], [DefaultLinkDir="/opt/homebrew"])
+    AC_SUBST([DefaultLinkDir], [${DefaultLinkDir}])
+])
 AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
 [
     crypto_ROOT_LIB=""
@@ -162,7 +170,7 @@ AC_DEFUN([AX_THOR_CHECK_THIRD_PARTY_LIBS],
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
-
+    AX_THOR_LOCAL_DIR
     AC_CHECK_PROGS([UNZIP], [bzip2], [:])
     if test "$UNZIP" = :; then
         AC_MSG_ERROR([The build tools needs bzip2. Please install it.])
@@ -228,7 +236,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
         AC_MSG_NOTICE([With: ${with_Thors$1root}])
 
         if test "${with_Thors$1root}" == ""; then
-            declare with_Thors$1root="/usr/local"
+            declare with_Thors$1root="${DefaultLinkDir}"
         fi
         ORIG_LDFLAGS="${LDFLAGS}"
         LDFLAGS="-std=c++17 $LDFLAGS -L${with_Thors$1root}/lib"
@@ -285,30 +293,20 @@ AC_DEFUN([AX_THOR_FUNC_USE_YAML],
         [yamlroot],
         AS_HELP_STRING([--with-yamlroot=<location>], [Directory of YAML_ROOT])
     )
-    AC_ARG_ENABLE(
-        [yaml],
-        AS_HELP_STRING([--disable-yaml], [Disable linking with YAML])
-    )
-    AS_IF(
-        USING_YAML=0
-        [test "x$enable_yaml" != "xno"],
-        [
-            USING_YAML=1
-            if test "${with_yamlroot}" == ""; then
-                with_yamlroot="/usr/local"
-            fi
-            LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
+    if test "${with_yamlroot}" == ""; then
+        with_yamlroot="${DefaultLinkDir}"
+    fi
+    LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
 
-            AC_CHECK_LIB(
-                [yaml],
-                [yaml_parser_initialize],
-                [
-                    AC_DEFINE([HAVE_YAML], 1, [When on Yaml Serialization code will be compiled])
-                    yaml_ROOT_DIR="${with_yamlroot}"
-                    yaml_ROOT_LIB="yaml"
-                ],
-                [AC_MSG_ERROR([
- 
+    AC_CHECK_LIB(
+        [yaml],
+        [yaml_parser_initialize],
+        [
+            yaml_ROOT_DIR="${with_yamlroot}"
+            yaml_ROOT_LIB="yaml"
+        ],
+        [AC_MSG_ERROR([
+
 Error: Could not find libyaml
 
 You can solve this by installing libyaml
@@ -317,13 +315,7 @@ You can solve this by installing libyaml
 Alternately specify install location with:
     --with-yamlroot=<location of yaml installation>
 
-If you do not want to use yaml serialization then it
-can be disabled with:
-    --disable-yaml
-
-                ], [1])]
-            )
-        ]
+        ], [1])]
     )
 
     LDFLAGS="${ORIG_LDFLAGS}"
@@ -340,7 +332,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
         AS_HELP_STRING([--with-eventroot=<location>], [Directory of EVENT_ROOT])
     )
     if test "${with_eventroot}" == ""; then
-        with_eventroot="/usr/local"
+        with_eventroot="${DefaultLinkDir}"
     fi
     ORIG_LDFLAGS="${LDFLAGS}"
     LDFLAGS="$LDFLAGS -L$with_eventroot/lib"
@@ -360,7 +352,7 @@ Error: Could not find libevent
 You can solve this by installing libevent
 see http://libevent.org/
 
-If libevent is not installed in the default location (/usr/local) then you will need to specify its location.
+If libevent is not installed in the default location (/usr/local or /opt/homebrew) then you will need to specify its location.
 --with-eventroot=<location of event installation>
 
             ], [1])]
