@@ -1,3 +1,18 @@
+AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
+[
+    SDL_VERSION=2.0.0
+    AM_PATH_SDL($SDL_VERSION, :, AC_MSG_ERROR([
+*** SDL version $SDL_VERSION not found!
+
+    Please install SDL
+
+        On the mac use brew install sdl2
+
+
+])
+               )
+])
+
 AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
 [
     AX_CHECK_LINK_FLAG(
@@ -471,7 +486,7 @@ AC_DEFUN(
     [
         AX_THOR_TEST_CXX_FLAGS()
         minLangFeature=$1
-        AS_IF([test "$2" = ""], [maxLangFeature=17], [maxLangFeature=$2])
+        AS_IF([test "$2" = ""], [maxLangFeature=$1], [maxLangFeature=$2])
         AS_IF([test $minLangFeature -gt $maxLangFeature], AC_MSG_ERROR([Invalid Language Value],[1]))
         
         AC_LANG(C++)
