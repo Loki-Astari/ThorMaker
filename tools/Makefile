@@ -112,18 +112,14 @@ SHELL=/bin/bash
 #		but if you want to reduce this you can set this in a specific project make file
 #
 #	Displaying coverage:
-#		make test COVERAGE=file.h	=> Display the coverage for file.h
-#		make test COVERAGE=On		=> Display the coverage for ALL files
+#		make coverage-file.h	=> Display the coverage for file.h
 #
 #	Run specific UNIT TEST
 #		Note:	TestName	=> *
 #							=> <ClassName>.*
 #							=> <ClassName>.<TestMethod>
 #
-#		make test TESTNAME=<TestName>
-#
-#	Run Test and see coverage for that test on file:
-#		make test TESTNAME=<TestName> COVERAGE=<FileName or On>
+#		make test-<TestName>
 #
 #	Only Run specific test
 #		make testrun.<TestName>
@@ -644,7 +640,6 @@ Print_On:
 	@$(ECHO) "INSTALL_SHARED_LIB:   $(INSTALL_SHARED_LIB)"
 	@$(ECHO) "INSTALL_STATIC_LIB:   $(INSTALL_STATIC_LIB)"
 	@$(ECHO) "INSTALL_HEADER:       $(INSTALL_HEADER)"
-	@$(ECHO) "TESTNAME:             $(TESTNAME)"
 	@$(ECHO) "DEFER_NAME:           $(DEFER_NAME)"
 	@$(ECHO) "INSTALL_DEFER:        $(INSTALL_DEFER)"
 	@$(ECHO) "DEFER_NAME:           $(DEFER_NAME)"
