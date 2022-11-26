@@ -22,6 +22,8 @@ struct MockOutFunction
 
 using ThorsAnvil::BuildTools::Mock::RemoveNoExceptType;
 
+#define MOCK_MEM_DECL(func)         MockOutFunction<RemoveNoExceptType<decltype(func)>>  mockOutFunction ## func
+#define MOCK_MEM_INIT(func, lambda) mockOutFunction ## func(ThorsAnvil::BuildTools::Mock::mock ## func, lambda)
 #define MOCK_SYS(func, lambda)      MockOutFunction<RemoveNoExceptType<decltype(func)>>  MockOutFunction ## func(ThorsAnvil::BuildTools::Mock::mock ## func, lambda)
 
 
