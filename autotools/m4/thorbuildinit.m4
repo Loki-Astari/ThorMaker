@@ -1,16 +1,49 @@
 AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
 [
+    AX_THOR_CHECK_FOR_SDL_MAIN
+    AX_THOR_CHECK_FOR_SDL_TTF
+])
+
+
+AC_DEFUN([AX_THOR_CHECK_FOR_SDL_MAIN],
+[
     SDL_VERSION=2.0.0
     AM_PATH_SDL($SDL_VERSION, :, AC_MSG_ERROR([
 *** SDL version $SDL_VERSION not found!
 
-    Please install SDL
+Error: Count not find libSDL2
 
-        On the mac use brew install sdl2
+You can solve this in installing SDL2
 
+        On the mac use:
+            > brew install sdl2
 
+    ]))
 ])
-               )
+
+AC_DEFUN([AX_THOR_CHECK_FOR_SDL_TTF],
+[
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="${LDFLAGS} ${SDL_LIBS}"
+
+    AC_CHECK_LIB(
+        [SDL2_ttf],
+        [TTF_Init],
+        :,
+        [AC_MSG_ERROR([
+
+Error: Could not find libSDL2_ttf
+
+You can solve this by installing SDL2_ttf
+
+        On the mac use:
+            > brew install sdl2_ttf
+
+        ], [1])]
+    )
+
+    LDFLAGS="${ORIG_LDFLAGS}"
+    AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_ttf"])
 ])
 
 AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
