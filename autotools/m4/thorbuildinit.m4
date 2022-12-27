@@ -67,7 +67,11 @@ AC_DEFUN([AX_THOR_LOCAL_DIR],
 [
     DefaultLinkDir="/usr/local"
     host=$(uname -p)
-    AS_IF([test ${host} == "arm" ], [DefaultLinkDir="/opt/homebrew"])
+    AS_IF([test "${host}" == "arm" ],
+    [
+        DefaultLinkDir="/opt/homebrew"
+        AS_IF([test "${prefix}" == "NONE"], [prefix=${DefaultLinkDir}])
+    ])
     AC_SUBST([DefaultLinkDir], [${DefaultLinkDir}])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],

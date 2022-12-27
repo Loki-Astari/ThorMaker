@@ -20,14 +20,15 @@
 .PHONY:	ActionInstall ActionUInstall
 ##### Internal
 .PHONY: clean veryclean
-.PHONY:	ActionDoInstallDebug  ActionDoInstallRelease  ActionDoInstallHead  ActionDoInstallMan
-.PHONY:	ActionDoUInstallDebug ActionDoUInstallRelease ActionDoUInstallHead ActionDoUInstallMan
-.PHONY:	ActionTryInstallApp  ActionTryInstallSlib  ActionTryInstallAlib  ActionTryInstallHead  ActionTryInstallDefer ActionTryInstallMan
-.PHONY:	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallHead ActionTryUInstallDefer ActionTryUInstallMan   ActionTryUInstallDRoot
-.PHONY:	ActionInstallApp  ActionInstallSlib  ActionInstallAlib  ActionInstallAHead  ActionInstallDefer  ActionInstallMan
-.PHONY:	ActionUInstallApp ActionUInstallSlib ActionUInstallAlib ActionUInstallAHead ActionUInstallDefer ActionUInstallMan ActionUInstallDRoot
+.PHONY:	ActionDoInstallDebug  ActionDoInstallRelease  ActionDoInstallHead  ActionDoInstallMan ActionDoInstallConfig
+.PHONY:	ActionDoUInstallDebug ActionDoUInstallRelease ActionDoUInstallHead ActionDoUInstallMan ActionDoUInstallConfig
+.PHONY:	ActionTryInstallApp  ActionTryInstallSlib  ActionTryInstallAlib  ActionTryInstallHead  ActionTryInstallDefer ActionTryInstallMan ActionTryInstallConfig
+.PHONY:	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallHead ActionTryUInstallDefer ActionTryUInstallMan ActionTryUInstallConfig ActionTryUInstallDRoot
+.PHONY:	ActionInstallApp  ActionInstallSlib  ActionInstallAlib  ActionInstallAHead  ActionInstallDefer  ActionInstallMan ActionInstallConfig
+.PHONY:	ActionUInstallApp ActionUInstallSlib ActionUInstallAlib ActionUInstallAHead ActionUInstallDefer ActionUInstallMan ActionUInstallConfig ActionUInstallDRoot
 .PHONY:	install_app_%   install_shared_lib_%   install_static_lib_%   install_head_%   install_defer_YES_%   install_defer_NO_%   install_defer_dir_YES_%   install_defer_dir_NO_%
 .PHONY:	uninstall_app_% uninstall_shared_lib_% uninstall_static_lib_% uninstall_head_% uninstall_defer_YES_% uninstall_defer_NO_% uninstall_defer_dir_YES_% uninstall_defer_dir_NO_%
+.PHONY:	install_config_local_NO_% install_config_local_YES_% install_config_root_NO_% install_config_root_YES_%
 .PHONY:	root_clean_defer_YES_% root_clean_defer_NO_%
 .PHONY:	install_defer_lib install_defer_obj
 .PRECIOUS: $(PREFIX_BIN)/%$(BUILD_EXTENSION)
@@ -58,13 +59,16 @@ LIBBASENAME					= $(LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
 INSTALL_MAN_SRC				= $(wildcard man/man*/*)
 INSTALL_MAN_DIR				= $(patsubst man/%, $(PREFIX_MAN)/%.Dir, $(sort $(dir $(INSTALL_MAN_SRC))))
 INSTALL_MAN_PAGE			= $(patsubst man/%, $(PREFIX_MAN)/%.man, $(INSTALL_MAN_SRC))
+INSTALL_CONFIG_LOCAL		= $(if $(CONFIG) $(INSTALL_APP_NAME), $(patsubst %, install_config_local_$(INSTALL_ACTIVE)_%, $(wildcard *.$(CONFIG))))
+INSTALL_CONFIG_ROOT			= $(if $(CONFIG) $(INSTALL_APP_NAME), $(patsubst %, install_config_root_$(INSTALL_ACTIVE)_%, $(wildcard *.$(CONFIG))))
 
-
+INSTALL_APP_NAME			= $(strip $(patsubst %.app,   %,					$(filter %.app,  $(TARGET_ALL))))
 INSTALL_APP					= $(patsubst %.app,   install_app_%,		$(filter %.app,  $(TARGET_ALL)))
 INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
 INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
 INSTALL_HEADER				= $(patsubst %,		  install_head_%,		$(LIBBASENAME))
 INSTALL_MAN					= $(if $(strip $(INSTALL_MAN_PAGE)), install_man_$(INSTALL_ACTIVE))
+INSTALL_CONFIG				= $(INSTALL_CONFIG_LOCAL) $(INSTALL_CONFIG_ROOT)
 INSTALL_DEFER				= $(patsubst %, install_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 INSTALL_DEFER_DIR			= $(patsubst %, install_defer_dir_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 INSTALL_HEAD				= $(patsubst %, $(PREFIX_INC)/$(LIBBASENAME)/%, $(HEAD))
@@ -74,8 +78,8 @@ INSTALL_DEFER_OBJ			= $(patsubst %, $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/%, $(OBJ))
 # This is the interface to this makefile.
 # Use either ActionInstall or ActionUInstall
 #
-ActionInstall:				ActionDoInstallHead  ActionDoInstallDebug  ActionDoInstallRelease  ActionDoInstallMan
-ActionUInstall:				ActionDoUInstallHead ActionDoUInstallDebug ActionDoUInstallRelease ActionDoUInstallMan ActionTryUInstallDRoot
+ActionInstall:				ActionDoInstallHead  ActionDoInstallDebug  ActionDoInstallRelease  ActionDoInstallMan ActionDoInstallConfig
+ActionUInstall:				ActionDoUInstallHead ActionDoUInstallDebug ActionDoUInstallRelease ActionDoUInstallMan ActionDoUInstallConfig ActionTryUInstallDRoot
 
 ActionDoInstallDebug:
 	$(MAKE) TARGET_MODE=debug	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
@@ -83,6 +87,7 @@ ActionDoInstallRelease:
 	$(MAKE) TARGET_MODE=release ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
 ActionDoInstallHead:		ActionTryInstallHead
 ActionDoInstallMan:			ActionTryInstallMan
+ActionDoInstallConfig:		ActionTryInstallConfig
 
 ActionDoUInstallDebug:
 	$(MAKE) TARGET_MODE=debug	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
@@ -90,12 +95,14 @@ ActionDoUInstallRelease:
 	$(MAKE) TARGET_MODE=release	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
 ActionDoUInstallHead:		ActionTryUInstallHead
 ActionDoUInstallMan:		ActionTryUInstallMan
+ActionDoUInstallConfig:		ActionTryUInstallConfig
 
 ActionTryInstallApp :		$(if $(strip $(INSTALL_APP)),			ActionInstallApp)
 ActionTryInstallSlib:		$(if $(strip $(INSTALL_SHARED_LIB)),	ActionInstallSlib)
 ActionTryInstallAlib:		$(if $(strip $(INSTALL_STATIC_LIB)),	ActionInstallAlib)
 ActionTryInstallHead:		$(if $(strip $(INSTALL_HEADER)),		ActionInstallAHead)
 ActionTryInstallMan:		$(if $(strip $(INSTALL_MAN)),			ActionInstallMan)
+ActionTryInstallConfig:		$(if $(strip $(INSTALL_CONFIG)),		ActionInstallConfig)
 ActionTryInstallDefer:		$(if $(strip $(INSTALL_DEFER)),			ActionInstallDefer)
 
 ActionTryUInstallApp:		$(if $(strip $(INSTALL_APP)),			ActionUInstallApp)
@@ -103,6 +110,7 @@ ActionTryUInstallSlib:		$(if $(strip $(INSTALL_SHARED_LIB)),	ActionUInstallSlib)
 ActionTryUInstallAlib:		$(if $(strip $(INSTALL_STATIC_LIB)),	ActionUInstallAlib)
 ActionTryUInstallHead:		$(if $(strip $(INSTALL_HEADER)),		ActionUInstallAHead)
 ActionTryUInstallMan:		$(if $(strip $(INSTALL_MAN)),			ActionUInstallMan)
+ActionTryUInstallConfig:	$(if $(strip $(INSTALL_CONFIG)),		ActionUInstallConfig)
 ActionTryUInstallDefer:		$(if $(strip $(INSTALL_DEFER)),			ActionUInstallDefer)
 ActionTryUInstallDRoot:		$(if $(strip $(INSTALL_DEFER_DIR)),		ActionUInstallDRoot)
 
@@ -111,12 +119,14 @@ ActionInstallSlib:			Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)   
 ActionInstallAlib:			Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)    Note_End_Installing_Libraries
 ActionInstallAHead:			Note_Start_Installing_Headers      $(INSTALL_HEADER)        Note_End_Installing_Headers
 ActionInstallMan:			Note_Start_Installing_Man          $(INSTALL_MAN)           Note_End_Installing_Man
+ActionInstallConfig:		Note_Start_Installing_Config       $(INSTALL_CONFIG)        Note_End_Installing_Config
 ActionInstallDefer:			Note_Start_Installing_DeferLib     $(INSTALL_DEFER)         Note_End_Installing_DeferLib
 ActionUInstallApp:			Note_Start_Clean_Applications      $(patsubst install_%, uninstall_%, $(INSTALL_APP))               Note_End_Clean_Applications
 ActionUInstallSlib:			Note_Start_Clean_Libraries         $(patsubst install_%, uninstall_%, $(INSTALL_SHARED_LIB))        Note_End_Clean_Libraries
 ActionUInstallAlib:			Note_Start_Clean_Libraries         $(patsubst install_%, uninstall_%, $(INSTALL_STATIC_LIB))        Note_End_Clean_Libraries
 ActionUInstallAHead:		Note_Start_Clean_Headers           $(patsubst install_%, uninstall_%, $(INSTALL_HEADER))            Note_End_Clean_Headers
 ActionUInstallMan:			Note_Start_Clean_Man               $(patsubst install_%, uninstall_%, $(INSTALL_MAN))               Note_End_Clean_Man
+ActionUInstallConfig:		Note_Start_Clean_Config            $(patsubst install_%, uninstall_%, $(INSTALL_CONFIG))            Note_End_Clean_Config
 ActionUInstallDefer:		Note_Start_Clean_Defer             $(patsubst install_%, uninstall_%, $(INSTALL_DEFER))             Note_End_Clean_Defer
 ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, uninstall_%, $(INSTALL_DEFER_DIR))         Note_End_Clean_Defer_Root
 
@@ -132,6 +142,16 @@ install_man_NO:
 	@# Do nothng
 install_man_YES: $(INSTALL_MAN_PAGE)
 	@# Do nothng
+
+
+install_config_local_NO_%:
+	@# Do nothng
+install_config_root_NO_%:
+	@# Do nothng
+install_config_local_YES_%:	$(HOME)/.$(INSTALL_APP_NAME).Dir
+	-cp $* $(HOME)/.$(INSTALL_APP_NAME)/
+install_config_root_YES_%: $(PREFIX_CONFIG)/$(INSTALL_APP_NAME).Dir
+	-cp $* $(PREFIX_CONFIG)/$(INSTALL_APP_NAME)/
 install_defer_YES_%:
 	@# Do nothng
 install_defer_NO_$(DEFER_NAME):		install_defer_lib install_defer_obj
@@ -163,7 +183,7 @@ $(PREFIX_INC)/$(LIBBASENAME)/%:	%											| $(PREFIX_INC)/$(LIBBASENAME).Dir
 	@$(ECHO) $(call paragraph, Install Header $*)
 
 $(PREFIX_MAN)/%.man:	man/% | $(INSTALL_MAN_DIR)
-	cp man/$* $(PREFIX_MAN)/$*
+	$(CP) man/$* $(PREFIX_MAN)/$*
 
 $(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a:	coverage/libUnitTest$(DEFER_NAME).a	| $(PREFIX_DEFER_LIB).Dir
 	@$(CP) coverage/libUnitTest$(DEFER_NAME).a $(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a
@@ -193,6 +213,15 @@ uninstall_head_%:
 
 uninstall_man_NO:
 uninstall_man_YES: $(patsubst %.man, %.unman, $(INSTALL_MAN_PAGE))
+
+uninstall_config_local_NO_%:
+	@# Do nothng
+uninstall_config_root_NO_%:
+	@# Do nothng
+uninstall_config_local_YES_%:
+	-$(RM) -rf $(HOME)/.$(INSTALL_APP_NAME)/
+uninstall_config_root_YES_%:
+	-$(RM) -rf $(PREFIX_CONFIG)/$(INSTALL_APP_NAME)/
 
 $(PREFIX_MAN)/%.unman: $(PREFIX_MAN).Dir
 	$(RM) $(PREFIX_MAN)/$*
