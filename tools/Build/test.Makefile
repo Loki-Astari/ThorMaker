@@ -50,7 +50,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			TEST_STATE=on									\
 			-C test											\
 			-f ../Makefile									\
-			dependency
+			makedependency
 	$(MAKE) TARGET_OVERRIDE=unittest.app					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\

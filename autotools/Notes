@@ -112,7 +112,7 @@ release/
 profile/
 report/
 vera/
-dependency/
+makedependency/
 
 makefile_tmp
 Makefile.extra

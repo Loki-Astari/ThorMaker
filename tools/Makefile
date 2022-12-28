@@ -206,7 +206,7 @@ YACC_SRC					= $(wildcard *.y)
 TMP_SRC						= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC))
 TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.hpp,$(LEX_SRC))
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
-DEP							= $(patsubst %.cpp, dependency/%.d, $(SRC))
+DEP							= $(patsubst %.cpp, makedependency/%.d, $(SRC))
 HEAD						= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp *.hpp)) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					= $(filter-out $(TEST_IGNORE) $(TMP_SRC), $(CPP_SRC) $(APP_SRC)) $(filter-out %Config.h $(TMP_HDR), $(CPP_HDR)) $(wildcard *.tpp)
@@ -342,7 +342,7 @@ DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))
 .PHONY:	test
 .PHONY:	tools
 .PHONY:	coverage coveragetest veraonly
-.PHONY:	dependency
+.PHONY:	makedependency
 
 
 .PRECIOUS: %.Dir
@@ -357,9 +357,9 @@ build:					test debug release
 	@$(MAKE) INSTALL_ACTIVE=NO		ActionInstall
 veryclean:				clean
 	@$(MAKE) INSTALL_ACTIVE=NO		ActionUInstall
-debug:					dependency
+debug:					makedependency
 	@$(MAKE) TARGET_MODE=debug		item
-release:				dependency
+release:				makedependency
 	@$(MAKE) TARGET_MODE=release	item
 lint:					doLint
 item:					PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ITEM)
@@ -369,14 +369,14 @@ buildDir:	| $(TARGET_MODE).Dir coverage.Dir
 testonly:				ActionRunUnitTest
 covonly:				ActionRunCoverage
 veraonly:				ActionRunVera
-test:					dependency ActionRunUnitTest ActionRunCoverage ActionRunVera
+test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 clean:
-	$(RM) -rf debug release coverage report dependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh
+	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh
 
-dependency:				$(DEP)
+makedependency:				$(DEP)
 
-.SECONDARY: dependency/%.d
+.SECONDARY: makedependency/%.d
 
 
 include $(BUILD_ROOT)/tools/Build/install.Makefile
@@ -385,7 +385,7 @@ include $(BUILD_ROOT)/tools/Build/coverage.Makefile
 include $(BUILD_ROOT)/tools/Build/vera.Makefile
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
--include dependency/*
+-include makedependency/*
 
 
 Note_%:
@@ -487,7 +487,7 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 		$(RM) makefile_tmp;								\
 	fi
 
-dependency/%.d:		%.cpp | dependency.Dir
+makedependency/%.d:		%.cpp | makedependency.Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(CXX) -MM -MT"coverage/$(<:.cpp=.o)" "$<"';\
 	fi
