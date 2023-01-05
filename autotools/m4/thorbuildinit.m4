@@ -2,6 +2,7 @@ AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
 [
     AX_THOR_CHECK_FOR_SDL_MAIN
     AX_THOR_CHECK_FOR_SDL_TTF
+    AX_THOR_CHECK_FOR_SDL_Image
 ])
 
 
@@ -44,6 +45,31 @@ You can solve this by installing SDL2_ttf
 
     LDFLAGS="${ORIG_LDFLAGS}"
     AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_ttf"])
+])
+
+AC_DEFUN([AX_THOR_CHECK_FOR_SDL_Image],
+[
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="${LDFLAGS} ${SDL_LIBS}"
+
+    AC_CHECK_LIB(
+        [SDL2_image],
+        [IMG_Init],
+        :,
+        [AC_MSG_ERROR([
+
+Error: Could not find libSDL2_Image
+
+You can solve this by installing SDL2_Image
+
+        On the mac use:
+            > brew install sdl2_image
+
+        ], [1])]
+    )
+
+    LDFLAGS="${ORIG_LDFLAGS}"
+    AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_image"])
 ])
 
 AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
