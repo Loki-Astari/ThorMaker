@@ -18,11 +18,11 @@ test-%:
 
 testrun.%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
-	@DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.app --gtest_filter=$*
+	@$(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.app --gtest_filter=$*
 
 debugrun.%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
-	@DYLD_LIBRARY_PATH=$(PREFIX_LIB)/lib:/usr/local/lib THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} lldb -- test/coverage/unittest.app --gtest_filter=$*
+	@$(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} lldb -- test/coverage/unittest.app --gtest_filter=$*
 
 report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		build_unit_test; fi
@@ -72,9 +72,9 @@ coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMoc
 run_unit_test:
 	@$(ECHO) $(call section_title,Running Unit Tests)
 	-@$(RM) coverage/*gcda coverage/*gcov test/coverage/*gcda test/coverage/*gcov
-	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) test/coverage/unittest.app --gtest_filter=$(TESTNAME)"
-	@($(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) || \
-						($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1)) | tee report/test
+	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) test/coverage/unittest.app --gtest_filter=$(TESTNAME)"
+	@($(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) || \
+						($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) lldb test/coverage/unittest.app" && exit 1)) | tee report/test
 
 
 #
@@ -116,7 +116,7 @@ coverage/MockHeaders.cpp:: coverage/MockHeaders.h | coverage.Dir
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
 
 
-#($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH) lldb test/coverage/unittest.app" && exit 1)) | tee report/test;\
+#($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) lldb test/coverage/unittest.app" && exit 1)) | tee report/test;\
 ## build_unit_test.old:
 ## 	$(MAKE) -n $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) objectarch
 ## 		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EXLDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)" item;	\
