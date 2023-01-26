@@ -62,22 +62,11 @@ These build files allow the following easy targets:
 
 
 
-## Tools You will need
+## Tools You will need to build the configure files.
 
     brew install autoconf
     brew install automake
     brew install libtool
-    brew install cmake
-    brew install boost
-    brew install boost-python
-
-    # Need to convert the versioned boost libraries to 
-    # nonversioned. This creates the appropriate symbolic links
-    cd /usr/local/lib
-    for src in `ls libboost_python*`; do
-        dst=${src//[[:digit:]]/}
-        ln -s ${src} ${dst}
-    done
 
 ## SetUp
 
