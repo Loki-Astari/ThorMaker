@@ -82,6 +82,7 @@ run_unit_test:
 # Allows for easy mocking of system calls for unit tests.
 #
 coverage/Mock.built:	| coverage.Dir
+test/Mock.def:
 coverage/MockHeaders.h: test/Mock.def coverage/Mock.built | coverage.Dir
 	@touch coverage/Mock.built
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix coverage/MockHeaders.h
