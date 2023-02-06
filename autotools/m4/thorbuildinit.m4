@@ -97,6 +97,7 @@ AC_DEFUN([AX_THOR_LOCAL_DIR],
     [
         DefaultLinkDir="/opt/homebrew"
         AS_IF([test "${prefix}" == "NONE"], [prefix=${DefaultLinkDir}])
+        AC_SUBST([THOR_STD_INCLUDES], [-I${DefaultLinkDir}/include])
     ])
     AC_SUBST([DefaultLinkDir], [${DefaultLinkDir}])
 ])

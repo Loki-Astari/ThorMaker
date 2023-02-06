@@ -283,7 +283,7 @@ findfullpath				=	$(firstword $(foreach dir, $(1), $(realpath $(dir)/$(2))))
 expand						=	$(foreach lib, $(1), -l$(lib)$(BUILD_EXTENSION))
 expandStatic				=	$(foreach lib, $(1), $(call findfullpath, $(THORSLINKDIRS),lib$(lib)$(BUILD_EXTENSION).a))
 expandFlag					=   $(foreach flag, $(1), $(flag))
-THORSANVIL_FLAGS			=	-I$(PREFIX_INC)
+THORSANVIL_FLAGS			=	$(THOR_STD_INCLUDES) -I$(PREFIX_INC)
 THORSANVIL_LIBS				=	-L$(PREFIX_LIB) $(call expand,$(LINK_LIBS))
 THORSANVIL_STATICLOADALL	=   $(if $(LINK_SLIBS), $(THOR_STATIC_LOAD_FLAG) $(call expandStatic,$(LINK_SLIBS)) $(THOR_STATIC_NOLOAD_FLAG))
 
