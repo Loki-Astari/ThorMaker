@@ -492,7 +492,7 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 		$(ECHO) '$(CXX) -MM -MT"coverage/$(<:.cpp=.o)" "$<"';\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
