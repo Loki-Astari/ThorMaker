@@ -206,7 +206,7 @@ The easy way to install vera++ is using brew:
     AC_SUBST([VERATOOL], [${VERATOOL}])
 ])
 
-AC_DEFUN([THOR_USE_HOST_BUILD],
+AC_DEFUN([AX_THOR_USE_HOST_BUILD],
 [
     AC_ARG_WITH(
         [hostbuild],
@@ -261,7 +261,8 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     git submodule update --init --recursive
     AX_THOR_FUNC_USE_VERA_INIT
     AX_THOR_LIB_SELECT
-    THOR_USE_HOST_BUILD
+    AX_THOR_USE_HOST_BUILD
+    AX_THOR_DARKMODE
 
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
@@ -400,6 +401,60 @@ Alternately specify install location with:
     LDFLAGS="${ORIG_LDFLAGS}"
     AC_SUBST([yaml_ROOT_DIR], [${yaml_ROOT_DIR}])
     AC_SUBST([yaml_ROOT_LIB], [${yaml_ROOT_LIB}])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_MAGIC_ENUM],
+[
+    magic_enum_ROOT_DIR=""
+    ORIG_CXXFLAGS="${CXXFLAGS}"
+    AC_ARG_WITH(
+        [magicenumroot],
+        AS_HELP_STRING([--with-magicenumroot=<location>], [Directory of YAML_ROOT])
+    )
+    if test "${with_magicenumroot}" == ""; then
+        with_magicenumroot="${DefaultLinkDir}"
+    fi
+    CXXFLAGS="$CXXFLAGS -std=c++17 -I$with_magicenumroot/include"
+
+    AC_LANG_PUSH([C++])
+    AC_CHECK_HEADER(magic_enum.hpp,
+        [
+            magic_enum_ROOT_DIR="${with_magicenumroot}"
+            subconfigure="${subconfigure} --with-magicenumroot=${with_magicenumroot}"
+        ],
+        [AC_MSG_ERROR(
+
+${CXXFLAGS}
+
+Could not find the header file <magic-enum.hpp>.
+You can install this with
+
+    brew install magic_enum
+
+Alternately if you have manually installed magic_enum you can specify its location with
+    --with-magicenumroot=<location of magic_enum installation>
+
+        )]
+    )
+    AC_LANG_POP([C++])
+
+    CXXFLAGS="${ORIG_CXXFLAGS}"
+    AC_SUBST([magic_enum_ROOT_DIR], [${magic_enum_ROOT_DIR}])
+])
+AC_DEFUN([AX_THOR_DARKMODE],
+[
+    DARK_MODE=""
+    AC_ARG_ENABLE(
+        [dark-mode],
+        AS_HELP_STRING([--enable-dark-mode], [If your background is black some text that was grey is turned yellow])
+    )
+    AS_IF(
+        [test "x$enable_dark-mode" != "xyes"],
+        [
+            DARK_MODE="ON"
+            subconfigure="${subconfigure} --enable-dark-mode"
+        ]
+    )
+    AC_SUBST([DARK_MODE], [${DARK_MODE}])
 ])
 
 AC_DEFUN([AX_THOR_FUNC_USE_EVENT],

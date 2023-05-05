@@ -27,7 +27,7 @@ coverage/%.vera: %	| coverage.Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) "$(VERA) --show-rule --error --std-report $@.report $*" | tee coverage/$*.vera; \
 	else												\
-		$(ECHO) $(call colour_text, GRAY, $(VERA) $*)	| awk '{printf "%-80s", $$0}' | tee -a coverage/$*.vera;	\
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), $(VERA) $*)	| awk '{printf "%-80s", $$0}' | tee -a coverage/$*.vera;	\
 	fi
 	@$(VERA) $(VERA_ROOT) --profile $(call VERA_PROFILE,$*) --show-rule --error --std-report $@.report $*;\
 	if [ $$? != 0 ]; then								\
