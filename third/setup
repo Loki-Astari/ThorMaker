@@ -1,4 +1,4 @@
-#!/bin/bash
+
 set -e
 
 CXX=$1
@@ -33,6 +33,8 @@ GTEST_DIR=$(cd "${GTEST_DIR_PATH}";pwd)
 pushd ${GTEST_DIR}
 ${CXX} -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
 ${CXX} -I${GTEST_DIR}/include -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest_main.cc
+#${CXX} -I./include -I. -c "src/gtest-all.cc"
+#${CXX} -I./include -I. -c "src/gtest_main.cc"
 ar -rv libgtest.a gtest-all.o gtest_main.o
 popd
 
@@ -47,8 +49,10 @@ echo cp ${GTEST_DIR}/libgtest.a lib/
 cp ${GTEST_DIR}/libgtest.a lib/
 echo rm -f include3rd/gtest
 rm -f include3rd/gtest
+rm -f include3rd/lokigtest.h
 echo ln -s ${GTEST_DIR}/include/gtest include3rd/gtest
 ln -s ${GTEST_DIR}/include/gtest include3rd/gtest
+ln -s ${ROOT}/lokigtest.h include3rd/lokigtest.h
 popd
 
 

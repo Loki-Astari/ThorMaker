@@ -159,6 +159,10 @@ endif
 
 COVERAGE_REQUIRED	?= 80
 
+#
+# Look in Platform.Makefile
+# These value may have platform specific values.
+# They are defined here as a last resort (i.e. default values)
 YACC			?= bison
 LEX				?= flex
 GPERF			?= gperf --ignore-case
@@ -166,11 +170,7 @@ CP				?= cp
 MKDIR			?= mkdir
 RMDIR			?= rmdir
 
-CXX				?= g++
-COV				?= gcov
-VERA			?= $(if $(VERATOOL),$(VERATOOL), vera++)
 VERA_ROOT		= --root=$(THORSANVIL_ROOT)/build/vera-plusplus
-MKTEMP			= $(MKTEMP_$(PLATFORM))
 MAKE			= make --silent
 
 TESTNAME		?= *
@@ -181,9 +181,6 @@ TESTNAME		?= *
 COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
 COV_LONG_FLAG_Linux		= --long-file-names
 COV_LONG_FLAG_Darwin	= -l
-
-MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
-MKTEMP_Linux					= mktemp -u
 
 
 #
@@ -260,6 +257,7 @@ ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS)  $(L
 PLATFORM_SPECIFIC_FLAGS		=	$(PLATFORM_$(PLATFORM)_FLAGS)
 PLATFORM_Darwin_FLAGS		=
 PLATFORM_Linux_FLAGS		=
+PLATFORM_CYGWIN_NT_FLAGS	=	-D_MSC_VER=1900
 
 
 #

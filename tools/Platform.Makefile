@@ -1,6 +1,6 @@
 
 
-PLATFORM					= $(shell uname -s)
+PLATFORM					= $(shell uname -s | sed 's/-.*//')
 HARDWARE					= $(shell uname -m)
 PLATHARD					= $(PLATFORM)_$(HARDWARE)
 PLATFORMVER					= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
@@ -8,6 +8,10 @@ SO							= $(SHARD_LIB_EXTENSOION_$(PLATFORM))
 SONAME						= $(SHARD_LIB_NAME_FLAG_$(PLATFORM))
 SHARED_LIB_FLAG				= $(SHARED_LIB_FLAG_$(PLATFORM))
 ECHO						= $(ECHO_$(PLATFORM))
+MKTEMP						= $(MKTEMP_$(PLATFORM))
+CXX							= $(CXX_$(PLATFORM))
+COV							= $(COV_$(PLATFORM))
+VERA						= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
 
 #
 COMPILER_NAME				= $(basename $(basename $(basename $(subst -,.,$(subst +,p,$(CXX))))))
@@ -17,14 +21,33 @@ COMPILER_VERSION			= $(COMPILER_CXX_$(COMPILER_NAME)_VERSION)
 # Currently we only use gcc so we have the technique for getting the gcc version
 COMPILER_CXX_gpp_VERSION	= $(subst .,_,$(basename $(shell $(CXX) -dumpversion)))
 
+CXX_Darwin					= g++
+CXX_Linux					= g++
+CXX_CYGWIN_NT				= g++
+
+COV_Darwin					= gcov
+COV_Linux					= gcov
+COV_CYGWIN_NT				= gcov
+
+VERA_Darwin					= vera++
+VERA_Linux					= vera++
+VERA_CYGWIN_NT				= vera++
+
 ECHO_Darwin					= echo -e
 ECHO_Linux					= echo -e
+ECHO_CYGWIN_NT				= echo -e
+
+MKTEMP_Darwin				= mktemp -u /tmp/tmp.XXXXXXXXXX
+MKTEMP_Linux				= mktemp -u
+MKTEMP_CYGWIN_NT			= mktemp -u
 
 SHARD_LIB_EXTENSOION_Darwin	= dylib
 SHARD_LIB_EXTENSOION_Linux	= so
+SHARD_LIB_EXTENSOION_CYGWIN_NT	= dll
 
 SHARED_LIB_FLAG_Darwin		= -dynamiclib -install_name lib$*$(BUILD_EXTENSION).$(SO)
 SHARED_LIB_FLAG_Linux		= -shared
+SHARED_LIB_FLAG_CYGWIN_NT	= -shared
 
 SHARD_LIB_NAME_FLAG_Darwin	= -install_name
 SHARD_LIB_NAME_FLAG_Linux	= -soname
