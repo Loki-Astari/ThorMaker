@@ -370,7 +370,7 @@ veraonly:				ActionRunVera
 test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 clean:
-	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh
+	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh *.gcov test/*.gcov
 
 makedependency:				$(DEP)
 
