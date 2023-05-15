@@ -392,8 +392,8 @@ Note_%:
 .PRECIOUS:	$(OBJ)
 .PRECIOUS:	$(GCOV_OBJ)
 .PRECIOUS:	$(TARGET_MODE)/%.app
-.PRECIOUS:	$(TARGET_MODE)/lib%.$(SO)
-.PRECIOUS:  $(TARGET_MODE)/lib%.a
+.PRECIOUS:	$(TARGET_MODE)/lib%$(BUILD_EXTENSION).$(SO)
+.PRECIOUS:  $(TARGET_MODE)/lib%$(BUILD_EXTENSION).a
 .PRECIOUS:	%.tab.cpp
 .PRECIOUS:	%.lex.cpp
 .PRECIOUS:	%.gperf.cpp
@@ -414,10 +414,10 @@ Note_%:
 %.app:		buildDir $(TARGET_MODE)/%.app
 	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/$*)
 
-%.a:		buildDir $(TARGET_MODE)/lib%.a
+%.a:		buildDir $(TARGET_MODE)/lib%$(BUILD_EXTENSION).a
 	@$(ECHO) $(call subsection_title, Done Building $(shell basename `pwd`) $(TARGET_MODE)/lib$*.a)
 
-%.slib:		buildDir $(TARGET_MODE)/lib%.$(SO)
+%.slib:		buildDir $(TARGET_MODE)/lib%$(BUILD_EXTENSION).$(SO)
 	@$(ECHO) $(call subsection_title, Done Building $(shell basename `pwd`) $(TARGET_MODE)/lib$*.$(SO))
 
 #
@@ -449,7 +449,7 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).Di
 		$(RM) makefile_tmp;								\
 	fi
 
-$(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
+$(TARGET_MODE)/lib%$(BUILD_EXTENSION).a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ)';\
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
@@ -467,7 +467,7 @@ $(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 		$(RM) makefile_tmp;								\
 	fi
 
-$(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
+$(TARGET_MODE)/lib%$(BUILD_EXTENSION).$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; fi
@@ -660,7 +660,7 @@ Print_On:
 	@$(ECHO) "LDLIBS_EXTERN_BUILD:	$(LDLIBS_EXTERN_BUILD)"
 	@$(ECHO) "LDLIBS_EXTERN_SHARE:	$(LDLIBS_EXTERN_SHARE)"
 	@$(ECHO) "INSTALL_CONFIG:		$(INSTALL_CONFIG)"
-	@$(ECHO) "MODE_TEXT_COLOR	$(MODE_TEXT_COLOR)"
+	@$(ECHO) "MODE_TEXT_COLOR		$(MODE_TEXT_COLOR)"
 	@echo    "ECHO:                 $(ECHO)"
 
 tools:
