@@ -7,7 +7,7 @@
 
 TEST_FILES					= $(wildcard test/*.cpp test/*.h test/*.tpp)
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
-COVERAGE_LIB				= UnitTest$(strip $(DEFER_NAME))
+COVERAGE_LIB				= UnitTest$(strip $(DEFER_NAME))$(BUILD_EXTENSION)
 
 
 ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
@@ -65,7 +65,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 	@rm test/unittest.cpp
 
 coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMock.h | coverage.Dir
-	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
+	@$(MAKE) TARGET_OVERRIDE=$(patsubst %$(BUILD_EXTENSION),%,$(COVERAGE_LIB)).a item
 	@touch coverage/$(COVERAGE_LIB)
 
 run_unit_test:

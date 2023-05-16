@@ -178,9 +178,10 @@ TESTNAME		?= *
 #
 # This is obviously not working
 # Need to look at this
-COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
-COV_LONG_FLAG_Linux		= --long-file-names
-COV_LONG_FLAG_Darwin	= -l
+COV_LONG_FLAG					= $(COV_LONG_FLAG_$(PLATFORM))
+COV_LONG_FLAG_Linux				= --long-file-names
+COV_LONG_FLAG_Darwin			= -l
+COV_LONG_FLAG_CYGWIN_NT_FLAGS	= -l
 
 
 #
@@ -287,7 +288,7 @@ THORSANVIL_STATICLOADALL	=   $(if $(LINK_SLIBS), $(THOR_STATIC_LOAD_FLAG) $(call
 
 
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
-TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread
+TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread -lgcov
 TEST_FLAGS_on				=	-I..
 TEST_LIBS_on				=	-L../coverage -L$(PREFIX_DEFER_LIB) -L$(THORSANVIL_ROOT)/build/lib $(GCOV_LIBOBJ_PASS) -lgtest
 TEST_PATH_coverage			=	-I$(LOCAL_ROOT)
@@ -302,6 +303,7 @@ OPTIMIZER_FLAGS_DISP_debug		=	-g
 OPTIMIZER_FLAGS_DISP_release	=	-O3
 OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET) -DTHOR_COVERAGE
 OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
+OPTIMIZER_FLAGS_HIDE_test		=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
 CC							=	$(CXX)
@@ -393,7 +395,7 @@ Note_%:
 .PRECIOUS:	$(GCOV_OBJ)
 .PRECIOUS:	$(TARGET_MODE)/%.app
 .PRECIOUS:	$(TARGET_MODE)/lib%$(BUILD_EXTENSION).$(SO)
-.PRECIOUS:  $(TARGET_MODE)/lib%$(BUILD_EXTENSION).a
+.PRECIOUS:	$(TARGET_MODE)/lib%$(BUILD_EXTENSION).a
 .PRECIOUS:	%.tab.cpp
 .PRECIOUS:	%.lex.cpp
 .PRECIOUS:	%.gperf.cpp

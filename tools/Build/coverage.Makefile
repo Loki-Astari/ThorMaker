@@ -62,11 +62,10 @@ coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	
 coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
 	@$(COV) $(COV_LONG_FLAG) --object-directory coverage $*.cpp > /dev/null 2>&1
-	@for file in $$(ls $*.cpp.gcov 2> /dev/null); do mv $${file} coverage/;done
-	@checkSubFile=$$(ls $*.cpp##*.gcov 2> /dev/null);				\
-	if [[ $${checkSubFile} != "" ]]; then							\
-		mv $*.cpp##*.gcov coverage/$*.cpp.coverage/;				\
-	fi
+	mv $*.cpp.gcov    coverage/				| true
+	mv $*.cpp##*.gcov coverage/$*.cpp.coverage/             | true
+	mv *.h.gcov       coverage/$*.cpp.coverage/	 	| true
+	mv *.tpp.gcov     coverage/$*.cpp.coverage/		| true
 
 coverage/%.tpp.gcov:	$(GCOV_ALL_FILES) | coverage.Dir
 	$(BUILD_ROOT)/tools/coverageBuild $*.tpp
