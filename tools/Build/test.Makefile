@@ -7,7 +7,7 @@
 
 TEST_FILES					= $(wildcard test/*.cpp test/*.h test/*.tpp)
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
-COVERAGE_LIB				= UnitTest$(strip $(DEFER_NAME))$(BUILD_EXTENSION)
+UNITTEST_LIB				= UnitTest$(strip $(DEFER_NAME))$(BUILD_EXTENSION)
 
 
 ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
@@ -40,7 +40,7 @@ reportErrorCheck:
 
 build_unit_test:	test/coverage/unittest.app
 
-test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/coverage.Dir
+test/coverage/unittest.app: coverage/$(UNITTEST_LIB) $(TEST_FILES) | test/coverage.Dir
 	@touch test/unittest.cpp
 	# Make sure the test dependencies have been updated first.
 	$(MAKE) TARGET_OVERRIDE=unittest.app					\
@@ -54,7 +54,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
-			LOADLIBES="-L$(BASE)/coverage -l$(COVERAGE_LIB)"\
+			LOADLIBES="-L$(BASE)/coverage -l$(UNITTEST_LIB)"\
 			LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)"	\
 			UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)"		\
 			LINK_LIBS="$(UNITTEST_LINK_LIBS)"				\
@@ -64,9 +64,9 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			item
 	@rm test/unittest.cpp
 
-coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMock.h | coverage.Dir
-	@$(MAKE) TARGET_OVERRIDE=$(patsubst %$(BUILD_EXTENSION),%,$(COVERAGE_LIB)).a item
-	@touch coverage/$(COVERAGE_LIB)
+coverage/$(UNITTEST_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMock.h | coverage.Dir
+	@$(MAKE) TARGET_OVERRIDE=$(patsubst %$(BUILD_EXTENSION),%,$(UNITTEST_LIB)).a item
+	@touch coverage/$(UNITTEST_LIB)
 
 run_unit_test:
 	@$(ECHO) $(call section_title,Running Unit Tests)

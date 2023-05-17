@@ -288,11 +288,12 @@ THORSANVIL_STATICLOADALL	=   $(if $(LINK_SLIBS), $(THOR_STATIC_LOAD_FLAG) $(call
 
 
 TEST_FLAGS					=	$(TEST_FLAGS_$(TEST_STATE))
-TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread -lgcov
+TEST_LIBS					=	$(TEST_LIBS_$(TEST_STATE)) -fprofile-arcs -ftest-coverage -lpthread $(COVERAGE_LIB)
 TEST_FLAGS_on				=	-I..
 TEST_LIBS_on				=	-L../coverage -L$(PREFIX_DEFER_LIB) -L$(THORSANVIL_ROOT)/build/lib $(GCOV_LIBOBJ_PASS) -lgtest
 TEST_PATH_coverage			=	-I$(LOCAL_ROOT)
 TEST_PATH					=	$(TEST_PATH_$(TARGET_MODE))
+
 
 
 OPTIMIZER_FLAGS				=	$(OPTIMIZER_FLAGS_DISP) $(OPTIMIZER_FLAGS_HIDE)

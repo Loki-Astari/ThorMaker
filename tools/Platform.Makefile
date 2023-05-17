@@ -11,7 +11,8 @@ ECHO						= $(ECHO_$(PLATFORM))
 MKTEMP						= $(MKTEMP_$(PLATFORM))
 CXX							= $(CXX_$(PLATFORM))
 COV							= $(COV_$(PLATFORM))
-VERA						= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
+COVERAGE_LIB				= $(COVERAGE_LIB_$(PLATFORM))
+VERA						?= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
 
 #
 COMPILER_NAME				= $(basename $(basename $(basename $(subst -,.,$(subst +,p,$(CXX))))))
@@ -28,6 +29,11 @@ CXX_CYGWIN_NT				= g++
 COV_Darwin					= gcov
 COV_Linux					= gcov
 COV_CYGWIN_NT				= gcov
+
+COVERAGE_LIB_Darwin			=
+COVERAGE_LIB_Linux			=
+COVERAGE_LIB_CYGWIN_NT		= -lgcov
+
 
 VERA_Darwin					= vera++
 VERA_Linux					= vera++
