@@ -46,13 +46,14 @@ docbuild:
 	fi
 
 %.dir:
-	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
-	@if test -d $*; then														\
+	$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
+	if [[ test -d $* ]]; then echo "Dir"; else echo "Not Dir"; fi
+	if test -d $*; then														\
 		$(MAKE) -j1 -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi
-	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Finish")
+	$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Finish")
 
 include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
 include $(THORSANVIL_ROOT)/build/tools/lint.Makefile
