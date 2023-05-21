@@ -142,7 +142,7 @@ DOC_METHOD_LIST_TOOL		= $(BUILD_ROOT)/doc/methodList
 DOC_SOURCE					?= docSource/source
 DOC_DIR						= $(THORSANVIL_ROOT)/$(DOC_SOURCE)
 
-DOC_DEST					= $(subst :,-,$(DOC_DIR)/$(1)/$(2).md)
+DOC_DEST					=
 
 DOC_FILES					= $(DOC_PACKAGE) $(DOC_CLASSES) $(DOC_METHODS)
 DOC_BASE					= $(basename $(firstword $(TARGET)))
