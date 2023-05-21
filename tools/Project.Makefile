@@ -48,8 +48,8 @@ docbuild:
 %.dir:
 	$(ECHO) "Shell: ${SHELL}"
 	$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
-	test -d $*; if [[ $? == 0 ]]; then echo "Dir"; else echo "Not Dir"; fi
-	test -d $*; if [[ $? == 0 ]]; then														\
+	test -d $*; if [[ $$? == 0 ]]; then echo "Dir"; else echo "Not Dir"; fi
+	test -d $*; if [[ $$? == 0 ]]; then														\
 		$(MAKE) -j1 -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
