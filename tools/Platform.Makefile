@@ -25,35 +25,43 @@ COMPILER_CXX_gpp_VERSION	= $(subst .,_,$(basename $(shell $(CXX) -dumpversion)))
 CXX_Darwin					= g++
 CXX_Linux					= g++
 CXX_CYGWIN_NT				= g++
+CXX_MINGW64_NT				= x86_64-w64-mingw32-g++.exe
 
 COV_Darwin					= gcov
 COV_Linux					= gcov
 COV_CYGWIN_NT				= gcov
+COV_MINGW64_NT				= gcov
 
 COVERAGE_LIB_Darwin			=
 COVERAGE_LIB_Linux			=
 COVERAGE_LIB_CYGWIN_NT		= -lgcov
+COVERAGE_LIB_MINGW64_NT		= -lgcov
 
 
 VERA_Darwin					= vera++
 VERA_Linux					= vera++
 VERA_CYGWIN_NT				= vera++
+VERA_MINGW64_NT				= vera++
 
 ECHO_Darwin					= echo -e
 ECHO_Linux					= echo -e
 ECHO_CYGWIN_NT				= echo -e
+ECHO_MINGW64_NT				= echo -e
 
 MKTEMP_Darwin				= mktemp -u /tmp/tmp.XXXXXXXXXX
 MKTEMP_Linux				= mktemp -u
 MKTEMP_CYGWIN_NT			= mktemp -u
+MKTEMP_MINGW64_NT			= mktemp -u
 
 SHARD_LIB_EXTENSOION_Darwin	= dylib
 SHARD_LIB_EXTENSOION_Linux	= so
 SHARD_LIB_EXTENSOION_CYGWIN_NT	= dll
+SHARD_LIB_EXTENSOION_MINGW64_NT	= dll
 
 SHARED_LIB_FLAG_Darwin		= -dynamiclib -install_name lib$*$(BUILD_EXTENSION).$(SO)
 SHARED_LIB_FLAG_Linux		= -shared
 SHARED_LIB_FLAG_CYGWIN_NT	= -shared
+SHARED_LIB_FLAG_MINGW64_NT	= -shared
 
 SHARD_LIB_NAME_FLAG_Darwin	= -install_name
 SHARD_LIB_NAME_FLAG_Linux	= -soname
@@ -62,6 +70,7 @@ RUNTIME_SHARED_PATH_SET				= $(RUNTIME_SHARED_PATH_SET_$(PLATFORM))
 RUNTIME_SHARED_PATH_SET_Darwin		= DYLD_LIBRARY_PATH
 RUNTIME_SHARED_PATH_SET_Linux		= LD_LIBRARY_PATH
 RUNTIME_SHARED_PATH_SET_CYGWIN_NT	= PATH
+RUNTIME_SHARED_PATH_SET_MINGW64_NT	= PATH
 
 #STANDARD_LIB_DIR					= /usr/local/lib
 #DARWIN_M1_LIB_DIR					= /opt/homebrew/lib
@@ -75,5 +84,6 @@ DEFAULT_LIB_DIR_Darwin_M1			= /opt/homebrew/lib
 DEFAULT_LIB_DIR_Darwin_STANDARD		= /usr/local/lib
 DEFAULT_LIB_DIR_Linux				= /usr/local/lib
 DEFAULT_LIB_DIR_CYGWIN_NT			= /cygdrive/c/cygwin64/usr/x86_64-w64-mingw32/sys-root/mingw/bin/
+DEFAULT_LIB_DIR_MINGW64_NT			= /d/a/_temp/msys64/mingw64/lib
 RUNTIME_PATHS_USED_TO_LOAD			= $(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH):$(DEFAULT_LIB_DIR)
 
