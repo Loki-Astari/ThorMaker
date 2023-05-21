@@ -173,7 +173,12 @@ DOC_METHOD_CLASS			= $(call DOC_F2_OF_4,$(1))
 DOC_METHOD_TYPE				= $(call DOC_F3_OF_4,$(1))
 DOC_METHOD_METHOD			= $(call DOC_F4_OF_4,$(1))
 
-doc: $(DOC_FILES)
+doc:
+	echo
+	echo
+	echo "DOC FILES: $(DOC_FILES)"
+	echo
+	echo
 
 docprint:	always
 	@echo "DOC_FILES		$(DOC_FILES)"
