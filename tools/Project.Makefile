@@ -4,7 +4,7 @@
 
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
-MAKE	= make --silent
+MAKE	= make
 
 
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
