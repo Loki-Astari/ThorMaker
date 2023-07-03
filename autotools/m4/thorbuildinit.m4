@@ -206,7 +206,7 @@ The easy way to install vera++ is using brew:
     AC_SUBST([VERATOOL], [${VERATOOL}])
 ])
 
-AC_DEFUN([THOR_USE_HOST_BUILD],
+AC_DEFUN([AX_THOR_USE_HOST_BUILD],
 [
     AC_ARG_WITH(
         [hostbuild],
@@ -261,7 +261,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     git submodule update --init --recursive
     AX_THOR_FUNC_USE_VERA_INIT
     AX_THOR_LIB_SELECT
-    THOR_USE_HOST_BUILD
+    AX_THOR_USE_HOST_BUILD
     AX_THOR_COLOUR_MODE
 
     AS_IF(
