@@ -596,6 +596,18 @@ AX_CHECK_COMPILE_FLAG(
     [-Wno-deprecated-register],
     [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])]
 )
+AX_CHECK_COMPILE_FLAG(
+    [-Winconsistent-missing-override],
+    [AC_SUBST([INCONSISTENT_MISSING_OVERRIDE], [-Winconsistent-missing-override])]
+)
+AX_CHECK_COMPILE_FLAG(
+    [-Wdelete-non-abstract-non-virtual-dtor],
+    [AC_SUBST([DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR], [-Wdelete-non-abstract-non-virtual-dtor])]
+)
+AX_CHECK_COMPILE_FLAG(
+    [-Wdelete-non-virtual-dtor],
+    [AC_SUBST([DELETE_NON_VIRTUAL_DTOR], [-Wdelete-non-virtual-dtor])]
+)
 
 
     ]
