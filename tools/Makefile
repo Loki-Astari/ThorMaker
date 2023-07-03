@@ -159,6 +159,10 @@ endif
 
 COVERAGE_REQUIRED	?= 80
 
+#
+# Look in Platform.Makefile
+# These value may have platform specific values.
+# They are defined here as a last resort (i.e. default values)
 YACC			?= bison
 LEX				?= flex
 GPERF			?= gperf --ignore-case
@@ -166,11 +170,7 @@ CP				?= cp
 MKDIR			?= mkdir
 RMDIR			?= rmdir
 
-CXX				?= g++
-COV				?= gcov
-VERA			?= $(if $(VERATOOL),$(VERATOOL), vera++)
 VERA_ROOT		= --root=$(THORSANVIL_ROOT)/build/vera-plusplus
-MKTEMP			= $(MKTEMP_$(PLATFORM))
 MAKE			= make --silent
 
 TESTNAME		?= *
@@ -178,12 +178,9 @@ TESTNAME		?= *
 #
 # This is obviously not working
 # Need to look at this
-COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
-COV_LONG_FLAG_Linux		= --long-file-names
-COV_LONG_FLAG_Darwin	= -l
-
-MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
-MKTEMP_Linux					= mktemp -u
+COV_LONG_FLAG					= $(COV_LONG_FLAG_$(PLATFORM))
+COV_LONG_FLAG_Linux				= --long-file-names
+COV_LONG_FLAG_Darwin			= -l
 
 
 #
@@ -304,6 +301,7 @@ OPTIMIZER_FLAGS_DISP_debug		=	-g
 OPTIMIZER_FLAGS_DISP_release	=	-O3
 OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET) -DTHOR_COVERAGE
 OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
+OPTIMIZER_FLAGS_HIDE_test		=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
 CC							=	$(CXX)
