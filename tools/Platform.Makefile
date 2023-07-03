@@ -17,8 +17,11 @@ COMPILER_VERSION			= $(COMPILER_CXX_$(COMPILER_NAME)_VERSION)
 # Currently we only use gcc so we have the technique for getting the gcc version
 COMPILER_CXX_gpp_VERSION	= $(subst .,_,$(basename $(shell $(CXX) -dumpversion)))
 
-ECHO_Darwin					= echo -e
-ECHO_Linux					= echo -e
+
+ECHO_COLOUR					= $(ECHO_COLOUR_$(COLOUR_STATE))
+ECHO_COLOUR_ON				= -e
+ECHO_Darwin					= echo $(ECHO_COLOUR)
+ECHO_Linux					= echo $(ECHO_COLOUR)
 
 SHARD_LIB_EXTENSOION_Darwin	= dylib
 SHARD_LIB_EXTENSOION_Linux	= so

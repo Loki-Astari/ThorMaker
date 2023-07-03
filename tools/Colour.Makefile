@@ -1,5 +1,6 @@
 
-
+#
+# Also check out echo in the Platform.Makefile
 COLOUR_STATE					?= ON
 
 

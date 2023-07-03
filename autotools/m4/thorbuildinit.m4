@@ -262,6 +262,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AX_THOR_FUNC_USE_VERA_INIT
     AX_THOR_LIB_SELECT
     THOR_USE_HOST_BUILD
+    AX_THOR_COLOUR_MODE
 
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
@@ -438,6 +439,23 @@ Alternately if you have manually installed magic_enum you can specify its locati
 
     CXXFLAGS="${ORIG_CXXFLAGS}"
     AC_SUBST([magic_enum_ROOT_DIR], [${magic_enum_ROOT_DIR}])
+])
+AC_DEFUN([AX_THOR_COLOUR_MODE],
+[
+    COLOUR_STATE="ON"
+    DARK_MODE=""
+    AC_ARG_ENABLE(
+        [colour],
+        AS_HELP_STRING([--disable-colour], [Turns off text colouring in the makefile output])
+    )
+    AS_IF(
+        [test "x$enable_colour" == "xno"],
+        [
+            COLOUR_STATE="OFF"
+            subconfigure="${subconfigure} --disable-colour"
+        ]
+    )
+    AC_SUBST([COLOUR_STATE], [${COLOUR_STATE}])
 ])
 
 AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
