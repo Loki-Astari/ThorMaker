@@ -1,7 +1,12 @@
 
 set -e
 
-CXX=$1
+CXX=${1:-g++}
+AR=${2:-ar}
+echo "All Flags: $@"
+echo "CXX: ${CXX}"
+echo "AR:  ${AR}"
+
 
 #
 # Change this as required to point at the root of ThorsAnvil code
