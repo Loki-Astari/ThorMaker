@@ -694,7 +694,7 @@ Another alternative is to explicitly specify the coverage tool to use.
             )]
         )]
     )
-    ${COV} --version 2>&1 | grep -Eo '(\d+\.)+\d+' || ${COV} --version 2>&1 | grep -Po '(\d+\.)+\d+' > /dev/null
+    ${COV} --version 2>&1 | grep -Eo '([[[:digit:]]]+\.)+[[[:digit:]]]+' || ${COV} --version 2>&1 | grep -Po '(\d+\.)+\d+' > /dev/null
     AS_IF(
         [test $? != 0],
         [AC_MSG_ERROR([
