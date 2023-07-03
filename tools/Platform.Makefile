@@ -43,8 +43,8 @@ VERA_Linux					= vera++
 VERA_CYGWIN_NT				= vera++
 VERA_MINGW64_NT				= vera++
 
-ECHO_Darwin					= echo -e
-ECHO_Linux					= echo -e
+ECHO_Darwin					= echo
+ECHO_Linux					= echo
 ECHO_CYGWIN_NT				= echo -e
 ECHO_MINGW64_NT				= echo -e
 

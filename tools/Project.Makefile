@@ -5,6 +5,7 @@
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
 MAKE	= make
+SHELL	= /bin/bash
 
 
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
@@ -46,15 +47,15 @@ docbuild:
 	fi
 
 %.dir:
-	$(ECHO) "Shell: ${SHELL}"
-	$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
-	test -d $*; if [[ $$? == 0 ]]; then echo "Dir"; else echo "Not Dir"; fi
-	test -d $*; if [[ $$? == 0 ]]; then														\
+	@$(ECHO) "Shell: ${SHELL}"
+	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
+	@test -d $*; if [[ $$? == 0 ]]; then echo "Dir"; else echo "Not Dir"; fi
+	@test -d $*; if [[ $$? == 0 ]]; then														\
 		$(MAKE) -j1 -C $* $(ACTION) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi
-	$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Finish")
+	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Finish")
 
 include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
 include $(THORSANVIL_ROOT)/build/tools/lint.Makefile
