@@ -1,6 +1,6 @@
 
 
-PLATFORM					= $(shell uname -s)
+PLATFORM					= $(shell uname -s | sed 's/-.*//')
 HARDWARE					= $(shell uname -m)
 PLATHARD					= $(PLATFORM)_$(HARDWARE)
 PLATFORMVER					= $(subst .,_,$(shell uname -r | sed 's/-.*//'))

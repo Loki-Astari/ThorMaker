@@ -370,7 +370,7 @@ veraonly:				ActionRunVera
 test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 clean:
-	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh
+	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh *.gcov test/*.gcov
 
 makedependency:				$(DEP)
 
@@ -490,7 +490,7 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 		$(ECHO) '$(CXX) -MM -MT"coverage/$(<:.cpp=.o)" "$<"';\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
