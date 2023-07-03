@@ -104,7 +104,7 @@ coverage/ThorMock.h: coverage/MockHeaders.h | coverage.Dir
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.median >> coverage/ThorMock.h
 	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.suffix >> coverage/ThorMock.h
 
-coverage/MockHeaders.cpp:: coverage/MockHeaders.h | coverage.Dir
+coverage/MockHeaders.cpp: coverage/MockHeaders.h | coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.preamb >> coverage/MockHeaders.cpp
 	@if [ -e test/Mock.def ]; then		\
