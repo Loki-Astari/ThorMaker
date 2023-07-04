@@ -1,0 +1,58 @@
+#!/bin/bash
+
+function tidyProject {
+
+    cwd=$(pwd)
+
+    prefix=$1
+    package=$2
+    directory=$(basename ${cwd})
+    namespace=$3
+    packageDst=${prefix}/${package}
+
+    echo "Tidy Module: ${directory} => ${prefix}/${package}"
+
+    echo "        Removing Makefile"
+    rm ${packageDst}/Makefile
+
+    if [[ -e test ]]; then
+        echo "        Removing test files and data"
+        rm -rf ${prefix}/${package}/test
+    fi
+	echo "        Removing Build Dirs"
+    rm -rf ${prefix}/${package}/coverage
+    rm -rf ${prefix}/${package}/report
+    rm -rf ${prefix}/${package}/makedependency
+    echo
+}
+
+function updateGitFiles {
+    cwd=$(pwd)
+
+    prefix=$1
+    package=$2
+    directory=$(basename ${cwd})
+    namespace=$3
+    packageDst=${prefix}/${package}
+
+    cd ${packageDst}
+    echo "Adding From: $(pwd)"
+
+    echo "Git Update Module: ${directory} => ${prefix}/${package}"
+    echo "        Add Existing Files"
+    git add *.h      2> /dev/null || :
+    get add *.hpp    2> /dev/null || :
+    git add *.tpp    2> /dev/null || :
+    git add *.source 2> /dev/null || :
+
+    echo "        Del Old Files"
+    git status . | awk '/deleted/ {print $2}' | xargs -I^ git rm ^
+}
+
+proxy=$1
+package=$2
+namespace=$3
+tidyProject  "${proxy}" "${package}" "${namespace}"
+updateGitFiles  "${proxy}" "${package}" "${namespace}"
+
+

@@ -1,0 +1,89 @@
+#!/bin/bash
+
+set -e
+
+function get_awkScriptToConvertSourceToHeader {
+    includeToIgnore=$1
+    namespace=$2
+    awkScriptToConvertSourceToHeader=$(
+cat << AWK_SCRIPT_CONVERT_SRC
+BEGIN                           {PRINT=1;DEPTH=0;}
+/^#include "${includeToIgnore}"/{next;}
+/^using namespace ${namespace};/{printf("namespace ${namespace}\n{\n");next;}
+/^#ifdef COVERAGE_TEST/         {if (PRINT==1){SAVEDEPTH=DEPTH;PRINT=0;}}
+/^#if/                          {DEPTH+=1;}
+/^#endif/                       {DEPTH-=1;if (PRINT == 0 && SAVEDEPTH==DEPTH){PRINT=1;}}
+                                {if (PRINT) {print;}}
+END                             {print "}\n"}
+AWK_SCRIPT_CONVERT_SRC
+)
+    echo "${awkScriptToConvertSourceToHeader}"
+}
+
+function get_awkScriptToConvertMakeFileToHeader {
+    package=$1
+    awkScriptToConvertMakeFileToHeader=$(
+cat << AWK_SCRIPT_CONVERT_MAKE
+/TARGET/                        {print "TARGET = ${package}.head";next;}
+                                {print;}
+AWK_SCRIPT_CONVERT_MAKE
+)
+    echo "${awkScriptToConvertMakeFileToHeader}"
+}
+
+awkScriptToConvertConfigFileToHeader=$(
+cat << AWK_SCRIPT_CONVERT_CONFIG
+/^#define HEADER_ONLY_INCLUDE/  {print "#define HEADER_ONLY_INCLUDE inline";next;}
+/^#define HEADER_ONLY/          {print "#define HEADER_ONLY 1";next;}
+                                {print;}
+AWK_SCRIPT_CONVERT_CONFIG
+)
+
+function convertPackageToHeaderOnly {
+
+    cwd=$(pwd)
+
+    prefix=$1
+    package=$2
+    directory=$(basename ${cwd})
+    namespace=$3
+    packageDst=${prefix}/${package}
+
+    echo "Converting Module: ${directory} => ${prefix}/${package}"
+
+    rm -rf ${prefix}/${package}
+    mkdir ${prefix}/${package}
+
+    echo "        Copying standard header files"
+    cp *.h   ${packageDst} 2> /dev/null || :
+    cp *.hpp ${packageDst} 2> /dev/null || :
+    cp *.tpp ${packageDst} 2> /dev/null || :
+
+    echo "        Converting Makefile"
+    awk "$(get_awkScriptToConvertMakeFileToHeader ${package})" Makefile > ${packageDst}/Makefile
+
+    echo "        Converting Config"
+    awk "${awkScriptToConvertConfigFileToHeader}" ${directory}Config.h > ${packageDst}/${directory}Config.h
+
+    if [[ -e test ]]; then
+        echo "        Copying test files and data"
+        cp -R test ${prefix}/${package}
+        rm -rf ${prefix}/${package}/test/coverage
+        rm -rf ${prefix}/${package}/test/report
+        rm -rf ${prefix}/${package}/test/makedependency
+    fi
+
+    for loop in $(ls *.cpp 2> /dev/null); do
+        file=${loop##*/}
+        base=${file%%.cpp}
+        echo "        Converting ${loop}  Into: ${packageDst}/${base}.source"
+        awk "$(get_awkScriptToConvertSourceToHeader ${base}.h ${namespace})" ${loop} >  ${packageDst}/${base}.source
+    done
+    echo
+}
+
+proxy=$1
+package=$2
+namespace=$3
+convertPackageToHeaderOnly  "${proxy}" "${package}" "${namespace}"
+

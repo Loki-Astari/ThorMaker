@@ -372,6 +372,16 @@ covonly:				ActionRunCoverage
 veraonly:				ActionRunVera
 test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
+HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
+build-honly:
+	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
+	@echo "CWD=$$(pwd);cd $(PREFIX);HEADER_ONLY=1 THORSANVIL_ROOT=$${CWD} CXXFLAGS=-I$(PREFIX) $(MAKE) test"
+	@CWD="$$(pwd)";	\
+	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
+	HEADER_ONLY=1 THORSANVIL_ROOT="$${CWD}" CXXFLAGS="-I$(PREFIX)" $(MAKE) test
+	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
+
+
 clean:
 	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh *.gcov test/*.gcov
 
