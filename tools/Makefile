@@ -159,6 +159,10 @@ endif
 
 COVERAGE_REQUIRED	?= 80
 
+#
+# Look in Platform.Makefile
+# These value may have platform specific values.
+# They are defined here as a last resort (i.e. default values)
 YACC			?= bison
 LEX				?= flex
 GPERF			?= gperf --ignore-case
@@ -166,11 +170,7 @@ CP				?= cp
 MKDIR			?= mkdir
 RMDIR			?= rmdir
 
-CXX				?= g++
-COV				?= gcov
-VERA			?= $(if $(VERATOOL),$(VERATOOL), vera++)
 VERA_ROOT		= --root=$(THORSANVIL_ROOT)/build/vera-plusplus
-MKTEMP			= $(MKTEMP_$(PLATFORM))
 MAKE			= make --silent
 
 TESTNAME		?= *
@@ -178,12 +178,9 @@ TESTNAME		?= *
 #
 # This is obviously not working
 # Need to look at this
-COV_LONG_FLAG			= $(COV_LONG_FLAG_$(PLATFORM))
-COV_LONG_FLAG_Linux		= --long-file-names
-COV_LONG_FLAG_Darwin	= -l
-
-MKTEMP_Darwin					= mktemp -u /tmp/tmp.XXXXXXXXXX
-MKTEMP_Linux					= mktemp -u
+COV_LONG_FLAG					= $(COV_LONG_FLAG_$(PLATFORM))
+COV_LONG_FLAG_Linux				= --long-file-names
+COV_LONG_FLAG_Darwin			= -l
 
 
 #
@@ -276,7 +273,9 @@ LANGUAGE_SPECIFIC_FLAGS		= -DTHOR_USE_CPLUSPLUS$(CXXSTDVER)
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
-WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Werror -Wunreachable-code -Wno-long-long -Wdeprecated -Wdeprecated-declarations
+WARNING_FLAGS_				=	-Wall -Wextra -Werror -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Wunreachable-code -Wno-long-long -Wdeprecated -Wdeprecated-declarations
+WARNING_FLAGS_				+=	-Wmissing-braces -Wmissing-field-initializers -Wunused-variable
+WARNING_FLAGS_				+= $(INCONSISTENT_MISSING_OVERRIDE) $(DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR) $(DELETE_NON_VIRTUAL_DTOR) $(NO_DEPRECATED_REGISTER_TEST) $(LITERAL_WARNING)
 
 THORSLINKDIRS				=	$(PREFIX_LIB) $(filter -L%, %, $(LDFLAGS)) ${libdir}
 findfullpath				=	$(firstword $(foreach dir, $(1), $(realpath $(dir)/$(2))))
@@ -304,10 +303,12 @@ OPTIMIZER_FLAGS_DISP_debug		=	-g
 OPTIMIZER_FLAGS_DISP_release	=	-O3
 OPTIMIZER_FLAGS_DISP_coverage	=	-D$(COVERAGE_TARGET) -DTHOR_COVERAGE
 OPTIMIZER_FLAGS_HIDE_coverage	=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
+OPTIMIZER_FLAGS_HIDE_test		=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $(NO_UNUSED_PRIVATE_FIELD_TEST)
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
 CC							=	$(CXX)
 CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC3RD) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
+
 ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS)
 
 MOCK_HEADERS_coverage		=	-include coverage/MockHeaders.h
@@ -372,7 +373,7 @@ veraonly:				ActionRunVera
 test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 clean:
-	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh
+	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh *.gcov test/*.gcov
 
 makedependency:				$(DEP)
 
@@ -431,12 +432,10 @@ Note_%:
 	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/defer)
 
 
-
-
 $(TARGET_MODE)/%.app:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then \
 		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
-	else $(ECHO) $(call colour_text, GRAY, "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ;	fi
+	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ;	fi
 	@$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -454,7 +453,7 @@ $(TARGET_MODE)/%.app:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).Di
 $(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ)';\
-	else $(ECHO) $(call colour_text, GRAY, "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
+	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-80s", $$0}' ; fi
 	@$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ) > makefile_tmp 2>&1;	\
 	ranlib $@ 2> /dev/null;								\
 	if [ $$? != 0 ];									\
@@ -472,7 +471,7 @@ $(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
-	else $(ECHO) $(call colour_text, GRAY, "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; fi
+	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-80s", $$0}' ; fi
 	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
@@ -492,7 +491,7 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 		$(ECHO) '$(CXX) -MM -MT"coverage/$(<:.cpp=.o)" "$<"';\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
@@ -504,12 +503,12 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 
 $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(ECHO) $(call colour_text, GRAY, "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-80s", $$0}' ; \
+	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-80s", $$0}' ; \
 	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
@@ -525,7 +524,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 
 %.tab.cpp: %.y
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(YACC) -o $@ -d $<' ;					\
 	fi
@@ -545,7 +544,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 		sed -e 's/semantic_type yylval;/semantic_type yylval{};/'	\
 			$${tmpfile} > $@;							\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			$(ECHO) $(call colour_text, GRAY, "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
+			$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(YACC) $^") | awk '{printf "%-80s", $$0}' ; \
 		fi;												\
 		$(ECHO) $(GREEN_OK);							\
 		$(RM) $${errorFile} $${tmpfile};				\
@@ -553,7 +552,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 
 %.lex.cpp: %.l
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(LEX) -t $< > $@' ;					\
 	fi
@@ -576,7 +575,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 				-e 's/int yy_buf_size;/std::size_t yy_buf_size;/'	\
 				> $@;									\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			$(ECHO) $(call colour_text, GRAY, "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
+			$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(LEX) $^") | awk '{printf "%-80s", $$0}' ; \
 		fi;												\
 		$(ECHO) $(GREEN_OK);							\
 		$(RM) $${errorFile} $${tmpFile};				\
@@ -584,7 +583,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 
 %.gperf.cpp: %.gperf
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(GPERF) -l -L C++ --class-name=$*_Hash $^ > $@'	;	\
 	fi
@@ -600,7 +599,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 		exit 1;											\
 	else 												\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			$(ECHO) $(call colour_text, GRAY, "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
+			$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(GPERF) --class-name=$*_Hash $^") | awk '{printf "%-80s", $$0}' ; \
 		fi;												\
 		$(ECHO) $(GREEN_OK);							\
 	fi
@@ -662,6 +661,7 @@ Print_On:
 	@$(ECHO) "LDLIBS_EXTERN_BUILD:	$(LDLIBS_EXTERN_BUILD)"
 	@$(ECHO) "LDLIBS_EXTERN_SHARE:	$(LDLIBS_EXTERN_SHARE)"
 	@$(ECHO) "INSTALL_CONFIG:		$(INSTALL_CONFIG)"
+	@$(ECHO) "MODE_TEXT_COLOR		$(MODE_TEXT_COLOR)"
 	@echo    "ECHO:                 $(ECHO)"
 
 tools:

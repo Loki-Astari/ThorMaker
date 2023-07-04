@@ -448,6 +448,10 @@ AC_DEFUN([AX_THOR_COLOUR_MODE],
         [colour],
         AS_HELP_STRING([--disable-colour], [Turns off text colouring in the makefile output])
     )
+    AC_ARG_ENABLE(
+        [dark-mode],
+        AS_HELP_STRING([--enable-dark-mode], [If your background is black some text that was grey is turned yellow])
+    )
     AS_IF(
         [test "x$enable_colour" == "xno"],
         [
@@ -455,7 +459,15 @@ AC_DEFUN([AX_THOR_COLOUR_MODE],
             subconfigure="${subconfigure} --disable-colour"
         ]
     )
+    AS_IF(
+        [test "x$enable_dark-mode" != "xyes"],
+        [
+            DARK_MODE="ON"
+            subconfigure="${subconfigure} --enable-dark-mode"
+        ]
+    )
     AC_SUBST([COLOUR_STATE], [${COLOUR_STATE}])
+    AC_SUBST([DARK_MODE], [${DARK_MODE}])
 ])
 
 AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
@@ -595,6 +607,18 @@ AX_CHECK_COMPILE_FLAG(
 AX_CHECK_COMPILE_FLAG(
     [-Wno-deprecated-register],
     [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])]
+)
+AX_CHECK_COMPILE_FLAG(
+    [-Winconsistent-missing-override],
+    [AC_SUBST([INCONSISTENT_MISSING_OVERRIDE], [-Winconsistent-missing-override])]
+)
+AX_CHECK_COMPILE_FLAG(
+    [-Wdelete-non-abstract-non-virtual-dtor],
+    [AC_SUBST([DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR], [-Wdelete-non-abstract-non-virtual-dtor])]
+)
+AX_CHECK_COMPILE_FLAG(
+    [-Wdelete-non-virtual-dtor],
+    [AC_SUBST([DELETE_NON_VIRTUAL_DTOR], [-Wdelete-non-virtual-dtor])]
 )
 
 
