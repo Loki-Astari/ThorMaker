@@ -247,6 +247,12 @@ AC_DEFUN([AX_THOR_CHECK_THIRD_PARTY_LIBS],
     fi
 ])
 
+AC_DEFUN([AX_THOR_SET_HEADER_ONLY_VARIABLES],
+[
+    AC_DEFINE([HEADER_ONLY], [0], [Enable to use header only libraries])
+    AC_DEFINE([HEADER_ONLY_INCLUDE], [], [For header only convery to inline])
+])
+
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
     AX_THOR_LOCAL_DIR
@@ -263,6 +269,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
     AX_THOR_LIB_SELECT
     AX_THOR_USE_HOST_BUILD
     AX_THOR_COLOUR_MODE
+    AX_THOR_SET_HEADER_ONLY_VARIABLES
 
     AS_IF(
         [test "x${with_hostbuild}" == "x"],
