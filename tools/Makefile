@@ -273,7 +273,9 @@ LANGUAGE_SPECIFIC_FLAGS		= -DTHOR_USE_CPLUSPLUS$(CXXSTDVER)
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
-WARNING_FLAGS_				=	-Wall -Wextra -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Werror -Wunreachable-code -Wno-long-long -Wdeprecated -Wdeprecated-declarations
+WARNING_FLAGS_				=	-Wall -Wextra -Werror -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Wunreachable-code -Wno-long-long -Wdeprecated -Wdeprecated-declarations
+WARNING_FLAGS_				+=	-Wmissing-braces -Wmissing-field-initializers -Wunused-variable
+WARNING_FLAGS_				+= $(INCONSISTENT_MISSING_OVERRIDE) $(DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR) $(DELETE_NON_VIRTUAL_DTOR) $(NO_DEPRECATED_REGISTER_TEST) $(LITERAL_WARNING)
 
 THORSLINKDIRS				=	$(PREFIX_LIB) $(filter -L%, %, $(LDFLAGS)) ${libdir}
 findfullpath				=	$(firstword $(foreach dir, $(1), $(realpath $(dir)/$(2))))
@@ -306,6 +308,7 @@ OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
 CC							=	$(CXX)
 CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC3RD) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
+
 ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS)
 
 MOCK_HEADERS_coverage		=	-include coverage/MockHeaders.h
