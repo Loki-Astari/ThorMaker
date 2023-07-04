@@ -2,6 +2,8 @@
 #
 # Also check out echo in the Platform.Makefile
 COLOUR_STATE					?= ON
+MODE_TEXT_COLOR=$(if $(DARK_MODE), YELLOW, GRAY)
+
 
 
 COLOUR_TERMINAL_NONE			= "\\033[0m"
@@ -32,7 +34,7 @@ GREEN_OK						= $(call colour_text, GREEN, OK)
 RED_ERROR						= $(call colour_text, RED, ERROR)
 section_title					= $(call colour_text, BLUE, $(1))
 subsection_title				= $(call colour_text, CYAN, "  $(1)")
-paragraph						= $(call colour_text, GRAY, "      $(1)")
+paragraph						= $(call colour_text, $(MODE_TEXT_COLOR), "      $(1)")
 
 
 toInt							= $(shell $(ECHO) "$(1)" | awk -F. '{print $$1+0}')

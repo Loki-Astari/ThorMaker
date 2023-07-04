@@ -43,7 +43,7 @@ reportCoverage:
 	@coverage=$$(echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk);\
 	coverageInt=$$( printf "%.0f" $${coverage} );\
 	if [[ $${coverageInt} -le $(COVERAGE_REQUIRED) ]]; then \
-		$(ECHO) $(RED_ERROR)  $(call colour_text, GRAY, Coverage $${coverage} is below $(COVERAGE_REQUIRED)%);\
+		$(ECHO) $(RED_ERROR)  $(call colour_text, $(MODE_TEXT_COLOR), Coverage $${coverage} is below $(COVERAGE_REQUIRED)%);\
 		exit 1;\
 	fi
 
@@ -53,7 +53,7 @@ check_hed_coverage: $(GCOV_HED_FILES)
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
-	@$(ECHO) $(call colour_text, GRAY,$*) | awk '{printf "\t%-80s", $$1}' | tee $(Ignore)coverage/$*.out
+	@$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR),$*) | awk '{printf "\t%-80s", $$1}' | tee $(Ignore)coverage/$*.out
 	@if [[ "$(Ignore)" == "/tmp/" ]]; then	\
 		$(ECHO) "Ignore Test File"; \
 	else \
