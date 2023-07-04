@@ -9,6 +9,7 @@
 TEST_FILES					= $(wildcard test/*.cpp test/*.h test/*.tpp)
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 COVERAGE_LIB				= UnitTest$(strip $(DEFER_NAME))
+UNITTEST_LINK_LIBS_BULD		= $(if $(HEADER_ONLY), ,$(UNITTEST_LINK_LIBS))
 
 
 ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
@@ -58,7 +59,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			LOADLIBES="-L$(BASE)/coverage -l$(COVERAGE_LIB)"\
 			LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)"	\
 			UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)"		\
-			LINK_LIBS="$(UNITTEST_LINK_LIBS)"				\
+			LINK_LIBS="$(UNITTEST_LINK_LIBS_BULD)"			\
 			EXLDLIBS="$(UNITTEST_LDLIBS)"					\
 			-C test											\
 			-f ../Makefile									\
