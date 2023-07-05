@@ -231,6 +231,9 @@ AC_DEFUN([AX_THOR_CHECK_THIRD_PARTY_LIBS],
     pushd third
     if [[ $? == 0 ]]; then
         for third in $(ls); do
+            echo
+            echo
+            echo "Building Third Party: ${third}"
             pushd ${third}
             if [[ -e ./configure ]]; then
                 echo "${third}:  ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build"
@@ -240,11 +243,29 @@ AC_DEFUN([AX_THOR_CHECK_THIRD_PARTY_LIBS],
                     exit 1
                 fi
             fi
+            echo "Complete: ${third}"
             echo "================ DONE ================="
+            echo
             popd
         done
         popd
     fi
+])
+
+AC_DEFUN([AX_THOR_FIX_GIT_SYMLINKS_WINDOWS],
+[
+    sedStrip='s/-.*//'
+    UNAME=`uname -s | sed "${sedStrip}"`
+    echo "Checking Windows Symbolic Links: ${UNAME}"
+    AS_IF([test "x${UNAME}" = "xMSYS_NT"],
+    [
+        echo "    Fixing"
+        git config --local core.symlinks true
+        find src/ -type f | xargs -I^ git restore --source=HEAD ^
+        echo "    Fixing DONE"
+    ],[
+        echo "    Not Windows"
+    ])
 ])
 
 AC_DEFUN([AX_THOR_SET_HEADER_ONLY_VARIABLES],
