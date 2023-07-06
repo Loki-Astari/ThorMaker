@@ -12,7 +12,7 @@ MKTEMP								= $(MKTEMP_$(PLATFORM))
 CXX									= $(CXX_$(PLATFORM))
 COV									= $(COV_$(PLATFORM))
 COVERAGE_LIB						= $(COVERAGE_LIB_$(PLATFORM))
-VERA								= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
+VERA								?= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
 
 #
 COMPILER_NAME						= $(basename $(basename $(basename $(subst -,.,$(subst +,p,$(CXX))))))
