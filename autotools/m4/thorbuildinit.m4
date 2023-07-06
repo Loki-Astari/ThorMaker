@@ -257,7 +257,7 @@ AC_DEFUN([AX_THOR_FIX_GIT_SYMLINKS_WINDOWS],
     sedStrip='s/-.*//'
     UNAME=`uname -s | sed "${sedStrip}"`
     echo "Checking Windows Symbolic Links: ${UNAME}"
-    AS_IF([test "x${UNAME}" = "xMSYS_NT"],
+    AS_IF([test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
     [
         echo "    Fixing"
         git config --local core.symlinks true
