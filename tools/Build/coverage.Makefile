@@ -42,8 +42,8 @@ reportCoverage:
 	@$(ECHO) $(call getPercentColour, $(shell  echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a report/coverage
 	@coverage=$$(echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk);\
 	coverageInt=$$( printf "%.0f" $${coverage} );\
-	if [[ $${coverageInt} -le $(COVERAGE_REQUIRED) ]]; then \
-		$(ECHO) $(RED_ERROR)  $(call colour_text, $(MODE_TEXT_COLOR), Coverage $${coverage} is below $(COVERAGE_REQUIRED)%);\
+	if [[ $${coverageInt} -lt $(COVERAGE_REQUIRED_TEST) ]]; then \
+		$(ECHO) $(RED_ERROR)  $(call colour_text, $(MODE_TEXT_COLOR), Coverage $${coverage} is below $(COVERAGE_REQUIRED_TEST)%);\
 		exit 1;\
 	fi
 

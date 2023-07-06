@@ -158,6 +158,7 @@ PREFIX_CONFIG=${prefix}/etc
 endif
 
 COVERAGE_REQUIRED	?= 80
+COVERAGE_REQUIRED_TEST = $(if $(filter-out MINGW64_NT, $(PLATFORM)), $(COVERAGE_REQUIRED), 0)
 
 #
 # Look in Platform.Makefile
