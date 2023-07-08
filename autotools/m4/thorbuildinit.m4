@@ -216,9 +216,6 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 [
     AX_THOR_FUNC_BUILD_LOCAL_DIR
 
-    AC_PROG_CXX
-    AX_THOR_CHECK_APP_COV
-
     subconfigure=""
     git submodule update --init --recursive
 
@@ -235,6 +232,9 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
     AX_THOR_FUNC_BUILD_CHECK_THIRD_PARTY_LIBS
 
     AX_THOR_FUNC_LANG_FLAG($2)
+
+    AC_PROG_CXX
+    AX_THOR_CHECK_APP_COV
 
     AH_TOP([
 #ifndef  $1
