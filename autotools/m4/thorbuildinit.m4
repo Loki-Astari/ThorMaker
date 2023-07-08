@@ -1,17 +1,21 @@
 #
 # Deprecated Functions
 #
+AC_DEFUN([AX_THOR_FUNC_BUILD],
+[
+    AC_MSG_FAILURE([Deprecated: Use AX_THOR_FUNC_INIT_BUILD])
+])
 AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
 [
     AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_SDL])
 ])
 AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
 [
-    AC_MSG_FAILURE([Deprecated: Called automatically from AX_THOR_FUNC_BUILD])
+    AC_MSG_FAILURE([Deprecated: Called automatically from AX_THOR_FUNC_INIT_BUILD])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_CRYPTO
+    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_CRYPTO])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
 [
@@ -27,7 +31,7 @@ AC_DEFUN([AX_THOR_PROG_LEX],
 ])
 AC_DEFUN([AX_THOR_PROG_COV],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_APP_COV])
+    AC_MSG_FAILURE([Deprecated: Called automatically from AX_THOR_FUNC_INIT_BUILD])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
@@ -63,7 +67,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
 #
 # Standard include to get all basic functionality for the build tools.
 #
-#   AX_THOR_FUNC_BUILD
+#   AX_THOR_FUNC_INIT_BUILD
 #       Calls a st of AX_THOR_FUNC_BUILD_* functions. (see below)
 #
 #
@@ -208,11 +212,12 @@ AC_DEFUN([AX_THOR_TEST_CXX_FLAGS],
 ###################################################################################################
 
 
-AC_DEFUN([AX_THOR_FUNC_BUILD],
+AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 [
     AX_THOR_FUNC_BUILD_LOCAL_DIR
 
     AC_PROG_CXX
+    AX_THOR_CHECK_APP_COV
 
     subconfigure=""
     git submodule update --init --recursive
@@ -228,6 +233,17 @@ AC_DEFUN([AX_THOR_FUNC_BUILD],
 
     AX_THOR_FUNC_BUILD_FIX_GIT_SYMLINKS_WINDOWS
     AX_THOR_FUNC_BUILD_CHECK_THIRD_PARTY_LIBS
+
+    AX_THOR_FUNC_LANG_FLAG($2)
+
+    AH_TOP([
+#ifndef  $1
+#define  $1
+    ])
+    AH_BOTTOM([
+#endif
+    ])
+
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD_LOCAL_DIR],
@@ -903,7 +919,8 @@ Eg.
 ])
 
 AC_DEFUN([AX_THOR_CHECK_APP_COV],
-    [AS_IF(
+[
+    AS_IF(
         [test "x${COV}x" = "xx"],
         [AS_IF(
             [test "${CXX}" = "g++"],
@@ -942,8 +959,8 @@ The coverage tool "${COV}" does not seem to be working.
 
          ])
         ]
-    )]
-)
+    )
+])
 
 
 ###################################################################################################
@@ -1017,7 +1034,7 @@ Error: Your compiler does not seem to support the language features required.
             ])
             AC_SUBST([CXXFLAGS], [${CXXFLAGS_SAVE}])
         ])
-]
+])
 
 AC_DEFUN([AX_THOR_FUNC_TEST_BINARY],
 [
@@ -1121,7 +1138,8 @@ AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE],
 
     mysq_test_connect=`echo "$6" | $3 -$5 $$3_test_host -u $$3_test_user -p$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1`
     AS_IF([test "x$mysq_test_connect" != "$7"],
-         [AC_MSG_ERROR([
+    [
+        AC_MSG_ERROR([
 
     Error: Can not connect to $3 server for testing.
 
@@ -1133,29 +1151,35 @@ AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE],
                     cat ./src/$2/test/data/init.$4 | $3 -$5 $$3_test_host -u root -p 
                     cat ./src/$2/test/data/data.$4 | $3 -$5 $$3_test_host -u $$3_test_user -p$$3_test_pw $$3_test_db
 
-                      ])
          ])
+    ])
 
     version=`$3 -$5 $$3_test_host -u $$3_test_user -p$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
-    AC_DEFINE_UNQUOTED([$1_MAJOR_VERSION], [${version}], ["Get $3 version into #define. That way we can turn off some tests"])
+    AC_DEFINE_UNQUOTED(
+        [$1_MAJOR_VERSION],
+        [${version}],
+        ["Get $3 version into #define. That way we can turn off some tests"]
+    )
 ])
+
 AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE_MYSQL],
-        [AX_THOR_CHECKDB_AVAILABLE([MYSQL], [MySQL], [mysql], [sql],
+[
+        AX_THOR_CHECKDB_AVAILABLE([MYSQL], [MySQL], [mysql], [sql],
                                     [B -h],
                                     [select 3+4 from dual], [x7],
                                     [1],
                                     [-e 'SHOW VARIABLES LIKE "innodb_version"'],
                                     [1], [2], [1])
-        ]
-)
+])
+
 AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE_MONGO],
-        [AX_THOR_CHECKDB_AVAILABLE([MONGO], [Mongo], [mongo], [mongo],
+[
+        AX_THOR_CHECKDB_AVAILABLE([MONGO], [Mongo], [mongo], [mongo],
                                     [-host],
                                     [db.Blob.stats().nindexes], [x1],
                                     [2],
                                     [--eval 'db.version()'],
                                     [1], [1], [1])
-        ]
-)
+])
 
 
