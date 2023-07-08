@@ -637,6 +637,18 @@ AX_CHECK_COMPILE_FLAG(
     [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])]
 )
 AX_CHECK_COMPILE_FLAG(
+    [-Wno-literal-suffix],
+    [AC_SUBST([LITERAL_WARNING_SUFFIX], [-Wno-literal-suffix])],
+)
+AX_CHECK_COMPILE_FLAG(
+    [-Wno-literal-range],
+    [AC_SUBST([LITERAL_WARNING_RANGE],  [-Wno-literal-range])],
+)
+AX_CHECK_COMPILE_FLAG(
+    [-ansi],
+    [AC_SUBST([ANSI_FLAG], ["-ansi"])]
+)
+AX_CHECK_COMPILE_FLAG(
     [-Winconsistent-missing-override],
     [AC_SUBST([INCONSISTENT_MISSING_OVERRIDE], [-Winconsistent-missing-override])]
 )

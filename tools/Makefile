@@ -274,7 +274,7 @@ LANGUAGE_SPECIFIC_FLAGS		= -DTHOR_USE_CPLUSPLUS$(CXXSTDVER)
 
 
 WARNING_FLAGS				=	$(WARNING_FLAGS_$(TEST_STATE)) $(WARNING_FLAGS_$(TARGET_MODE)) $(FILE_WARNING_FLAGS)
-WARNING_FLAGS_				=	-Wall -Wextra -Werror -Wstrict-aliasing $(THORSANVIL_ANSI) -pedantic -Wunreachable-code -Wno-long-long -Wdeprecated -Wdeprecated-declarations
+WARNING_FLAGS_				=	-Wall -Wextra -Werror $(ANSI_FLAG) -Wstrict-aliasing -pedantic -Wunreachable-code -Wno-long-long -Wdeprecated -Wdeprecated-declarations
 WARNING_FLAGS_				+=	-Wmissing-braces -Wmissing-field-initializers -Wunused-variable
 WARNING_FLAGS_				+= $(INCONSISTENT_MISSING_OVERRIDE) $(DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR) $(DELETE_NON_VIRTUAL_DTOR) $(NO_DEPRECATED_REGISTER_TEST) $(LITERAL_WARNING)
 
