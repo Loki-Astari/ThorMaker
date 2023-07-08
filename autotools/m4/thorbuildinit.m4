@@ -3,55 +3,55 @@
 #
 AC_DEFUN([AX_THOR_FUNC_BUILD],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_FUNC_INIT_BUILD])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_FUNC_INIT_BUILD])
 ])
 AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_SDL])
+    AC_MSG_FAILURE([Deprecated: Use AX_ FUNC THOR_CHECK_USE_SDL])
 ])
 AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
 [
-    AC_MSG_FAILURE([Deprecated: Called automatically from AX_THOR_FUNC_INIT_BUILD])
+    AC_MSG_FAILURE([Deprecated: Called automatically from AX FUNC _THOR_FUNC_INIT_BUILD])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_CRYPTO])
+    AC_MSG_FAILURE([Deprecated: Use A FUNC X_THOR_CHECK_USE_CRYPTO])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_THORS_DB])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_THORS_DB])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_THORS_SERIALIZE])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_THORS_SERIALIZE])
 ])
 AC_DEFUN([AX_THOR_PROG_LEX],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_APP_LEX])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_APP_LEX])
 ])
 AC_DEFUN([AX_THOR_PROG_COV],
 [
-    AC_MSG_FAILURE([Deprecated: Called automatically from AX_THOR_FUNC_INIT_BUILD])
+    AC_MSG_FAILURE([Deprecated: Called automatically from AX FUNC _THOR_FUNC_INIT_BUILD])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_YAML],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_YAML])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_YAML])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_MAGIC_ENUM],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_MAGIC_ENUM])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_MAGIC_ENUM])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_EVENT])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_EVENT])
 ])
 AC_DEFUN([AX_THOR_BOOST_BASE],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_CHECK_USE_BOOST])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_BOOST])
 ])
 AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
 [
-    AC_MSG_FAILURE([Deprecated: Use AX_THOR_FUNC_TEST_BINARY])
+    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_FUNC_TEST_BINARY])
 ])
 
 ###################################################################################################
@@ -113,6 +113,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
 
 AC_DEFUN([AX_THOR_FUNC_LANG_FLAG],
 [
+    AC_LANG(C++)
     AX_THOR_TEST_CXX_FLAGS()
 
     AC_ARG_WITH(
@@ -134,7 +135,6 @@ AC_DEFUN([AX_THOR_FUNC_LANG_FLAG],
     AS_IF([test $askedLangFeature -gt $maxLangFeature], AC_MSG_ERROR([Invalid Language requested: ${askedLangFeature}. Maximum: ${maxLangFeature}],[1]))
     AS_IF([test $minLangFeature -gt $maxLangFeature],   AC_MSG_ERROR([Invalid Language max: ${maxLangFeature} can not be less ${minLangFeature}],[1]))
 
-    AC_LANG(C++)
     CXXMaxLanguage=03
     CXXExpLanguage=03
     AX_CHECK_COMPILE_FLAG([-std=c++11], [AC_SUBST([CXXMaxLanguage],11) AC_SUBST([StdFlag11],[-std=c++11])])
@@ -177,35 +177,51 @@ AC_DEFUN([AX_THOR_TEST_CXX_FLAGS],
 
     AX_CHECK_COMPILE_FLAG(
         [-Wno-unused-private-field],
-        [AC_SUBST([NO_UNUSED_PRIVATE_FIELD_TEST], [-Wno-unused-private-field])]
+        [AC_SUBST([NO_UNUSED_PRIVATE_FIELD_TEST], [-Wno-unused-private-field])],
+        [],
+        [-Werror]
     )
     AX_CHECK_COMPILE_FLAG(
         [-Wno-deprecated-register],
-        [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])]
+        [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])],
+        [],
+        [-Werror]
     )
     AX_CHECK_COMPILE_FLAG(
         [-Wno-literal-suffix],
         [AC_SUBST([LITERAL_WARNING_SUFFIX], [-Wno-literal-suffix])],
+        [],
+        [-Werror]
     )
     AX_CHECK_COMPILE_FLAG(
         [-Wno-literal-range],
         [AC_SUBST([LITERAL_WARNING_RANGE],  [-Wno-literal-range])],
+        [],
+        [-Werror]
     )
     AX_CHECK_COMPILE_FLAG(
         [-ansi],
-        [AC_SUBST([ANSI_FLAG], ["-ansi"])]
+        [AC_SUBST([ANSI_FLAG], ["-ansi"])],
+        [],
+        [-Werror]
     )
     AX_CHECK_COMPILE_FLAG(
         [-Winconsistent-missing-override],
-        [AC_SUBST([INCONSISTENT_MISSING_OVERRIDE], [-Winconsistent-missing-override])]
+        [AC_SUBST([INCONSISTENT_MISSING_OVERRIDE], [-Winconsistent-missing-override])],
+        [],
+        [-Werror]
     )
     AX_CHECK_COMPILE_FLAG(
         [-Wdelete-non-abstract-non-virtual-dtor],
-        [AC_SUBST([DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR], [-Wdelete-non-abstract-non-virtual-dtor])]
+        [AC_SUBST([DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR], [-Wdelete-non-abstract-non-virtual-dtor])],
+        [],
+        [-Werror]
     )
     AX_CHECK_COMPILE_FLAG(
         [-Wdelete-non-virtual-dtor],
-        [AC_SUBST([DELETE_NON_VIRTUAL_DTOR], [-Wdelete-non-virtual-dtor])]
+        [AC_SUBST([DELETE_NON_VIRTUAL_DTOR], [-Wdelete-non-virtual-dtor])],
+        [],
+        [-Werror]
     )
 ])
 
