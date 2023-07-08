@@ -847,4 +847,65 @@ NOTE:
     )
 ])
 
+AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE],
+[
+    AC_ARG_WITH([Test$2Host], AS_HELP_STRING([--with-Test$2Host=<Host>], [Use an alternative $3 host for testing with Default(127.0.0.1)]))
+    AC_ARG_WITH([Test$2User], AS_HELP_STRING([--with-Test$2User=<User>], [Use an alternative $3 user for testing with (test)]))
+    AC_ARG_WITH([Test$2Pass], AS_HELP_STRING([--with-Test$2Pass=<Pass>], [Use an alternative $3 password for testing with (testPassword)]))
+    AC_ARG_WITH([Test$2Database], AS_HELP_STRING([--with-Test$2Database=<DB>], [Use an alternative $3 database for testing with (test)]))
+
+    $3_test_host="127.0.0.1"
+    $3_test_user="test"
+    $3_test_pw="testPassword"
+    $3_test_db="test"
+
+    AS_IF([test "x$have_Test$2Host" = "xyes"], [$3_test_host=$with_Test$2Host])
+    AS_IF([test "x$have_Test$2User" = "xyes"], [$3_test_user=$with_Test$2User])
+    AS_IF([test "x$have_Test$2Pass" = "xyes"], [$3_test_pw=$with_Test$2Pass])
+    AS_IF([test "x$have_Test$2Database" = "xyes"], [$3_test_db=$with_Test$2Database])
+
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_HOST], ["$$3_test_host"], [$3 DB host for testing])
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_USER], ["$$3_test_user"], [$3 DB user for testing])
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_PASS], ["$$3_test_pw"],   [$3 DB password for testing])
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_DB],   ["$$3_test_db"],   [$3 DB for testing])
+
+    mysq_test_connect=`echo "$6" | $3 -$5 $$3_test_host -u $$3_test_user -p$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1`
+    AS_IF([test "x$mysq_test_connect" != "$7"],
+         [AC_MSG_ERROR([
+
+    Error: Can not connect to $3 server for testing.
+
+            This may be because the $3 server is not running or the test data has not been created.
+
+            1: Install $2 server
+            2: Make sure $2 is running
+            3: Install the test data and users.
+                    cat ./src/$2/test/data/init.$4 | $3 -$5 $$3_test_host -u root -p 
+                    cat ./src/$2/test/data/data.$4 | $3 -$5 $$3_test_host -u $$3_test_user -p$$3_test_pw $$3_test_db
+
+                      ])
+         ])
+
+    version=`$3 -$5 $$3_test_host -u $$3_test_user -p$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
+    AC_DEFINE_UNQUOTED([$1_MAJOR_VERSION], [${version}], ["Get $3 version into #define. That way we can turn off some tests"])
+])
+AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE_MYSQL],
+        [AX_THOR_CHECKDB_AVAILABLE([MYSQL], [MySQL], [mysql], [sql],
+                                    [B -h],
+                                    [select 3+4 from dual], [x7],
+                                    [1],
+                                    [-e 'SHOW VARIABLES LIKE "innodb_version"'],
+                                    [1], [2], [1])
+        ]
+)
+AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE_MONGO],
+        [AX_THOR_CHECKDB_AVAILABLE([MONGO], [Mongo], [mongo], [mongo],
+                                    [-host],
+                                    [db.Blob.stats().nindexes], [x1],
+                                    [2],
+                                    [--eval 'db.version()'],
+                                    [1], [1], [1])
+        ]
+)
+
 
