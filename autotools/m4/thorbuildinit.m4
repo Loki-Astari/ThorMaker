@@ -1,59 +1,3 @@
-#
-# Deprecated Functions
-#
-AC_DEFUN([AX_THOR_FUNC_BUILD],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_FUNC_INIT_BUILD])
-])
-AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX_ FUNC THOR_CHECK_USE_SDL])
-])
-AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
-[
-    AC_MSG_FAILURE([Deprecated: Called automatically from AX FUNC _THOR_FUNC_INIT_BUILD])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
-[
-    AC_MSG_FAILURE([Deprecated: Use A FUNC X_THOR_CHECK_USE_CRYPTO])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_THORS_DB])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_THORS_SERIALIZE])
-])
-AC_DEFUN([AX_THOR_PROG_LEX],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_APP_LEX])
-])
-AC_DEFUN([AX_THOR_PROG_COV],
-[
-    AC_MSG_FAILURE([Deprecated: Called automatically from AX FUNC _THOR_FUNC_INIT_BUILD])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_YAML],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_YAML])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_MAGIC_ENUM],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_MAGIC_ENUM])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_EVENT])
-])
-AC_DEFUN([AX_THOR_BOOST_BASE],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_CHECK_USE_BOOST])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
-[
-    AC_MSG_FAILURE([Deprecated: Use AX FUNC _THOR_FUNC_TEST_BINARY])
-])
-
 ###################################################################################################
 
 #
@@ -1196,6 +1140,69 @@ AC_DEFUN([AX_THOR_CHECKDB_AVAILABLE_MONGO],
                                     [2],
                                     [--eval 'db.version()'],
                                     [1], [1], [1])
+])
+
+###################################################################################################
+
+
+#
+# Deprecated Functions
+#
+AC_DEFUN([AX_THOR_LIB_SELECT],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_LIB_SELECT Automatically called from _THOR_FUNC_INIT_BUILD])
+])
+AC_DEFUN([AX_THOR_FUNC_BUILD],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_BUILD Use AX-THOR_FUNC_INIT_BUILD])
+])
+AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_CHECK_FOR_SDL Use AX-THOR_CHECK_USE_SDL])
+])
+AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_STATIC_LOAD_CHECK Automatically called from AX-THOR_FUNC_INIT_BUILD])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_USE_CRYPTO Use AX-THOR_CHECK_USE_CRYPTO])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_USE_THORS_LIB_DB Use AX-THOR_CHECK_USE_THORS_DB])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_USE_THORS_LIB_SERIALIZE Use AX-THOR_CHECK_USE_THORS_SERIALIZE])
+])
+AC_DEFUN([AX_THOR_PROG_LEX],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_PROG_LEX Use AX-THOR_CHECK_APP_LEX])
+])
+AC_DEFUN([AX_THOR_PROG_COV],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_PROG_COV Called automatically from AX-THOR_FUNC_INIT_BUILD])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_YAML],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_USE_YAML Use AX-THOR_CHECK_USE_YAML])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_MAGIC_ENUM],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_USE_MAGIC_ENUM Use AX-THOR_CHECK_USE_MAGIC_ENUM])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_USE_EVENT Use AX-THOR_CHECK_USE_EVENT])
+])
+AC_DEFUN([AX_THOR_BOOST_BASE],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_BOOST_BASE Use AX-THOR_CHECK_USE_BOOST])
+])
+AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
+[
+    AC_MSG_FAILURE([Deprecated: AX-THOR_FUNC_USE_BINARY Use AX-THOR_FUNC_TEST_BINARY])
 ])
 
 
