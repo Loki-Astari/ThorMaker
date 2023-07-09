@@ -1,171 +1,272 @@
-AC_DEFUN([AX_THOR_CHECK_FOR_SDL],
+###################################################################################################
+
+#
+# Set the Version of C++ you want to use.
+#   Check a set of compieler flags that are not consistent across platforms.
+#       All Flags are put in Makefile.config.in automatically.
+#       All Flags are used by the build/tools/Makefile
+#
+#
+#       AX_THOR_FUNC_LANG_FLAG
+#
+# Standard include to get all basic functionality for the build tools.
+#
+#   AX_THOR_FUNC_INIT_BUILD
+#       Calls a st of AX_THOR_FUNC_BUILD_* functions. (see below)
+#
+#
+# Checking Libraries:
+#   These functions allow user to specify a location where the libraries could be installed.
+#   This information is passed down to any third party configuration libraries.
+#   They will also define two variables that should be added to the Makefile.config.in
+#           <name>_ROOT_LIB         eg sdl_ROOT_LIB
+#           <name>_ROOT_DIR         eg sdl_ROOT_DIR
+#       For the XXXConfigure.h file it will also define.
+#           HAVE_<name>
+#   They can then be used in you Makefile setup flags:
+#
+#           LDLIBS      += $(sdl_ROOT_LIB)
+#           LDFLAGS     += $(if $(sdl_ROOT_DIR), -L$(sdl_ROOT_DIR)/lib,)
+#           CXXFLAGS    += $(if $(sdl_ROOT_DIR), -I$(sdl_ROOT_DIR)/include)
+#
+#   Checks Provided:
+#       AX_THOR_CHECK_USE_SDL
+#       AX_THOR_CHECK_USE_CRYPTO
+#       AX_THOR_CHECK_USE_THORS_DB
+#       AX_THOR_CHECK_USE_THORS_SERIALIZE
+#       AX_THOR_CHECK_USE_MAGIC_ENUM
+#       AX_THOR_CHECK_USE_EVENT
+#       AX_THOR_CHECK_USE_BOOST
+#       AX_THOR_CHECK_USE_YAML
+#       AX_THOR_CHECK_USE_SNAPPY
+#       AX_THOR_CHECK_USE_SMARTY
+#       AX_THOR_CHECK_USE_STATIC_LOAD
+#
+#   Disable some functionality as it is only used in tests
+#       AX_THOR_CHECK_DISABLE_TIMEGM
+#       AX_THOR_CHECK_DISABLE_MODTEST
+#
+# Check if specific applications are available
+#       AX_THOR_CHECK_APP_LEX
+#
+# Specific Functionality Tests:
+#       AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION
+#       AX_THOR_FUNC_TEST_COMP
+#       AX_THOR_FUNC_TEST_BINARY
+#
+# Check if the DB is up and running and we can accesses it:
+#       AX_THOR_SERVICE_AVAILABLE_MYSQL
+#       AX_THOR_SERVICE_AVAILABLE_MONGO],
+#       AX_THOR_CHECK_SMARTY_AVAILABLE],
+
+
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+AC_DEFUN([AX_THOR_FUNC_LANG_FLAG],
 [
-    AX_THOR_CHECK_FOR_SDL_MAIN
-    AX_THOR_CHECK_FOR_SDL_TTF
-    AX_THOR_CHECK_FOR_SDL_Image
-])
+    AX_THOR_FUNC_LANG_CHECK_FLAGS()
 
-
-AC_DEFUN([AX_THOR_CHECK_FOR_SDL_MAIN],
-[
-    SDL_VERSION=2.0.0
-    AM_PATH_SDL($SDL_VERSION, :, AC_MSG_ERROR([
-*** SDL version $SDL_VERSION not found!
-
-Error: Count not find libSDL2
-
-You can solve this in installing SDL2
-
-        On the mac use:
-            > brew install sdl2
-
-    ]))
-])
-
-AC_DEFUN([AX_THOR_CHECK_FOR_SDL_TTF],
-[
-    ORIG_LDFLAGS="${LDFLAGS}"
-    LDFLAGS="${LDFLAGS} ${SDL_LIBS}"
-
-    AC_CHECK_LIB(
-        [SDL2_ttf],
-        [TTF_Init],
-        :,
-        [AC_MSG_ERROR([
-
-Error: Could not find libSDL2_ttf
-
-You can solve this by installing SDL2_ttf
-
-        On the mac use:
-            > brew install sdl2_ttf
-
-        ], [1])]
+    AC_ARG_WITH(
+        [standard],
+        AS_HELP_STRING([--with-standard=<version>], [Use the specified version <version> of the C++ standard])
     )
 
-    LDFLAGS="${ORIG_LDFLAGS}"
-    AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_ttf"])
+    minLangFeature=$1
+    askedLangFeature=${minLangFeature}
+    AS_IF(
+        [test "x${with_standard}" != "x"],
+        [
+            askedLangFeature=${with_standard}
+        ]
+    )
+
+    AS_IF([test "$2" = ""], [maxLangFeature=$1], [maxLangFeature=$askedLangFeature])
+    AS_IF([test $minLangFeature -gt $askedLangFeature], AC_MSG_ERROR([Invalid Language requested: ${askedLangFeature}. Minimum: ${minLangFeature}]))
+    AS_IF([test $askedLangFeature -gt $maxLangFeature], AC_MSG_ERROR([Invalid Language requested: ${askedLangFeature}. Maximum: ${maxLangFeature}]))
+    AS_IF([test $minLangFeature -gt $maxLangFeature],   AC_MSG_ERROR([Invalid Language max: ${maxLangFeature} can not be less ${minLangFeature}]))
+
+    CXXMaxLanguage=03
+    CXXExpLanguage=03
+    AX_CHECK_COMPILE_FLAG([-std=c++11], [AC_SUBST([CXXMaxLanguage],11) AC_SUBST([StdFlag11],[-std=c++11])])
+    AX_CHECK_COMPILE_FLAG([-std=c++14], [AC_SUBST([CXXMaxLanguage],14) AC_SUBST([StdFlag14],[-std=c++14])])
+    AX_CHECK_COMPILE_FLAG([-std=c++17], [AC_SUBST([CXXMaxLanguage],17) AC_SUBST([StdFlag17],[-std=c++17])])
+    AX_CHECK_COMPILE_FLAG([-std=c++20], [AC_SUBST([CXXMaxLanguage],20) AC_SUBST([StdFlag20],[-std=c++20])])
+    AX_CHECK_COMPILE_FLAG([-std=c++23], [AC_SUBST([CXXMaxLanguage],20) AC_SUBST([StdFlag20],[-std=c++20])])
+    AX_CHECK_COMPILE_FLAG([-std=c++1x], [AC_SUBST([CXXExpLanguage],11) AC_SUBST([ExpFlag11],[-std=c++1x])])
+    AX_CHECK_COMPILE_FLAG([-std=c++1y], [AC_SUBST([CXXExpLanguage],14) AC_SUBST([ExpFlag14],[-std=c++1y])])
+    AX_CHECK_COMPILE_FLAG([-std=c++1z], [AC_SUBST([CXXExpLanguage],17) AC_SUBST([ExpFlag17],[-std=c++1z])])
+    AX_CHECK_COMPILE_FLAG([-std=c++2a], [AC_SUBST([CXXExpLanguage],20) AC_SUBST([ExpFlag20],[-std=c++2a])])
+    AX_CHECK_COMPILE_FLAG([-std=c++2b], [AC_SUBST([CXXExpLanguage],23) AC_SUBST([ExpFlag20],[-std=c++2b])])
+
+    #CXX_STD_FLAG
+    #CXXSTDVER
+
+    AS_IF(
+        [test $askedLangFeature -le $CXXMaxLanguage],
+        [
+            AC_SUBST([CXXSTDVER], [$askedLangFeature])
+            AC_SUBST([CXX_STD_FLAG], [$(eval echo "\${StdFlag${CXXSTDVER}}")])
+        ],
+        [
+            AS_IF(
+                [test $askedLangFeature -le $CXXExpLanguage],
+                [
+                    AC_SUBST([CXXSTDVER], [$askedLangFeature])
+                    AC_SUBST([CXX_STD_FLAG], [$(eval echo "\${ExpFlag${CXXSTDVER}}")])
+                ],
+                [
+                    AC_MSG_ERROR([
+
+Error: Need C++${askedLangFeature} but the compiler only supports ${CXXMaxLanguage} (Experimental ${CXXExpLanguage})
+
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
 ])
 
-AC_DEFUN([AX_THOR_CHECK_FOR_SDL_Image],
+AC_DEFUN([AX_THOR_FUNC_LANG_CHECK_FLAGS],
 [
-    ORIG_LDFLAGS="${LDFLAGS}"
-    LDFLAGS="${LDFLAGS} ${SDL_LIBS}"
-
-    AC_CHECK_LIB(
-        [SDL2_image],
-        [IMG_Init],
-        :,
-        [AC_MSG_ERROR([
-
-Error: Could not find libSDL2_Image
-
-You can solve this by installing SDL2_Image
-
-        On the mac use:
-            > brew install sdl2_image
-
-        ], [1])]
+    AX_CHECK_COMPILE_FLAG(
+        [-Wno-unused-private-field],
+        [AC_SUBST([NO_UNUSED_PRIVATE_FIELD_TEST], [-Wno-unused-private-field])]
+        [],
+        [-Werror]
     )
-
-    LDFLAGS="${ORIG_LDFLAGS}"
-    AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_image"])
+    AX_CHECK_COMPILE_FLAG(
+        [-Wno-deprecated-register],
+        [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])]
+        [],
+        [-Werror]
+    )
+    AX_CHECK_COMPILE_FLAG(
+        [-Winconsistent-missing-override],
+        [AC_SUBST([INCONSISTENT_MISSING_OVERRIDE], [-Winconsistent-missing-override])]
+        [],
+        [-Werror]
+    )
+    AX_CHECK_COMPILE_FLAG(
+        [-Wdelete-non-abstract-non-virtual-dtor],
+        [AC_SUBST([DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR], [-Wdelete-non-abstract-non-virtual-dtor])]
+        [],
+        [-Werror]
+    )
+    AX_CHECK_COMPILE_FLAG(
+        [-Wdelete-non-virtual-dtor],
+        [AC_SUBST([DELETE_NON_VIRTUAL_DTOR], [-Wdelete-non-virtual-dtor])]
+        [],
+        [-Werror]
+    )
+    AX_CHECK_COMPILE_FLAG(
+        [-Wno-literal-suffix],
+        [AC_SUBST([LITERAL_WARNING_SUFFIX], [-Wno-literal-suffix])],
+        [],
+        [-Werror]
+    )
+    AX_CHECK_COMPILE_FLAG(
+        [-Wno-literal-range],
+        [AC_SUBST([LITERAL_WARNING_RANGE], [-Wno-literal-range])],
+        [],
+        [-Werror]
+    )
 ])
 
-AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],
+###################################################################################################
+
+AC_DEFUN([AX_THOR_BUILDING],
 [
-    AX_CHECK_LINK_FLAG(
-        [-Wl,-all_load],
-        [AC_SUBST([THOR_STATIC_LOAD_FLAG],[-Wl,-all_load])]
-    )
-    AX_CHECK_LINK_FLAG(
-        [-Wl,-noall_load],
-        [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[])]
-    )
-    AX_CHECK_LINK_FLAG(
-        [-Wl,--whole-archive -Wl,--no-whole-archive],
-        [AC_SUBST([THOR_STATIC_LOAD_FLAG],[-Wl,--whole-archive])]
-        [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[-Wl,--no-whole-archive])]
-    )
+    export BUILDING_$1=1
 ])
 
-AC_DEFUN([AX_THOR_LOCAL_DIR],
+AC_DEFUN([AX_THOR_FUNC_TERM_BUILD],
+[
+    AX_THOR_FUNC_BUILD_FIX_GIT_SYMLINKS_WINDOWS
+    AX_THOR_FUNC_BUILD_THIRD_PARTY_LIBS
+
+    #
+    # Add your defintions in here.
+    # Note there are some predefined macros in build/autotools/m4/
+
+
+
+    # Build all the Makefiles and configuration files.
+    # Used by ThorMaker
+    # Note: you can push the config file to sub directories in the AC_CONFIG_HEADERS macro (see example)
+    # Note: Local Make variables should be placed in Makefile.config.in
+    AM_INIT_AUTOMAKE([foreign])
+    AH_TOP([
+
+#ifndef  THORS_$1_CONFIG_H
+#define  THORS_$1_CONFIG_H
+
+    ])
+    AH_BOTTOM([
+
+#endif
+
+    ])
+
+    AC_CONFIG_HEADERS([config.h $2])
+    AC_CONFIG_FILES([Makefile.extra Makefile.config:build/autotools/build/Makefile.config.in:Makefile.config.in])
+])
+
+AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
+[
+    AX_THOR_BUILDING($1)
+    AC_LANG(C++)
+
+    AX_THOR_FUNC_BUILD_LOCAL_DIR
+
+    AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS
+
+    AX_THOR_CHECK_APP_COV
+
+    subconfigure=""
+    AX_THOR_FUNC_BUILD_VERA_INIT
+    AX_THOR_FUNC_BUILD_LIB_SELECT
+    AX_THOR_FUNC_BUILD_COLOUR_MODE
+    AX_THOR_FUNC_BUILD_HEADER_ONLY_VARIABLES
+
+    AC_CONFIG_SRCDIR([$3])
+
+    AX_THOR_FUNC_LANG_FLAG([$2])
+
+])
+
+AC_DEFUN([AX_THOR_FUNC_BUILD_LOCAL_DIR],
 [
     DefaultLinkDir="/usr/local"
     host=$(uname -p)
-    AS_IF([test "${host}" == "arm" ],
-    [
-        DefaultLinkDir="/opt/homebrew"
-        AS_IF([test "${prefix}" == "NONE"], [prefix=${DefaultLinkDir}])
-        AC_SUBST([THOR_STD_INCLUDES], [-I${DefaultLinkDir}/include])
-    ])
-    AC_SUBST([DefaultLinkDir], [${DefaultLinkDir}])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],
-[
-    crypto_ROOT_LIB=""
-    crypto_ROOT_DIR=""
-
-    AC_ARG_WITH(
-        [cryptoroot],
-        AS_HELP_STRING([--with-cryptoroot=<location>], [Directory of CRYPTO_ROOT])
-    )
-    ORIG_LDFLAGS="${LDFLAGS}"
-    LDFLAGS="$LDFLAGS -L$with_cryptoroot/lib"
-
-    AC_CHECK_LIB(
-        [crypto],
-        [SHA1_Init],
+    AS_IF(
+        [test "${host}" == "arm" ],
         [
-            AS_IF([test "$with_cryptoroot" != ""],
-                  [
-                    crypto_ROOT_DIR="$with_cryptoroot"
-                    subconfigure="${subconfigure} --with-cryptoroot=$with_cryptoroot"
-                  ])
-        ],
-        [AC_MSG_ERROR([
- 
-Error: Could not find libcrypto
-
-        On a mac you will need to install openssl
-        and define the crypto root directory to configuration.
-
-            brew install openssl
-            ./configure --with-cryptoroot=/usr/local/Cellar/openssl/1.0.2j/
-
-        On Linux you will need to install openssl
-
-            sudo apt-get install openssl
-            sudo apt-get install libssl-dev
-
-                ], [1])]
+            DefaultLinkDir="/opt/homebrew"
+            AS_IF([test "${prefix}" == "NONE"], [prefix=${DefaultLinkDir}])
+            AC_SUBST([DefaultLinkDir], [${DefaultLinkDir}])
+        ]
     )
-    crypto_ROOT_LIB="ssl crypto"
-
-    LDFLAGS="${ORIG_LDFLAGS}"
-    AC_SUBST([crypto_ROOT_LIB], [${crypto_ROOT_LIB}])
-    AC_SUBST([crypto_ROOT_DIR], [${crypto_ROOT_DIR}])
 ])
-AC_DEFUN([AX_THOR_LIB_SELECT],
+
+AC_DEFUN([AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS],
 [
-    THOR_TARGETLIBS=""
-    AS_IF(
-          [test "x$enable_shared" == "xyes"],
-          [THOR_TARGETLIBS+=" slib"]
-    )
-    AS_IF(
-          [test "x$enable_static" == "xyes"],
-          [THOR_TARGETLIBS+=" a"]
-    )
-    AS_IF(
-          [test "x$THOR_TARGETLIBS" == "x"],
-          [THOR_TARGETLIBS="slib"]
-    )
-
-    AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
+    AC_CHECK_PROGS([UNZIP], [bzip2], [:])
+    if test "$UNZIP" = :; then
+        AC_MSG_ERROR([
+            The build tools needs bzip2. Please install it.
+            We use it to unzip google packages for building tests.
+        ])
+    fi
+    pushd build/third
+    ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities])
+    popd
 ])
 
-AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
+AC_DEFUN([AX_THOR_FUNC_BUILD_VERA_INIT],
 [
     AC_ARG_ENABLE(
         [vera],
@@ -184,7 +285,7 @@ AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],
             AS_IF(
                 [test "$TestVera" == ":"],
                 [
-                AC_MSG_ERROR([
+                    AC_MSG_ERROR([
 
 By default the build tools use vera++ for static analysis of C++ code to ensure the project
 maintains a consistent style when people add pull requests. The configuration tests have
@@ -194,11 +295,9 @@ The easy way to install vera++ is using brew:
 
     > brew install vera++
 
-
-])
+                    ])
                 ],
-                [
-                ]
+                []
             )
             VERATOOL='vera++';
         ]
@@ -206,269 +305,26 @@ The easy way to install vera++ is using brew:
     AC_SUBST([VERATOOL], [${VERATOOL}])
 ])
 
-AC_DEFUN([AX_THOR_USE_HOST_BUILD],
+AC_DEFUN([AX_THOR_FUNC_BUILD_LIB_SELECT],
 [
-    AC_ARG_WITH(
-        [hostbuild],
-        AS_HELP_STRING([--with-hostbuild=<dir>], [Use the build tools located at <dir>])
-    )
-
+    THOR_TARGETLIBS=""
     AS_IF(
-        [test "x${with_hostbuild}" != "x"],
-        [
-            echo "Using Existing Host Build Tools: ${with_hostbuild}"
-            rm build
-            ln -s ${with_hostbuild} build
-            ls -la build
-        ]
-    )
-])
-
-AC_DEFUN([AX_THOR_CHECK_THIRD_PARTY_LIBS],
-[
-    export cwd=$(pwd)
-
-    pushd third
-    if [[ $? == 0 ]]; then
-        for third in $(ls); do
-            echo
-            echo
-            echo "Building Third Party: ${third}"
-            pushd ${third}
-            if [[ -e ./configure ]]; then
-                echo "${third}:  ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build"
-                ./configure ${subconfigure} --prefix=${prefix} --with-hostbuild=${cwd}/build
-                if [[ $? != 0 ]]; then
-                    "Failed to configure: ${third}"
-                    exit 1
-                fi
-            fi
-            echo "Complete: ${third}"
-            echo "================ DONE ================="
-            echo
-            popd
-        done
-        popd
-    fi
-])
-
-AC_DEFUN([AX_THOR_FIX_GIT_SYMLINKS_WINDOWS],
-[
-    sedStrip='s/-.*//'
-    UNAME=`uname -s | sed "${sedStrip}"`
-    echo "Checking Windows Symbolic Links: ${UNAME}"
-    AS_IF([test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
-    [
-        echo "    Fixing"
-        git config --local core.symlinks true
-        find src/ -type f | xargs -I^ git restore --source=HEAD ^
-        echo "    Fixing DONE"
-    ],[
-        echo "    Not Windows"
-    ])
-])
-
-AC_DEFUN([AX_THOR_SET_HEADER_ONLY_VARIABLES],
-[
-    AC_DEFINE([HEADER_ONLY], [0], [Enable to use header only libraries])
-    AC_DEFINE([HEADER_ONLY_INCLUDE], [], [For header only convery to inline])
-])
-
-AC_DEFUN([AX_THOR_FUNC_BUILD],
-[
-    AX_THOR_LOCAL_DIR
-    AC_CHECK_PROGS([UNZIP], [bzip2], [:])
-    if test "$UNZIP" = :; then
-        AC_MSG_ERROR([The build tools needs bzip2. Please install it.])
-    fi
-
-    AC_PROG_CXX
-
-    subconfigure=""
-    git submodule update --init --recursive
-    AX_THOR_FUNC_USE_VERA_INIT
-    AX_THOR_LIB_SELECT
-    AX_THOR_USE_HOST_BUILD
-    AX_THOR_COLOUR_MODE
-    AX_THOR_SET_HEADER_ONLY_VARIABLES
-
-    AS_IF(
-        [test "x${with_hostbuild}" == "x"],
-        [
-            pushd build/third
-            ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities], [1])
-            popd
-        ]
-    )
-])
-
-AC_DEFUN([AX_THOR_PROG_LEX],
-[
-    AC_PROG_LEX
-    if test "${LEX}" != "flex"; then
-        AC_MSG_ERROR([
-
-Error: This package uses flex (and is not compatible with lex).
-Please make sure flex is installed.
-
-If it is installed an autotools is picking the wrong lex you explicitly specify it via
-the environment variable LEX.
-
-Eg.
-    LEX=<path to flex> ./configure <other flags>
-
-    ])
-    fi
-])
-
-AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB],
-[
-    local_ROOT_DIR=""
-    local_ROOT_LIB=""
-    AC_SUBST(HAVE_Thors$1)
-    AC_ARG_WITH(
-        [Thors$1root],
-        AS_HELP_STRING([--with-Thors$1root=<location>], [Directory of Thors$1_ROOT])
-    )
-    AC_ARG_ENABLE(
-        [Thors$1],
-        AS_HELP_STRING([--disable-Thors$1], [Don't use Thors$1. This means features that use Thors$1 will be disabled.])
+        [test "x$enable_shared" == "xyes"],
+        [THOR_TARGETLIBS+=" slib"]
     )
     AS_IF(
-        flag=enable_Thors$1
-        [test "x${!flag}" != "xno"],
-
-        AC_LANG_PUSH([C++])
-        AC_MSG_NOTICE([Got HERE])
-        AC_MSG_NOTICE([Name: $1])
-        AC_MSG_NOTICE([With: ${with_Thors$1root}])
-
-        if test "${with_Thors$1root}" == ""; then
-            declare with_Thors$1root="${DefaultLinkDir}"
-        fi
-        ORIG_LDFLAGS="${LDFLAGS}"
-        LDFLAGS="-std=c++17 $LDFLAGS -L${with_Thors$1root}/lib"
-        AC_MSG_NOTICE([LDFLAGS: ${LDFLAGS}])
-        AC_MSG_NOTICE([LIB: $4])
-        AC_MSG_NOTICE([Meth: $5])
-
-        AC_CHECK_LIB(
-            [$4],
-            [$5],
-            [
-                AC_DEFINE([HAVE_Thors$1], 1, [When on code that uses Thors$1 will be compiled.])
-                local_ROOT_DIR="${with_Thors$1root}"
-                local_ROOT_LIB="$3"
-                HAVE_Thors$1=yes
-            ],
-            [AC_MSG_ERROR([
- 
-Error: Could not find lib$4
-
-You can solve this by installing lib$3
-    $6
-
-Alternately specify install location with:
-    --with-Thors$1root=<location of Thors$1 installation>
-
-If you do not want to use features that need Thor$1 then it
-can be disabled with:
-    --disable-Thors$1
-
-                ], [1])],
-                [$7]
-        )
-        LDFLAGS="${ORIG_LDFLAGS}"
-        AC_LANG_POP([C++])
+        [test "x$enable_static" == "xyes"],
+        [THOR_TARGETLIBS+=" a"]
     )
-    AC_SUBST(Thors$1_ROOT_DIR, [${local_ROOT_DIR}])
-    AC_SUBST(Thors$1_ROOT_LIB, [${local_ROOT_LIB}])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],
-[
-    AX_THOR_FUNC_USE_THORS_LIB(DB, $1, ThorsDB, [ThorsDB$1], [_ZN10ThorsAnvil2DB6Access3Lib15ConnectionProxyD2Ev], [https://github.com/Loki-Astari/ThorsDB], [])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],
-[
-    AX_THOR_FUNC_USE_THORS_LIB(Serialize, $1, ThorSerialize, [ThorSerialize$1], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv], [https://github.com/Loki-Astari/ThorsSerializer], [-ldl])
-])
-AC_DEFUN([AX_THOR_FUNC_USE_YAML],
-[
-    yaml_ROOT_DIR=""
-    yaml_ROOT_LIB=""
-    ORIG_LDFLAGS="${LDFLAGS}"
-    AC_ARG_WITH(
-        [yamlroot],
-        AS_HELP_STRING([--with-yamlroot=<location>], [Directory of YAML_ROOT])
-    )
-    if test "${with_yamlroot}" == ""; then
-        with_yamlroot="${DefaultLinkDir}"
-    fi
-    LDFLAGS="$LDFLAGS -L$with_yamlroot/lib"
-
-    AC_CHECK_LIB(
-        [yaml],
-        [yaml_parser_initialize],
-        [
-            yaml_ROOT_DIR="${with_yamlroot}"
-            yaml_ROOT_LIB="yaml"
-        ],
-        [AC_MSG_ERROR([
-
-Error: Could not find libyaml
-
-You can solve this by installing libyaml
-    see http://pyyaml.org/wiki/LibYAML
-
-Alternately specify install location with:
-    --with-yamlroot=<location of yaml installation>
-
-        ], [1])]
+    AS_IF(
+        [test "x$THOR_TARGETLIBS" == "x"],
+        [THOR_TARGETLIBS="slib"]
     )
 
-    LDFLAGS="${ORIG_LDFLAGS}"
-    AC_SUBST([yaml_ROOT_DIR], [${yaml_ROOT_DIR}])
-    AC_SUBST([yaml_ROOT_LIB], [${yaml_ROOT_LIB}])
+    AC_SUBST([THOR_TARGETLIBS],[${THOR_TARGETLIBS}])
 ])
-AC_DEFUN([AX_THOR_FUNC_USE_MAGIC_ENUM],
-[
-    magic_enum_ROOT_DIR=""
-    ORIG_CXXFLAGS="${CXXFLAGS}"
-    AC_ARG_WITH(
-        [magicenumroot],
-        AS_HELP_STRING([--with-magicenumroot=<location>], [Directory of YAML_ROOT])
-    )
-    if test "${with_magicenumroot}" == ""; then
-        with_magicenumroot="${DefaultLinkDir}"
-    fi
-    CXXFLAGS="$CXXFLAGS -std=c++17 -I$with_magicenumroot/include"
 
-    AC_LANG_PUSH([C++])
-    AC_CHECK_HEADER(magic_enum.hpp,
-        [
-            magic_enum_ROOT_DIR="${with_magicenumroot}"
-            subconfigure="${subconfigure} --with-magicenumroot=${with_magicenumroot}"
-        ],
-        [AC_MSG_ERROR(
-
-${CXXFLAGS}
-
-Could not find the header file <magic-enum.hpp>.
-You can install this with
-
-    brew install magic_enum
-
-Alternately if you have manually installed magic_enum you can specify its location with
-    --with-magicenumroot=<location of magic_enum installation>
-
-        )]
-    )
-    AC_LANG_POP([C++])
-
-    CXXFLAGS="${ORIG_CXXFLAGS}"
-    AC_SUBST([magic_enum_ROOT_DIR], [${magic_enum_ROOT_DIR}])
-])
-AC_DEFUN([AX_THOR_COLOUR_MODE],
+AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
 [
     COLOUR_STATE="ON"
     DARK_MODE=""
@@ -498,7 +354,282 @@ AC_DEFUN([AX_THOR_COLOUR_MODE],
     AC_SUBST([DARK_MODE], [${DARK_MODE}])
 ])
 
-AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
+AC_DEFUN([AX_THOR_FUNC_BUILD_HEADER_ONLY_VARIABLES],
+[
+    AC_DEFINE([HEADER_ONLY], [0], [Enable to use header only libraries])
+    AC_DEFINE([HEADER_ONLY_INCLUDE], [], [For header only convery to inline])
+])
+
+AC_DEFUN([AX_THOR_FUNC_BUILD_THIRD_PARTY_LIBS],
+[
+    export cwd=$(pwd)
+
+    pushd third
+    if [[ $? == 0 ]]; then
+        for third in $(ls); do
+            echo
+            echo
+            echo "Building Third Party: ${third}"
+            pushd ${third}
+            if [[ -e ./configure ]]; then
+                echo "${third}:  ./configure ${subconfigure} --prefix=${prefix} "
+                ./configure ${subconfigure} --prefix=${prefix}
+                if [[ $? != 0 ]]; then
+                    echo "Failed to configure: ${third}"
+                    exit 1
+                fi
+            fi
+            echo "Complete: ${third}"
+            echo "================ DONE ================="
+            echo
+            popd
+            AX_THOR_BUILDING(${third})
+        done
+        popd
+    fi
+])
+
+AC_DEFUN([AX_THOR_FUNC_BUILD_FIX_GIT_SYMLINKS_WINDOWS],
+[
+    sedStrip='s/-.*//'
+    UNAME=`uname -s | sed "${sedStrip}"`
+    echo "Checking Windows Symbolic Links: ${UNAME}"
+    AS_IF([test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
+    [
+        echo "    Fixing"
+        git config --local core.symlinks true
+        find src/ -type f | xargs -I^ git restore --source=HEAD ^
+        echo "    Fixing DONE"
+    ],[
+        echo "    Not Windows"
+    ])
+])
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+
+AC_DEFUN([AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST],
+[
+    AC_ARG_WITH(
+        [$1root],
+        AS_HELP_STRING([--with-$1root=<location>], [Directory of $2_ROOT])
+    )
+
+    INCLUDE_DIR="-I ${with_$1root}/include"
+    AS_IF(
+        [test "x${with_$1root}" == "x"],
+        [INCLUDE_DIR="-I${DefaultLinkDir}/include"]
+    )
+
+    ORIG_CXXFLAGS="${CXXFLAGS}"
+    CXXFLAGS="${CXXFLAGS} ${CXX_STD_FLAG} ${INCLUDE_DIR}"
+
+    AC_CHECK_HEADER(
+        [$3],
+        [
+            AS_IF(
+                [test "x${with_$1root}" != "x"],
+                [
+                    AC_DEFINE([HAVE_$2], 1, [We have found $2 package])
+                    AC_SUBST([$1_ROOT_DIR], [${with_$1root}])
+                    subconfigure="${subconfigure} --with-$1root=${with_$1root}"
+                ]
+            )
+        ],
+        [AC_MSG_ERROR([$4])]
+    )
+
+    CXXFLAGS="${ORIG_CXXFLAGS}"
+])
+
+AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
+[
+    dnl 1: =>  configure command line argument:  --with-$1root=
+    dnl 2: =>  Human Readable Name. Used in strings to describe package.
+    dnl 3: =>  Library we are checking for existance
+    dnl 4: =>  Symbol we are checking for in library
+    dnl 5: =>  The library (or list of libraries we will link against)
+    dnl         Note (not the lib or -l or extension).
+    dnl         eg. Fro Crypto:  "crypto ssl"  => will link against -lcrypto -lssl
+    dnl 6: =>  HAVE_$6 macro defined for source.
+    dnl 7: =>  Make Macro: $7_ROOT_DIR and $7_ROOT_LIB
+    dnl         Should be the same as one of the values in $5
+    dnl 8: =>  Extra Error Message.
+    dnl
+    dnl Note:
+    dnl           eg:
+    dnl               crypto_ROOT_DIR=/opt/homebrew/Cellar/@3/v1.1/
+    dnl               crypto_ROOT_LIB="crypto ssl"
+    AC_ARG_WITH(
+        [$1root],
+        AS_HELP_STRING([--with-$1root=<location>], [Define the root directory of package $2])
+    )
+
+    LIBRARY_DIR="-L ${with_$1root}/lib"
+    AS_IF(
+        [test "x${with_$1root}" == "x"],
+        [LIBRARY_DIR="-L ${DefaultLinkDir}/lib"]
+    )
+
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="$LDFLAGS ${LIBRARY_DIR}"
+
+    echo "Checking"
+    AC_CHECK_LIB(
+        [$3],
+        [$4],
+        [
+            AS_IF(
+                [test "x${with_$1root}" != "x"],
+                [
+                    AC_DEFINE([HAVE_$6], 1, [We have found package $2])
+                    AC_SUBST([$7_ROOT_DIR], [${with_$1root}])
+                    subconfigure="${subconfigure} --with-$1root=${with_$1root}"
+                ]
+            )
+            echo "Setting: $7_ROOT_LIB TO $5"
+            AC_SUBST([$7_ROOT_LIB], ["$5"])
+        ],
+        [
+            echo "FAIL: Using: >${with_$1root}<"
+            AC_MSG_ERROR([$8])
+            echo "FAIL DONE"
+        ]
+    )
+    echo "Checking DONE"
+
+    LDFLAGS="${ORIG_LDFLAGS}"
+])
+###################################################################################################
+
+
+
+AC_DEFUN([AX_THOR_CHECK_USE_SDL],
+[
+    AX_THOR_CHECK_USE_SDL_MAIN
+    AX_THOR_CHECK_USE_SDL_TTF
+    AX_THOR_CHECK_USE_SDL_Image
+])
+
+
+AC_DEFUN([AX_THOR_CHECK_USE_SDL_MAIN],
+[
+    SDL_VERSION=2.0.0
+    AM_PATH_SDL($SDL_VERSION, :, AC_MSG_ERROR([
+*** SDL version $SDL_VERSION not found!
+
+Error: Count not find libSDL2
+
+You can solve this in installing SDL2
+
+        On the mac use:
+            > brew install sdl2
+
+    ]))
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_SDL_TTF],
+[
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="${LDFLAGS} ${SDL_LIBS}"
+
+    AC_CHECK_LIB(
+        [SDL2_ttf],
+        [TTF_Init],
+        :,
+        [AC_MSG_ERROR([
+
+Error: Could not find libSDL2_ttf
+
+You can solve this by installing SDL2_ttf
+
+        On the mac use:
+            > brew install sdl2_ttf
+
+        ])]
+    )
+
+    LDFLAGS="${ORIG_LDFLAGS}"
+    AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_ttf"])
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_SDL_Image],
+[
+    ORIG_LDFLAGS="${LDFLAGS}"
+    LDFLAGS="${LDFLAGS} ${SDL_LIBS}"
+
+    AC_CHECK_LIB(
+        [SDL2_image],
+        [IMG_Init],
+        :,
+        [AC_MSG_ERROR([
+
+Error: Could not find libSDL2_Image
+
+You can solve this by installing SDL2_Image
+
+        On the mac use:
+            > brew install sdl2_image
+
+        ])]
+    )
+
+    LDFLAGS="${ORIG_LDFLAGS}"
+    AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_image"])
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_CRYPTO],
+[
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [crypto],
+        [CRYPTO],
+        [crypto], [SHA1_Init],
+        [ssl crypto],
+        [CRYPTO],
+        [crypto],
+        [
+
+Error: Could not find libcrypto
+
+        On a mac you will need to install openssl
+        and define the crypto root directory to configuration.
+
+            brew install openssl
+            ./configure --with-cryptoroot=/usr/local/Cellar/openssl/1.0.2j/
+
+        On Linux you will need to install openssl
+
+            sudo apt-get install openssl
+            sudo apt-get install libssl-dev
+
+        ]
+
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
+[
+    AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST(
+        [magicenum],
+        [MagicEnum],
+        [magic_enum.hpp],
+        [
+Could not find the header file <magic-enum.hpp>.
+You can install this with
+
+    brew install magic_enum
+
+Alternately if you have manually installed magic_enum you can specify its location with
+    --with-magicenumroot=<location of magic_enum installation>
+
+            ])
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_EVENT],
 [
     event_ROOT_DIR=""
     event_ROOT_LIB=""
@@ -520,7 +651,8 @@ AC_DEFUN([AX_THOR_FUNC_USE_EVENT],
             event_ROOT_DIR="${with_eventroot}"
             event_ROOT_LIB="event"
         ],
-        [AC_MSG_ERROR([
+        [
+            AC_MSG_ERROR([
 
 Error: Could not find libevent
 
@@ -530,7 +662,9 @@ see http://libevent.org/
 If libevent is not installed in the default location (/usr/local or /opt/homebrew) then you will need to specify its location.
 --with-eventroot=<location of event installation>
 
-            ], [1])]
+                ]
+            )
+        ]
     )
 
     LDFLAGS="${ORIG_LDFLAGS}"
@@ -538,193 +672,329 @@ If libevent is not installed in the default location (/usr/local or /opt/homebre
     AC_SUBST([event_ROOT_LIB], [${event_ROOT_LIB}])
 ])
 
-AC_DEFUN(
-    [AX_THOR_BOOST_BASE],
-    [
-        AC_ARG_WITH(
-            [boost],
-            AS_HELP_STRING([--with-boost=<dir>], [Directory of Boost Headers])
-        )
-        BOOST_CPPFLAGS="-I$with_boost"
-        AC_SUBST([BOOST_CPPFLAGS], [${BOOST_CPPFLAGS}])
-    ]
-)
+AC_DEFUN([AX_THOR_CHECK_USE_BOOST],
+[
+    AC_ARG_WITH(
+        [boost],
+        AS_HELP_STRING([--with-boost=<dir>], [Directory of Boost Headers])
+    )
+    BOOST_CPPFLAGS="-I$with_boost"
+    AC_SUBST([BOOST_CPPFLAGS], [${BOOST_CPPFLAGS}])
+])
 
-AC_DEFUN(
-    [AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION],
-    [
-        AC_LANG_PUSH([C++])
-        CXXFLAGS_SAVE=$CXXFLAGS
-        CXXFLAGS+=" -std=c++11 ${BOOST_CPPFLAGS}"
+AC_DEFUN([AX_THOR_CHECK_USE_YAML],
+[
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [yaml],
+        [YAML],
+        [yaml], [yaml_parser_initialize],
+        [yaml],
+        [YAML],
+        [yaml],
+        [
+Error: Could not find libyaml
 
-        thor_boost_coroutine_versoin=no
-        AC_MSG_NOTICE([Checking Boost CoRoutine Version])
-        AC_COMPILE_IFELSE(
-            [AC_LANG_SOURCE([[@%:@include <boost/coroutine/all.hpp>]])],
-            [
-                thor_boost_coroutine_versoin=1
-                AC_MSG_NOTICE([Checking Boost CoRoutine Version V1 OK])
-            ]
-        )
-        AC_COMPILE_IFELSE(
-            [AC_LANG_SOURCE([[@%:@include <boost/coroutine/all.hpp>]],[[ boost::context::asymmetric_coroutine<short>::pull_type x;]])],
-            [
-                thor_boost_coroutine_versoin=2
-                AC_MSG_NOTICE([Checking Boost CoRoutine Version V2 OK])
-            ]
-        )
-        AC_COMPILE_IFELSE(
-            [AC_LANG_SOURCE([[@%:@include <boost/coroutine2/all.hpp>]])],
-            [
-                thor_boost_coroutine_versoin=3
-                AC_MSG_NOTICE([Checking Boost CoRoutine Version V3 OK])
-            ]
-        )
-        CXXFLAGS=$CXXFLAGS_SAVE
-        AC_LANG_POP([C++])
+You can solve this by installing libyaml
+    see http://pyyaml.org/wiki/LibYAML
 
-        AS_IF([test "x${thor_boost_coroutine_versoin}" == "xno"],
-              [AC_MSG_ERROR([
+Alternately specify install location with:
+    --with-yamlroot=<location of yaml installation>
+        ]
 
-Error: Can not tell the type of the boost coroutine library.
+    )
+])
 
-                            ])
-              ],
-              [
-	            AC_DEFINE_UNQUOTED([BOOST_COROUTINE_VERSION],[$thor_boost_coroutine_versoin],[Define which version of the boost co-routines we are using])
-                AC_SUBST([BOOST_COROUTINE_VERSION], [$thor_boost_coroutine_versoin])
-              ]
-        )
-    ]
-)
-AC_DEFUN(
-    [AX_THOR_FUNC_TEST_COMP],
-    [
-        AS_IF([test "$1" != ""],
-            [
-                AC_MSG_CHECKING([Checking Compiler Compatibility ${CXX} ${CXX_STD_FLAG}])
-                AC_LANG(C++)
-                CXXFLAGS_SAVE="${CXXFLAGS}"
-                AC_SUBST([CXXFLAGS], [${CXX_STD_FLAG}])
-                AC_COMPILE_IFELSE([AC_LANG_SOURCE([$1])],
-                [
-                    AC_MSG_RESULT([good])
-                ],
-                [
-                    AC_MSG_ERROR([
+AC_DEFUN([AX_THOR_CHECK_USE_SNAPPY],
+[
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [snappy],
+        [SNAPPY],
+        [snappy], [snappy_compress],
+        [snappy],
+        [SNAPPY],
+        [snappy],
+        [
+Error: Could not find libsnappy
 
-Error: Your compiler does not seem to support the language features required.
-       Try updating your compiler to use a more recent version.
+You can solve this by installing libsnappy
+    brew install snappy
 
-       Compiler used: ${CXX} ${CXX_STD_FLAG}
-                    ])
-                ])
-                AC_SUBST([CXXFLAGS], [${CXXFLAGS_SAVE}])
+Alternately specify install location with:
+    --with-snappyroot=<location of snappy installation>
+        ]
+
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
+[
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [thorserialize],
+        [Thors Serializer],
+        [ThorSerialize17], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv],
+        [ThorSerialize ThorsLogging],
+        [THORSSERIALIZER],
+        [ThorSerialize],
+        [
+Error: Could not find libThorSerialize17
+
+You can solve this by installing Thors Serializer
+    brew install thors-serializer
+
+Alternately specify install location with:
+    --with-thorserializeroot=<location of snappy installation>
+        ]
+
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_SMARTY],
+[
+    AC_CHECK_LIB(
+        [smarty],
+        [__ZN6snappy10UncompressEPNS_6SourceEPNS_4SinkE]
+        [],
+        [
+            AC_MSG_ERROR([
+Error: Could not find libsnappy
+
+    On mac this can be installed with:
+        brew install snappy
+
+    On ubuntu this can be installed with:
+        sudo apt-get install libsnappy-dev
+
             ])
-    ]
-)
+        ]
+    )
+])
 
-AC_DEFUN(
-    [AX_THOR_TEST_CXX_FLAGS],
+AC_DEFUN([AX_THOR_CHECK_DISABLE_TIMEGM],
+[
+    AC_ARG_WITH(
+        [timegm],
+        [AS_HELP_STRING([--without-timegm], [Disables tests that use the timegm functions])]
+    )
+
+    AS_IF([test "x$with_timegm" != xno],
     [
-
-AX_CHECK_COMPILE_FLAG(
-    [-Wno-unused-private-field],
-    [AC_SUBST([NO_UNUSED_PRIVATE_FIELD_TEST], [-Wno-unused-private-field])]
-)
-AX_CHECK_COMPILE_FLAG(
-    [-Wno-deprecated-register],
-    [AC_SUBST([NO_DEPRECATED_REGISTER_TEST], [-Wno-deprecated-register])]
-)
-AX_CHECK_COMPILE_FLAG(
-    [-Winconsistent-missing-override],
-    [AC_SUBST([INCONSISTENT_MISSING_OVERRIDE], [-Winconsistent-missing-override])]
-)
-AX_CHECK_COMPILE_FLAG(
-    [-Wdelete-non-abstract-non-virtual-dtor],
-    [AC_SUBST([DELETE_NON_ABSTRACT_NON_VIRTUAL_DTOR], [-Wdelete-non-abstract-non-virtual-dtor])]
-)
-AX_CHECK_COMPILE_FLAG(
-    [-Wdelete-non-virtual-dtor],
-    [AC_SUBST([DELETE_NON_VIRTUAL_DTOR], [-Wdelete-non-virtual-dtor])]
-)
-
-
-    ]
-)
-
-AC_DEFUN(
-    [AX_THOR_FUNC_LANG_FLAG],
-    [
-        AX_THOR_TEST_CXX_FLAGS()
-
-        AC_ARG_WITH(
-            [standard],
-            AS_HELP_STRING([--with-standard=<version>], [Use the specified version <version> of the C++ standard])
-        )
-
-        minLangFeature=$1
-        askedLangFeature=${minLangFeature}
-        AS_IF(
-            [test "x${with_standard}" != "x"],
+        AC_CHECK_FUNCS(
+            [timegm],
+            [],
             [
-                askedLangFeature=${with_standard}
+                AC_MSG_ERROR([
+
+Error: Could not find `timegm()` function on your system.
+
+    timegm() is only used for testing.
+    If you are just building this package for usage (and trust that test will work) then you can safely disable this test.
+    If you are using modifying this package you will need to fix this because you need to run all the tests before submitting a pull request.
+
+    To disable these test by specifying --without-timegm
+
+    PS: If you happen to know a valid alternative to timegm() that is POSIX standard I would be greatful for input.
+                ])
             ]
         )
+    ],
+    [
+        AC_DEFINE([THOR_USE_TIMEGM_FLASE], [1], [Disable tests that use timegm()])
+    ])
+])
 
-        AS_IF([test "$2" = ""], [maxLangFeature=$1], [maxLangFeature=$askedLangFeature])
-        AS_IF([test $minLangFeature -gt $askedLangFeature], AC_MSG_ERROR([Invalid Language requested: ${askedLangFeature}. Minimum: ${minLangFeature}],[1]))
-        AS_IF([test $askedLangFeature -gt $maxLangFeature], AC_MSG_ERROR([Invalid Language requested: ${askedLangFeature}. Maximum: ${maxLangFeature}],[1]))
-        AS_IF([test $minLangFeature -gt $maxLangFeature],   AC_MSG_ERROR([Invalid Language max: ${maxLangFeature} can not be less ${minLangFeature}],[1]))
-        
-        AC_LANG(C++)
-        CXXMaxLanguage=03
-        CXXExpLanguage=03
-        AX_CHECK_COMPILE_FLAG([-std=c++11], [AC_SUBST([CXXMaxLanguage],11) AC_SUBST([StdFlag11],[-std=c++11])])
-        AX_CHECK_COMPILE_FLAG([-std=c++14], [AC_SUBST([CXXMaxLanguage],14) AC_SUBST([StdFlag14],[-std=c++14])])
-        AX_CHECK_COMPILE_FLAG([-std=c++17], [AC_SUBST([CXXMaxLanguage],17) AC_SUBST([StdFlag17],[-std=c++17])])
-        AX_CHECK_COMPILE_FLAG([-std=c++20], [AC_SUBST([CXXMaxLanguage],20) AC_SUBST([StdFlag20],[-std=c++20])])
-        AX_CHECK_COMPILE_FLAG([-std=c++23], [AC_SUBST([CXXMaxLanguage],20) AC_SUBST([StdFlag20],[-std=c++20])])
-        AX_CHECK_COMPILE_FLAG([-std=c++1x], [AC_SUBST([CXXExpLanguage],11) AC_SUBST([ExpFlag11],[-std=c++1x])])
-        AX_CHECK_COMPILE_FLAG([-std=c++1y], [AC_SUBST([CXXExpLanguage],14) AC_SUBST([ExpFlag14],[-std=c++1y])])
-        AX_CHECK_COMPILE_FLAG([-std=c++1z], [AC_SUBST([CXXExpLanguage],17) AC_SUBST([ExpFlag17],[-std=c++1z])])
-        AX_CHECK_COMPILE_FLAG([-std=c++2a], [AC_SUBST([CXXExpLanguage],20) AC_SUBST([ExpFlag20],[-std=c++2a])])
-        AX_CHECK_COMPILE_FLAG([-std=c++2b], [AC_SUBST([CXXExpLanguage],23) AC_SUBST([ExpFlag20],[-std=c++2b])])
+AC_DEFUN([AX_THOR_CHECK_DISABLE_MODTEST],
+[
+    AC_ARG_WITH(
+        [modtests],
+        [AS_HELP_STRING([--without-modtests], [Disables tests that check that modifying the DB work])]
+    )
 
-        #CXX_STD_FLAG
-        #CXXSTDVER
+    AS_IF([test "x$with_modtests" != xno],
+    [
+        thor_clt=good
+        AC_CHECK_TOOL([echo], [], [thor_clt=bad])
+        AC_CHECK_TOOL([wc],   [], [thor_clt=bad])
+        AC_CHECK_TOOL([awk],  [], [thor_clt=bad])
+        AS_IF([test "x$thor_clt" == xbad],
+        [
+            AC_MSG_ERROR([
+
+Error: Could not find one or more of: echo wc awk
+
+    echo/awk/ws are only used for testing.
+    If you are just building this package for usage (and trust that test will work) then you can safely disable this test.
+    If you are using modifying this package you will need to fix this because you need to run all the tests before submitting a pull request.
+
+    To disable these test by specifying --without-modtests
+
+            ])
+        ])
+    ],
+    [
+        AC_DEFINE([THOR_USE_MOD_TESTS_FLASE], [1], [Disable tests that use timegm()])
+    ])
+])
+
+
+AC_DEFUN([AX_THOR_CHECK_USE_STATIC_LOAD],
+[
+    AX_CHECK_LINK_FLAG(
+        [-Wl,-all_load],
+        [AC_SUBST([THOR_STATIC_LOAD_FLAG],[-Wl,-all_load])]
+    )
+    AX_CHECK_LINK_FLAG(
+        [-Wl,-noall_load],
+        [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[])]
+    )
+    AX_CHECK_LINK_FLAG(
+        [-Wl,--whole-archive -Wl,--no-whole-archive],
+        [AC_SUBST([THOR_STATIC_LOAD_FLAG],[-Wl,--whole-archive])]
+        [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[-Wl,--no-whole-archive])]
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORSLIB_FOUND],
+[
+    AC_DEFINE([HAVE_Thors$1], 1, [When on code that uses Thors$1 will be compiled.])
+    local_ROOT_DIR="${with_Thors$1root}"
+    local_ROOT_LIB="$3"
+    HAVE_Thors$1=yes
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORSLIB],
+[
+    local_ROOT_DIR=""
+    local_ROOT_LIB=""
+    AC_SUBST(HAVE_Thors$1)
+    AC_ARG_WITH(
+        [Thors$1root],
+        AS_HELP_STRING([--with-Thors$1root=<location>], [Directory of Thors$1_ROOT])
+    )
+    AC_ARG_ENABLE(
+        [Thors$1],
+        AS_HELP_STRING([--disable-Thors$1], [Don't use Thors$1. This means features that use Thors$1 will be disabled.])
+    )
+    AS_IF(
+        flag=enable_Thors$1
+        [test "x${!flag}" != "xno"],
+
+        AC_MSG_NOTICE([Got HERE])
+        AC_MSG_NOTICE([Name: $1])
+        AC_MSG_NOTICE([With: ${with_Thors$1root}])
+        AC_MSG_NOTICE([Building BUILDING_$4 $BUILDING_$4])
+
+        if test "${with_Thors$1root}" == ""; then
+            declare with_Thors$1root="${DefaultLinkDir}"
+        fi
+        ORIG_LDFLAGS="${LDFLAGS}"
+        LDFLAGS="-std=c++17 $LDFLAGS -L${with_Thors$1root}/lib"
+        AC_MSG_NOTICE([LDFLAGS: ${LDFLAGS}])
+        AC_MSG_NOTICE([LIB: $5])
+        AC_MSG_NOTICE([Meth: $6])
 
         AS_IF(
-            [test $askedLangFeature -le $CXXMaxLanguage],
+            [test "x$BUILDING_$4" == "x1" ],
             [
-                AC_SUBST([CXXSTDVER], [$askedLangFeature])
-                AC_SUBST([CXX_STD_FLAG], [$(eval echo "\${StdFlag${CXXSTDVER}}")])
+                AX_THOR_CHECK_USE_THORSLIB_FOUND([$1], [$2], [$3])
             ],
-            [AS_IF(
-                [test $askedLangFeature -le $CXXExpLanguage],
-                [
-                    AC_SUBST([CXXSTDVER], [$askedLangFeature])
-                    AC_SUBST([CXX_STD_FLAG], [$(eval echo "\${ExpFlag${CXXSTDVER}}")])
-                ],
-                [AC_MSG_ERROR([
+            [
+        AC_CHECK_LIB(
+            [$5],
+            [$6],
+            [
+                AX_THOR_CHECK_USE_THORSLIB_FOUND([$1], [$2], [$3])
+            ],
+            [
+                AC_MSG_ERROR([
 
-Error: Need C++${askedLangFeature} but the compiler only supports ${CXXMaxLanguage} (Experimental ${CXXExpLanguage})
+Error: Could not find lib$5
 
-                    ], [1])]
-            )]
+You can solve this by installing lib$3
+    $7
+
+Alternately specify install location with:
+    --with-Thors$1root=<location of Thors$1 installation>
+
+If you do not want to use features that need Thor$1 then it
+can be disabled with:
+    --disable-Thors$1
+
+                    ]
+                )
+            ],
+            [$8]
         )
-    ]
-)
-AC_DEFUN([AX_THOR_PROG_COV],
-    [AS_IF(
+            ])
+        LDFLAGS="${ORIG_LDFLAGS}"
+    )
+    AC_SUBST(Thors$1_ROOT_DIR, [${local_ROOT_DIR}])
+    AC_SUBST(Thors$1_ROOT_LIB, [${local_ROOT_LIB}])
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_DB],
+[
+    AX_THOR_CHECK_USE_THORSLIB(
+        [DB],
+        [$1],
+        [ThorsDB],
+        [ThorsDB],
+        [ThorsDB$1],
+        [_ZN10ThorsAnvil2DB6Access3Lib15ConnectionProxyD2Ev],
+        [https://github.com/Loki-Astari/ThorsDB],
+        []
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE_OLD],
+[
+    AX_THOR_CHECK_USE_THORSLIB(
+        [Serialize],
+        [$1],
+        [ThorSerialize],
+        [ThorsSerializer],
+        [ThorSerialize$1],
+        [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv],
+        [https://github.com/Loki-Astari/ThorsSerializer],
+        [-ldl]
+    )
+])
+
+###################################################################################################
+
+AC_DEFUN([AX_THOR_CHECK_APP_LEX],
+[
+    AC_PROG_LEX
+    if test "${LEX}" != "flex"; then
+        AC_MSG_ERROR([
+
+Error: This package uses flex (and is not compatible with lex).
+Please make sure flex is installed.
+
+If it is installed an autotools is picking the wrong lex you explicitly specify it via
+the environment variable LEX.
+
+Eg.
+    LEX=<path to flex> ./configure <other flags>
+
+            ]
+        )
+    fi
+])
+
+AC_DEFUN([AX_THOR_CHECK_APP_COV],
+[
+    AS_IF(
         [test "x${COV}x" = "xx"],
-        [AS_IF(
-            [test "${CXX}" = "g++"],
-            [AC_SUBST([COV],[gcov])],
-            [AS_IF(
-                [test "${CXX}" = "clang++"],
-                [AC_SUBST([COV],[llvm-cov])],
-                [AC_MSG_ERROR([
+        [
+            AS_IF(
+                [test "${CXX}" = "g++"],
+                [AC_SUBST([COV],[gcov])],
+                [
+                    AS_IF(
+                        [test "${CXX}" = "clang++"],
+                        [AC_SUBST([COV],[llvm-cov])],
+                        [
+                            AC_MSG_ERROR([
 
 Could not determine the coverage tool.
 
@@ -741,27 +1011,104 @@ Another alternative is to explicitly specify the coverage tool to use.
 
     COV=gcov ./confgiure
 
-                    ])
+                            ])
+                        ]
+                    )
                 ]
-            )]
-        )]
+            )
+        ]
     )
     ${COV} --version 2>&1 | grep -Eo '([[[:digit:]]]+\.)+[[[:digit:]]]+' || ${COV} --version 2>&1 | grep -Po '(\d+\.)+\d+' > /dev/null
     AS_IF(
         [test $? != 0],
-        [AC_MSG_ERROR([
+        [
+            AC_MSG_ERROR([
 
 The coverage tool "${COV}" does not seem to be working.
 
-         ])
+            ])
         ]
-    )]
-)
+    )
+])
 
-dnl
-dnl
 
-AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
+###################################################################################################
+
+AC_DEFUN([AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION],
+[
+    CXXFLAGS_SAVE=$CXXFLAGS
+    CXXFLAGS+=" -std=c++11 ${BOOST_CPPFLAGS}"
+
+    thor_boost_coroutine_versoin=no
+    AC_MSG_NOTICE([Checking Boost CoRoutine Version])
+    AC_COMPILE_IFELSE(
+        [AC_LANG_SOURCE([[@%:@include <boost/coroutine/all.hpp>]])],
+        [
+            thor_boost_coroutine_versoin=1
+            AC_MSG_NOTICE([Checking Boost CoRoutine Version V1 OK])
+        ]
+    )
+    AC_COMPILE_IFELSE(
+        [AC_LANG_SOURCE([[@%:@include <boost/coroutine/all.hpp>]],[[ boost::context::asymmetric_coroutine<short>::pull_type x;]])],
+        [
+            thor_boost_coroutine_versoin=2
+            AC_MSG_NOTICE([Checking Boost CoRoutine Version V2 OK])
+        ]
+    )
+    AC_COMPILE_IFELSE(
+        [AC_LANG_SOURCE([[@%:@include <boost/coroutine2/all.hpp>]])],
+        [
+            thor_boost_coroutine_versoin=3
+            AC_MSG_NOTICE([Checking Boost CoRoutine Version V3 OK])
+        ]
+    )
+    CXXFLAGS=$CXXFLAGS_SAVE
+
+    AS_IF([test "x${thor_boost_coroutine_versoin}" == "xno"],
+        [
+            AC_MSG_ERROR([
+
+Error: Can not tell the type of the boost coroutine library.
+
+            ])
+        ],
+        [
+	        AC_DEFINE_UNQUOTED([BOOST_COROUTINE_VERSION],[$thor_boost_coroutine_versoin],[Define which version of the boost co-routines we are using])
+            AC_SUBST([BOOST_COROUTINE_VERSION], [$thor_boost_coroutine_versoin])
+        ]
+    )
+])
+
+
+AC_DEFUN([AX_THOR_FUNC_TEST_COMP],
+[
+    AS_IF(
+        [test "$1" != ""],
+        [
+            AC_MSG_CHECKING([Checking Compiler Compatibility ${CXX} ${CXX_STD_FLAG}])
+            AC_LANG(C++)
+            CXXFLAGS_SAVE="${CXXFLAGS}"
+            AC_SUBST([CXXFLAGS], [${CXX_STD_FLAG}])
+            AC_COMPILE_IFELSE([AC_LANG_SOURCE([$1])],
+                [
+                    AC_MSG_RESULT([good])
+                ],
+                [
+                    AC_MSG_ERROR([
+
+Error: Your compiler does not seem to support the language features required.
+       Try updating your compiler to use a more recent version.
+
+       Compiler used: ${CXX} ${CXX_STD_FLAG}
+                    ])
+                ]
+            )
+            AC_SUBST([CXXFLAGS], [${CXXFLAGS_SAVE}])
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_FUNC_TEST_BINARY],
 [
     AC_ARG_WITH(
         [thors-network-byte-order],
@@ -794,7 +1141,8 @@ AC_DEFUN([AX_THOR_FUNC_USE_BINARY],
                     AC_DEFINE([NETWORK_BYTE_ORDER], 1, [We have functions to convert host to network byte order for 64/128 bit values])
                     AC_DEFINE_UNQUOTED([BSWAP64], [${bswap64_function}], [Name of the 64/128 bit endian swapping function])
                 ],
-                [AC_MSG_ERROR([
+                [
+                    AC_MSG_ERROR([
 
 Error: Could not find a way to convert 64 bit values to big endian for transport
 
@@ -814,7 +1162,7 @@ NOTE:
 
     There are standard libraries for 16/32 bit conversion between
     host and network byte order
-    
+
         htonl() ntohl()     # 32 bit
         htons() ntohs()     # 16 bit
 
@@ -829,10 +1177,118 @@ NOTE:
 
         --with-thors-network-byte-order
 
-                ])]
+                    ])
+                ]
             )
         ]
     )
 ])
 
+###################################################################################################
+
+AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
+[
+    AC_ARG_WITH([Test$2Host], AS_HELP_STRING([--with-Test$2Host=<Host>], [Use an alternative $3 host for testing with Default(127.0.0.1)]))
+    AC_ARG_WITH([Test$2User], AS_HELP_STRING([--with-Test$2User=<User>], [Use an alternative $3 user for testing with (test)]))
+    AC_ARG_WITH([Test$2Pass], AS_HELP_STRING([--with-Test$2Pass=<Pass>], [Use an alternative $3 password for testing with (testPassword)]))
+    AC_ARG_WITH([Test$2Database], AS_HELP_STRING([--with-Test$2Database=<DB>], [Use an alternative $3 database for testing with (test)]))
+
+    $3_test_host="127.0.0.1"
+    $3_test_user="test"
+    $3_test_pw="testPassword"
+    $3_test_db="test"
+
+    AS_IF([test "x$have_Test$2Host" = "xyes"], [$3_test_host=$with_Test$2Host])
+    AS_IF([test "x$have_Test$2User" = "xyes"], [$3_test_user=$with_Test$2User])
+    AS_IF([test "x$have_Test$2Pass" = "xyes"], [$3_test_pw=$with_Test$2Pass])
+    AS_IF([test "x$have_Test$2Database" = "xyes"], [$3_test_db=$with_Test$2Database])
+
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_HOST], ["$$3_test_host"], [$3 DB host for testing])
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_USER], ["$$3_test_user"], [$3 DB user for testing])
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_PASS], ["$$3_test_pw"],   [$3 DB password for testing])
+    AC_DEFINE_UNQUOTED([THOR_TESTING_$1_DB],   ["$$3_test_db"],   [$3 DB for testing])
+
+    echo "COMMAND: >$6<"
+    echo "DB LINK: >$3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db<" | sed -e 's/[Pp]ass/aasp/g'
+    echo "$6" | $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
+    test_connect=`echo "$6" | $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1 | sed -e 's/test>//' | xargs`
+    echo "RESULT:  >${test_connect}<"
+    AS_IF([test "x$test_connect" != "x$7"],
+    [
+            AC_MSG_ERROR([
+
+    Error: Can not connect to $3 server for testing.
+
+            This may be because the $3 server is not running or the test data has not been created.
+
+            1: Install $2 server
+            2: Make sure $2 is running
+            3: Install the test data and users.
+                    cat ./src/$2/test/data/init.$4 | $3 $5 $$3_test_host $13root $14
+                    cat ./src/$2/test/data/data.$4 | $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
+
+            ])
+    ])
+
+    version=`$3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
+    AC_DEFINE_UNQUOTED([$1_MAJOR_VERSION], [${version}], ["Get $3 version into #define. That way we can turn off some tests"])
+])
+
+AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_MYSQL],
+[
+    AX_THOR_SERVICE_AVAILABLE_CHECK(
+        [MYSQL], [MySQL], [mysql], [sql],
+        [-B -h],
+        [select 3+4 from dual], [7],
+        [1],
+        [-e 'SHOW VARIABLES LIKE "innodb_version"'],
+        [1], [2], [1],
+        [--user=], [--password=], [Word]
+    )
+])
+
+AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_MONGO],
+[
+    AX_THOR_SERVICE_AVAILABLE_CHECK(
+        [MONGO], [Mongo], [mongosh], [mongo],
+        [--host],
+        [db.Blob.stats().nindexes], [1],
+        [2],
+        [--eval 'db.version()'],
+        [1], [1], [1],
+        [--username ], [--password ], [Word]
+    )
+])
+
+
+
+###################################################################################################
+
+AC_DEFUN([AX_THOR_DEPIRCATE],
+[
+    AC_MSG_FAILURE([Depricated: $1 => $2])
+])
+
+AC_DEFUN([AX_THOR_FUNC_BUILD],                  AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_BUILD],                   [D_AX_THOR_FUNC_INIT_BUILD]))
+AC_DEFUN([AX_THOR_LOCAL_DIR],                   AX_THOR_DEPIRCATE([D_AX_THOR_LOCAL_DIR],                    [D_AX_THOR_FUNC_BUILD_LOCAL_DIR]))
+AC_DEFUN([AX_THOR_FUNC_USE_VERA_INIT],          AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_VERA_INIT],           [D_AX_THOR_FUNC_BUILD_VERA_INIT]))
+AC_DEFUN([AX_THOR_LIB_SELECT],                  AX_THOR_DEPIRCATE([D_AX_THOR_LIB_SELECT],                   [D_AX_THOR_FUNC_BUILD_LIB_SELECT]))
+AC_DEFUN([AX_THOR_USE_HOST_BUILD],              AX_THOR_DEPIRCATE([D_AX_THOR_USE_HOST_BUILD],               [D_AX_THOR_FUNC_BUILD_HOST_BUILD]))
+AC_DEFUN([AX_THOR_COLOUR_MODE],                 AX_THOR_DEPIRCATE([D_AX_THOR_COLOUR_MODE],                  [D_AX_THOR_FUNC_BUILD_COLOUR_MODE]))
+AC_DEFUN([AX_THOR_SET_HEADER_ONLY_VARIABLES],   AX_THOR_DEPIRCATE([D_AX_THOR_SET_HEADER_ONLY_VARIABLES],    [D_AX_THOR_FUNC_BUILD_HEADER_ONLY_VARIABLES]))
+AC_DEFUN([AX_THOR_CHECK_FOR_SDL],               AX_THOR_DEPIRCATE([D_AX_THOR_CHECK_FOR_SDL],                [D_AX_THOR_CHECK_USE_SDL]))
+AC_DEFUN([AX_THOR_FUNC_USE_CRYPTO],             AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_CRYPTO],              [D_AX_THOR_CHECK_USE_CRYPTO]))
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_DB],       AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_THORS_LIB_DB],        [D_AX_THOR_CHECK_USE_THORS_DB]))
+AC_DEFUN([AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE],AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_THORS_LIB_SERIALIZE], [D_AX_THOR_CHECK_USE_THORS_SERIALIZE]))
+AC_DEFUN([AX_THOR_FUNC_USE_MAGIC_ENUM],         AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_MAGIC_ENUM],          [D_AX_THOR_CHECK_USE_MAGIC_ENUM]))
+AC_DEFUN([AX_THOR_FUNC_USE_EVENT],              AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_EVENT],               [D_AX_THOR_CHECK_USE_EVENT]))
+AC_DEFUN([AX_THOR_BOOST_BASE],                  AX_THOR_DEPIRCATE([D_AX_THOR_BOOST_BASE],                   [D_AX_THOR_CHECK_USE_BOOST]))
+AC_DEFUN([AX_THOR_FUNC_USE_YAML],               AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_YAML],                [D_AX_THOR_CHECK_USE_YAML]))
+AC_DEFUN([AX_THOR_PROG_LEX],                    AX_THOR_DEPIRCATE([D_AX_THOR_PROG_LEX],                     [D_AX_THOR_CHECK_APP_LEX]))
+AC_DEFUN([AX_THOR_FUNC_USE_BINARY],             AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_USE_BINARY],              [D_AX_THOR_FUNC_TEST_BINARY]))
+AC_DEFUN([AX_THOR_TEST_CXX_FLAGS],              AX_THOR_DEPIRCATE([D_AX_THOR_TEST_CXX_FLAGS],               [D_AX_THOR_FUNC_LANG_CHECK_FLAGS]))
+AC_DEFUN([AX_THOR_PROG_COV],                    AX_THOR_DEPIRCATE([D_AX_THOR_PROG_COV],                     [D_AX_THOR_CHECK_APP_COV]))
+AC_DEFUN([AX_THOR_CHECK_THIRD_PARTY_LIBS],      AX_THOR_DEPIRCATE([D_AX_THOR_CHECK_THIRD_PARTY_LIBS],       [D_AX_THOR_FUNC_BUILD_THIRD_PARTY_LIBS]))
+AC_DEFUN([AX_THOR_FIX_GIT_SYMLINKS_WINDOWS],    AX_THOR_DEPIRCATE([D_AX_THOR_FIX_GIT_SYMLINKS_WINDOWS],     [D_AX_THOR_FUNC_BUILD_FIX_GIT_SYMLINKS_WINDOWS]))
+AC_DEFUN([AX_THOR_STATIC_LOAD_CHECK],           AX_THOR_DEPIRCATE([D_AX_THOR_STATIC_LOAD_CHECK],            [D_AX_THOR_CHECK_USE_STATIC_LOAD]))
 

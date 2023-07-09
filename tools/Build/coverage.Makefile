@@ -53,9 +53,9 @@ check_hed_coverage: $(GCOV_HED_FILES)
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
-	@$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR),$*) | awk '{printf "\t%-80s", $$1}' | tee $(Ignore)coverage/$*.out
+	@$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR),$*) | awk '{printf "\t%-$(LINE_WIDTH)s", $$1}' | tee $(Ignore)coverage/$*.out
 	@if [[ "$(Ignore)" == "/tmp/" ]]; then	\
-		$(ECHO) "Ignore Test File"; \
+		$(ECHO) "Processing Coverage Info"; \
 	else \
 		$(ECHO) $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a coverage/$*.out;\
 	fi

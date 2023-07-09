@@ -11,11 +11,11 @@ done
 ConfFiles=$(echo ${ConfFiles1} | xargs)
 
     cat - > configure.ac <<CONFIGUREAC
-AC_INIT([$(basename $(pwd))], [0.1], [YourName@Email.com])
+AC_INIT([$(basename $(pwd))], [0.1], [YourName+$(basename $(pwd))@Email.com])
 AC_PREREQ([2.65])
 
-AC_CONFIG_MACRO_DIR([.build/autotools/m4])
-AC_CONFIG_AUX_DIR([.build/autotools/build])
+AC_CONFIG_MACRO_DIR([build/autotools/m4])
+AC_CONFIG_AUX_DIR([build/autotools/build])
 AX_THOR_FUNC_BUILD
 
 
@@ -167,9 +167,8 @@ checkForBuildTools () {
     if [[ ! -e build/Notes ]]; then
         echo "Installing ThorMaker"
         git submodule init
-        git submodule add https://github.com/Loki-Astari/ThorMaker.git .build
-        ln -s .build build
-        ln -s .build/autotools/Notes .
+        git submodule add https://github.com/Loki-Astari/ThorMaker.git build
+        ln -s build/autotools/Notes .
         git add Notes
     fi
 }
@@ -227,20 +226,18 @@ fi
 echo "Configuring"
 rm configure
 autoreconf --install
-echo "THOR PREFIX"
-cp configure configure.tmp
-cat <<CONFIG_INIT - configure.tmp > configure
+cat - configure << SUBMODULE_UPDATE > config.tmp
 #!/bin/sh
-# Set up the build system
-if [[ ! -e build/Notes ]]; then
-    git submodule init
-    git submodule update
+
+if git submodule status | grep --quiet '^-'; then
+    git submodule update --init --recursive
 fi
-ln -s .build build | echo "Build Already Setup"
 
-
-CONFIG_INIT
-rm configure.tmp
+SUBMODULE_UPDATE
+mv config.tmp configure
+chmod +x configure
 echo "" > Makefile.extra.in
 rm -f configure~
+rm -f config.h.in~
+rm -f confdefs.h
 

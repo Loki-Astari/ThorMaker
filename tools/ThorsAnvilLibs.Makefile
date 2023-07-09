@@ -28,7 +28,7 @@
 ThorsMySQL_ISTHOR           = yes
 ThorsPostgres_ISTHOR        = yes
 ThorsSQL_ISTHOR             = yes
-ThorsSerialize_ISTHOR       = yes
+ThorSerialize_ISTHOR        = yes
 ThorsDB_ISTHOR              = yes
 ThorsExpress_ISTHOR         = yes
 ThorsLogging_ISTHOR         = yes
