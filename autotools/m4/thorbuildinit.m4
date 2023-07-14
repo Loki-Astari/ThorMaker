@@ -444,6 +444,20 @@ AC_DEFUN([AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST],
     CXXFLAGS="${ORIG_CXXFLAGS}"
 ])
 
+AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND],
+[
+    AS_IF(
+        [test "x${with_$1root}" != "x"],
+        [
+            AC_DEFINE([HAVE_$6], 1, [We have found package $2])
+            AC_SUBST([$7_ROOT_DIR], [${with_$1root}])
+            subconfigure="${subconfigure} --with-$1root=${with_$1root}"
+        ]
+    )
+    echo "Setting: $7_ROOT_LIB TO $5"
+    AC_SUBST([$7_ROOT_LIB], ["$5"])
+])
+
 AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
 [
     dnl 1: =>  configure command line argument:  --with-$1root=
@@ -456,7 +470,8 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
     dnl 6: =>  HAVE_$6 macro defined for source.
     dnl 7: =>  Make Macro: $7_ROOT_DIR and $7_ROOT_LIB
     dnl         Should be the same as one of the values in $5
-    dnl 8: =>  Extra Error Message.
+    dnl 8:      Name of standard checkout directory (Used for Thor Tools)
+    dnl 9: =>  Extra Error Message.
     dnl
     dnl Note:
     dnl           eg:
@@ -476,26 +491,27 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
     ORIG_LDFLAGS="${LDFLAGS}"
     LDFLAGS="$LDFLAGS ${LIBRARY_DIR}"
 
+    echo "Building: $8"
+    echo "Mark:     $BUILDING_$8"
     echo "Checking"
-    AC_CHECK_LIB(
-        [$3],
-        [$4],
+    AS_IF(
+        [test "x$BUILDING_$8" == "x1" ],
         [
-            AS_IF(
-                [test "x${with_$1root}" != "x"],
-                [
-                    AC_DEFINE([HAVE_$6], 1, [We have found package $2])
-                    AC_SUBST([$7_ROOT_DIR], [${with_$1root}])
-                    subconfigure="${subconfigure} --with-$1root=${with_$1root}"
-                ]
-            )
-            echo "Setting: $7_ROOT_LIB TO $5"
-            AC_SUBST([$7_ROOT_LIB], ["$5"])
+            AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9])
         ],
         [
-            echo "FAIL: Using: >${with_$1root}<"
-            AC_MSG_ERROR([$8])
-            echo "FAIL DONE"
+            AC_CHECK_LIB(
+                [$3],
+                [$4],
+                [
+                    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9])
+                ],
+                [
+                    echo "FAIL: Using: >${with_$1root}<"
+                    AC_MSG_ERROR([$9])
+                    echo "FAIL DONE"
+                ]
+            )
         ]
     )
     echo "Checking DONE"
@@ -589,6 +605,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_CRYPTO],
         [ssl crypto],
         [CRYPTO],
         [crypto],
+        [NotThor],
         [
 
 Error: Could not find libcrypto
@@ -691,6 +708,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_YAML],
         [yaml],
         [YAML],
         [yaml],
+        [NotThor],
         [
 Error: Could not find libyaml
 
@@ -713,6 +731,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_SNAPPY],
         [snappy],
         [SNAPPY],
         [snappy],
+        [NotThor],
         [
 Error: Could not find libsnappy
 
@@ -735,6 +754,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
         [ThorSerialize ThorsLogging],
         [THORSSERIALIZER],
         [ThorSerialize],
+        [ThorsSerializer],
         [
 Error: Could not find libThorSerialize17
 
