@@ -49,12 +49,6 @@ Rather then re-write and copy build files from project to project, I have my own
         "./setup":
             1) creates bin lib include include3rd
             2) install(s) gtest
-            3) installs locally vera++  (unless configure is run with --disable-vera)
-                a) Needs the following libs installed to build vera
-                    i  ) libboost
-                    ii ) libboost-python
-                    iii) tcl/tk
-                    iv ) cmake
 
 ##Simplified Makefile
         Each project directory you will need a makefile that looks like this:

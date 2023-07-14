@@ -83,8 +83,7 @@ These build files allow the following easy targets:
 
 The Makefiles documented in this section load the master makefile from: `$(THORSANVIL_ROOT)/build/tools/<Makefile>`. This implies that the `build` directory is this `ThorMaker` project. If you look at the scrip `Notes` from the "SetUp" section you will see that it adds this (ThorMaker) project as a submdule of the current project in the build directory:
 
-    git submodule add https://github.com/Loki-Astari/ThorMaker.git .build
-    ln -s .build build
+    git submodule add https://github.com/Loki-Astari/ThorMaker.git build
 
 ----
 
