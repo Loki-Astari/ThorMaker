@@ -34,6 +34,7 @@
 #       AX_THOR_CHECK_USE_CRYPTO
 #       AX_THOR_CHECK_USE_THORS_DB
 #       AX_THOR_CHECK_USE_THORS_SERIALIZE
+#       AX_THOR_CHECK_USE_THORS_SERIALIZE_HEADER_ONLY
 #       AX_THOR_CHECK_USE_MAGIC_ENUM
 #       AX_THOR_CHECK_USE_EVENT
 #       AX_THOR_CHECK_USE_BOOST
@@ -43,6 +44,11 @@
 #       AX_THOR_CHECK_USE_STATIC_LOAD
 #
 #   Disable some functionality as it is only used in tests
+#       AX_THOR_DISABLE_TEST_REQUIREING_LOCK_FILES
+#       AX_THOR_DISABLE_TEST_REQUIREING_POSTGRESS_AUTHENTICATION
+#       AX_THOR_DISABLE_TEST_REQUIREING_MONGO_QUERY
+#
+#       == Old Need to verify usability
 #       AX_THOR_CHECK_DISABLE_TIMEGM
 #       AX_THOR_CHECK_DISABLE_MODTEST
 #
@@ -56,9 +62,9 @@
 #
 # Check if the DB is up and running and we can accesses it:
 #       AX_THOR_SERVICE_AVAILABLE_MYSQL
-#       AX_THOR_SERVICE_AVAILABLE_MONGO],
-#       AX_THOR_CHECK_SMARTY_AVAILABLE],
-
+#       AX_THOR_SERVICE_AVAILABLE_POSTGRESS
+#       AX_THOR_SERVICE_AVAILABLE_MONGO
+#       AX_THOR_CHECK_SMARTY_AVAILABLE
 
 
 ###################################################################################################
@@ -396,10 +402,16 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_FIX_GIT_SYMLINKS_WINDOWS],
     echo "Checking Windows Symbolic Links: ${UNAME}"
     AS_IF([test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
     [
-        echo "    Fixing"
-        git config --local core.symlinks true
-        find src/ -type f | xargs -I^ git restore --source=HEAD ^
-        echo "    Fixing DONE"
+        AS_IF(
+            [test ! -e .windows.fix],
+            [
+                echo "    Fixing"
+                git config --local core.symlinks true
+                find src/ -type f | xargs -I^ git restore --source=HEAD ^
+                echo "    Fixing DONE"
+                touch .windows.fix
+            ]
+        )
     ],[
         echo "    Not Windows"
     ])
@@ -412,33 +424,46 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_FIX_GIT_SYMLINKS_WINDOWS],
 
 AC_DEFUN([AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST],
 [
+    dnl 1: =>  configure command line argument:  --with-$1-root=
+    dnl 2: =>  underscore version of $1 to be used in variables
+    dnl 3: =>  Name of package. We will define HAVE_$3 if it exists for Makefiles
+    dnl 4: =>  Header file we should check for.
+    dnl 5: =>  Is this flag optional
+    dnl 6: =>  Error Msg
+
     AC_ARG_WITH(
-        [$1root],
-        AS_HELP_STRING([--with-$1root=<location>], [Directory of $2_ROOT])
+        [$1-root],
+        AS_HELP_STRING([--with-$1-root=<location>], [Directory of $3 include folder: the folder that has the include file])
     )
 
-    INCLUDE_DIR="-I ${with_$1root}/include"
+    INCLUDE_DIR="-I${with_$2_root}"
     AS_IF(
-        [test "x${with_$1root}" == "x"],
-        [INCLUDE_DIR="-I${DefaultLinkDir}/include"]
+        [test "x${with_$2_root}" == "x"],
+        [INCLUDE_DIR="-I${DefaultLinkDir}"]
     )
 
     ORIG_CXXFLAGS="${CXXFLAGS}"
     CXXFLAGS="${CXXFLAGS} ${CXX_STD_FLAG} ${INCLUDE_DIR}"
 
     AC_CHECK_HEADER(
-        [$3],
+        [$4],
         [
             AS_IF(
-                [test "x${with_$1root}" != "x"],
+                [test "x${with_$2_root}" != "x"],
                 [
-                    AC_DEFINE([HAVE_$2], 1, [We have found $2 package])
-                    AC_SUBST([$1_ROOT_DIR], [${with_$1root}])
-                    subconfigure="${subconfigure} --with-$1root=${with_$1root}"
+                    AC_DEFINE([HAVE_$3], 1, [We have found $3 package])
+                    $2_defined=1
+                    AC_SUBST([$3_ROOT_DIR], [${with_$2_root}])
+                    subconfigure="${subconfigure} --with-$1-root=${with_$2_root}"
                 ]
             )
         ],
-        [AC_MSG_ERROR([$4])]
+        [
+            AS_IF(
+                [test "$5" == "1"],
+                [AC_MSG_ERROR([$6])]
+            )
+        ]
     )
 
     CXXFLAGS="${ORIG_CXXFLAGS}"
@@ -447,76 +472,82 @@ AC_DEFUN([AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST],
 AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND],
 [
     AS_IF(
-        [test "x${with_$1root}" != "x"],
+        [test "x${with_$2_root}" != "x"],
         [
-            AC_DEFINE([HAVE_$6], 1, [We have found package $2])
-            AC_SUBST([$7_ROOT_DIR], [${with_$1root}])
-            subconfigure="${subconfigure} --with-$1root=${with_$1root}"
+            AC_DEFINE([HAVE_$7], 1, [We have found package $3])
+            AC_SUBST([$8_ROOT_DIR], [${with_$2_root}])
+            subconfigure="${subconfigure} --with-$1-root=${with_$2_root}"
         ]
     )
-    echo "Setting: $7_ROOT_LIB TO $5"
-    AC_SUBST([$7_ROOT_LIB], ["$5"])
+    echo "Setting: $8_ROOT_LIB TO $6"
+    AC_SUBST([$8_ROOT_LIB], ["$6"])
 ])
 
 AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
 [
-    dnl 1: =>  configure command line argument:  --with-$1root=
-    dnl 2: =>  Human Readable Name. Used in strings to describe package.
-    dnl 3: =>  Library we are checking for existance
-    dnl 4: =>  Symbol we are checking for in library
-    dnl 5: =>  The library (or list of libraries we will link against)
+    dnl 1: =>  configure command line argument:  --with-$1-root=
+    dnl 2: =>  underscore version of $1 to be used in variables
+    dnl 3: =>  Human Readable Name. Used in strings to describe package.
+    dnl 4: =>  Library we are checking for existance
+    dnl 5: =>  Symbol we are checking for in library
+    dnl 6: =>  The library (or list of libraries we will link against)
     dnl         Note (not the lib or -l or extension).
     dnl         eg. Fro Crypto:  "crypto ssl"  => will link against -lcrypto -lssl
-    dnl 6: =>  HAVE_$6 macro defined for source.
-    dnl 7: =>  Make Macro: $7_ROOT_DIR and $7_ROOT_LIB
-    dnl         Should be the same as one of the values in $5
-    dnl 8:      Name of standard checkout directory (Used for Thor Tools)
-    dnl 9: =>  Extra Error Message.
+    dnl 7: =>  HAVE_$7 macro defined for source.
+    dnl 8: =>  Make Macro: $8_ROOT_DIR and $8_ROOT_LIB
+    dnl         Should be the same as one of the values in $6
+    dnl 9:     Name of standard checkout directory (Used for Thor Tools)
+    dnl 10: => Extra Error Message.
     dnl
     dnl Note:
     dnl           eg:
     dnl               crypto_ROOT_DIR=/opt/homebrew/Cellar/@3/v1.1/
     dnl               crypto_ROOT_LIB="crypto ssl"
     AC_ARG_WITH(
-        [$1root],
-        AS_HELP_STRING([--with-$1root=<location>], [Define the root directory of package $2])
+        [$1-root],
+        AS_HELP_STRING([--with-$1-root=<location>], [Define the root directory of package $3])
     )
 
-    LIBRARY_DIR="-L ${with_$1root}/lib"
+    LIBRARY_DIR="-L ${with_$2_root}/lib"
     AS_IF(
-        [test "x${with_$1root}" == "x"],
+        [test "x${with_$2_root}" == "x"],
         [LIBRARY_DIR="-L ${DefaultLinkDir}/lib"]
     )
 
-    ORIG_LDFLAGS="${LDFLAGS}"
-    LDFLAGS="$LDFLAGS ${LIBRARY_DIR}"
-
-    echo "Building: $8"
-    echo "Mark:     $BUILDING_$8"
-    echo "Checking"
     AS_IF(
-        [test "x$BUILDING_$8" == "x1" ],
+        [test "x${$2_header_only_defined}" == "x"],
         [
-            AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9])
-        ],
-        [
-            AC_CHECK_LIB(
-                [$3],
-                [$4],
+            ORIG_LDFLAGS="${LDFLAGS}"
+            LDFLAGS="$LDFLAGS ${LIBRARY_DIR}"
+
+            echo "Building: $9"
+            echo "Mark:     $BUILDING_$9"
+            echo "Checking"
+            AS_IF(
+                [test "x$BUILDING_$9" == "x1" ],
                 [
-                    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9])
+                    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9], [$10])
                 ],
                 [
-                    echo "FAIL: Using: >${with_$1root}<"
-                    AC_MSG_ERROR([$9])
-                    echo "FAIL DONE"
+                    AC_CHECK_LIB(
+                        [$4],
+                        [$5],
+                        [
+                            AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9], [$10])
+                        ],
+                        [
+                            echo "FAIL: Using: >${with_$2_root}<"
+                            AC_MSG_ERROR([$10])
+                            echo "FAIL DONE"
+                        ]
+                    )
                 ]
             )
+            echo "Checking DONE"
+
+            LDFLAGS="${ORIG_LDFLAGS}"
         ]
     )
-    echo "Checking DONE"
-
-    LDFLAGS="${ORIG_LDFLAGS}"
 ])
 ###################################################################################################
 
@@ -600,6 +631,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_CRYPTO],
 [
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
         [crypto],
+        [crypto],
         [CRYPTO],
         [crypto], [SHA1_Init],
         [ssl crypto],
@@ -614,7 +646,7 @@ Error: Could not find libcrypto
         and define the crypto root directory to configuration.
 
             brew install openssl
-            ./configure --with-cryptoroot=/usr/local/Cellar/openssl/1.0.2j/
+            ./configure --with-crypto-root=/usr/local/Cellar/openssl/1.0.2j/
 
         On Linux you will need to install openssl
 
@@ -629,9 +661,11 @@ Error: Could not find libcrypto
 AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
 [
     AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST(
-        [magicenum],
-        [MagicEnum],
+        [magicenum-header-only],
+        [magicenum_header_only],
+        [MagicEnumHeaderOnly],
         [magic_enum.hpp],
+        [1],
         [
 Could not find the header file <magic-enum.hpp>.
 You can install this with
@@ -639,7 +673,7 @@ You can install this with
     brew install magic_enum
 
 Alternately if you have manually installed magic_enum you can specify its location with
-    --with-magicenumroot=<location of magic_enum installation>
+    --with-magicenum-root=<location of magic_enum installation>
 
             ])
         ]
@@ -703,6 +737,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_YAML],
 [
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
         [yaml],
+        [yaml],
         [YAML],
         [yaml], [yaml_parser_initialize],
         [yaml],
@@ -716,7 +751,7 @@ You can solve this by installing libyaml
     see http://pyyaml.org/wiki/LibYAML
 
 Alternately specify install location with:
-    --with-yamlroot=<location of yaml installation>
+    --with-yaml-root=<location of yaml installation>
         ]
 
     )
@@ -725,6 +760,7 @@ Alternately specify install location with:
 AC_DEFUN([AX_THOR_CHECK_USE_SNAPPY],
 [
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [snappy],
         [snappy],
         [SNAPPY],
         [snappy], [snappy_compress],
@@ -739,15 +775,37 @@ You can solve this by installing libsnappy
     brew install snappy
 
 Alternately specify install location with:
-    --with-snappyroot=<location of snappy installation>
+    --with-snappy-root=<location of snappy installation>
         ]
 
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE_HEADER_ONLY],
+[
+    AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST(
+        [thorserialize-header-only],
+        [thorserialize_header_only],
+        [ThorSerializeHeaderOnly],
+        [ThorSerialize/ThorsSerializerUtil.h],
+        [0],
+        [
+Could not find the header file <ThorSerialize/ThorsSerializerUtil.h>
+
+    You can install this with:
+
+        git clone --single-branch --branch header-only https://github.com/Loki-Astari/ThorsSerializer.git <Location>
+
+        ./configure --with-thorserialize-header-only-root=<Location>
+
+        ]
     )
 ])
 
 AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
 [
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [thorserialize],
         [thorserialize],
         [Thors Serializer],
         [ThorSerialize17], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv],
@@ -762,7 +820,7 @@ You can solve this by installing Thors Serializer
     brew install thors-serializer
 
 Alternately specify install location with:
-    --with-thorserializeroot=<location of snappy installation>
+    --with-thorserialize-root=<location of snappy installation>
         ]
 
     )
@@ -785,6 +843,75 @@ Error: Could not find libsnappy
         sudo apt-get install libsnappy-dev
 
             ])
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_DISABLE_TEST],
+[
+    AC_ARG_ENABLE(
+        [test-$1],
+        AS_HELP_STRING([--disable-test-$1], [$5])
+    )
+
+    AS_IF(
+        [test "x${enable_test_$2}" == "xno"],
+        [
+            AC_DEFINE([$3], [1], [$4])
+            subconfigure="${subconfigure} --disable-test-$1";
+        ],
+        [
+            AC_DEFINE([$3], [0], [$4])
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_LOCK_FILES],
+[
+    AX_THOR_DISABLE_TEST(
+        [with-locked-file],
+        [with_locked_file],
+        [THOR_DISABLE_TEST_WITH_LOCKED_FILES],
+        [Disable test that require files to be locked],
+        [
+Windows does not provide the same locking capabilities as Linux.
+Thus during testing when we try and lock files, it does not work, so that an attempt to open them would fail.
+Unfortunately we can't lock the files and thus the test pass.
+Don't run these tests on Windows.
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_POSTGRESS_AUTHENTICATION],
+[
+    AX_THOR_DISABLE_TEST(
+        [with-postgress-auth],
+        [with_postgress_auth],
+        [THOR_DISABLE_TEST_WITH_POSTGRESS_AUTH],
+        [Disable test that require Authentication with Postgress server],
+        [
+The postgress functionality is still nacent (not much work completed here).
+As a result the authentication protocol is not working and so no tests that connect to the server can complete
+unless authentication has been completely turned off.
+
+Disable tests on Postgress where authentication required.
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_MONGO_QUERY],
+[
+    AX_THOR_DISABLE_TEST(
+        [with-mongo-query],
+        [with_mongo_query],
+        [THOR_DISABLE_TEST_WITH_MONGO_QUERY],
+        [Disable test that require the Mongo server to support the OP_QUERY command],
+        [
+There are three versions of the mongo wire protocol.
+
+Newer versions of Mongo do not support the older protocols.
+This flags disables tests that use the older wire protocol and only performs tests that use
+the now standard OP_MSG protocol.
         ]
     )
 ])
@@ -1208,6 +1335,23 @@ NOTE:
 
 AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
 [
+    dnl 1: =>   Name used for Macros:               ALL CAPS
+    dnl 2: =>   Name for flags used by configure.   Camel Case
+    dnl 3: =>   Application name                    Command line tools application
+    dnl 4: =>   File name extension for data.
+    dnl 5: =>   Flags preceding host
+    dnl 6: =>   statement to execute on 3
+    dnl 7: =>   Value returned by 6
+    dnl 8: =>   How many lines from the end of the output is the result.
+    dnl 9: =>   Command to extract version from the command line tool 3
+    dnl 10: =>  What Line the version info is on.
+    dnl 11: =>  What column the version info is on.
+    dnl 12: =>  After how many dots is the major version
+    dnl 13: =>  Argument to specify user.
+    dnl 14: =>  Argument to specify password
+    dnl 15: =>  Environment variable to set
+    dnl 16: =>  NOT USED. But needed so 14 is not the last argument.
+
     AC_ARG_WITH([Test$2Host], AS_HELP_STRING([--with-Test$2Host=<Host>], [Use an alternative $3 host for testing with Default(127.0.0.1)]))
     AC_ARG_WITH([Test$2User], AS_HELP_STRING([--with-Test$2User=<User>], [Use an alternative $3 user for testing with (test)]))
     AC_ARG_WITH([Test$2Pass], AS_HELP_STRING([--with-Test$2Pass=<Pass>], [Use an alternative $3 password for testing with (testPassword)]))
@@ -1230,8 +1374,8 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
 
     echo "COMMAND: >$6<"
     echo "DB LINK: >$3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db<" | sed -e 's/[Pp]ass/aasp/g'
-    echo "$6" | $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
-    test_connect=`echo "$6" | $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1 | sed -e 's/test>//' | xargs`
+    echo "$6" | $15 $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
+    test_connect=`echo "$6" | $15 $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1 | sed -e 's/test>//' | xargs`
     echo "RESULT:  >${test_connect}<"
     AS_IF([test "x$test_connect" != "x$7"],
     [
@@ -1250,8 +1394,23 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
             ])
     ])
 
-    version=`$3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
+    version=`$15 $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
     AC_DEFINE_UNQUOTED([$1_MAJOR_VERSION], [${version}], ["Get $3 version into #define. That way we can turn off some tests"])
+])
+
+AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_POSTGRESS],
+[
+    AX_THOR_SERVICE_AVAILABLE_CHECK(
+        [POSTGRESS], [Postgress], [psql], [sql],
+        [-h],
+        [select 3+4], [7],
+        [3],
+        [--version],
+        [2], [3], [1],
+        [--username=], [--variable=NAME=],
+        [PGPASSWORD=$psql_test_pw],
+        [Word]
+    )
 ])
 
 AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_MYSQL],
@@ -1263,7 +1422,9 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_MYSQL],
         [1],
         [-e 'SHOW VARIABLES LIKE "innodb_version"'],
         [1], [2], [1],
-        [--user=], [--password=], [Word]
+        [--user=], [--password=],
+        [],
+        [Word]
     )
 ])
 
@@ -1276,7 +1437,9 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_MONGO],
         [2],
         [--eval 'db.version()'],
         [1], [1], [1],
-        [--username ], [--password ], [Word]
+        [--username ], [--password ],
+        [],
+        [Word]
     )
 ])
 

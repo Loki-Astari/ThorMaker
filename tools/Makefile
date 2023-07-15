@@ -159,7 +159,7 @@ endif
 
 LINE_WIDTH			?= 180
 COVERAGE_REQUIRED	?= 80
-COVERAGE_REQUIRED_TEST = $(if $(filter-out MINGW64_NT, $(PLATFORM)), $(COVERAGE_REQUIRED), 0)
+COVERAGE_REQUIRED_TEST = $(if $(filter-out MSYS_NT, $(filter-out MINGW64_NT, $(PLATFORM))), $(COVERAGE_REQUIRED), 0)
 
 #
 # Look in Platform.Makefile
@@ -169,6 +169,7 @@ YACC			?= bison
 LEX				?= flex
 GPERF			?= gperf --ignore-case
 CP				?= cp
+LNSOFT			?= ln -f -s
 MKDIR			?= mkdir
 RMDIR			?= rmdir
 
@@ -221,13 +222,14 @@ DEFER_OBJ					= $(foreach dir, $(DEFER_OBJDIR), $(wildcard $(dir)/*.o))
 
 NOTHING						:=
 SPACE						:=$(NOTHING) $(NOTHING)
+CXX_EXTERN_HEADER_ONLY		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)HeaderOnly_ROOT_DIR), -I$($(lib)HeaderOnly_ROOT_DIR)))
 LDLIBS_EXTERN_LIB_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR), -L$($(lib)_ROOT_DIR)/lib))
 LDLIBS_EXTERN_INC_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR), -I$($(lib)_ROOT_DIR)/include))
 LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(foreach alib, $($(lib)_ROOT_LIB), -l$(alib)$(if $($(lib)_ISTHOR),$(BUILD_EXTENSION))))
 LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);)
 LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE) $(EXLDLIBS)
-CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
+CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(CXX_EXTERN_HEADER_ONLY) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
 
@@ -325,7 +327,8 @@ PREFIX_BIN					?=	$(PREFIX)/bin
 PREFIX_LIB					?=	$(PREFIX)/lib
 PREFIX_INC					?=	$(PREFIX)/include
 PREFIX_INC3RD				?=	$(THORSANVIL_ROOT)/build/include3rd
-BUILD_EXTENSION				=	$(CXXSTDVER)$(BUILD_EXTENSION_TYPE_$(TARGET_MODE))
+BUILD_SUFFIX				=	$(BUILD_EXTENSION_TYPE_$(TARGET_MODE))
+BUILD_EXTENSION				=	$(CXXSTDVER)$(BUILD_SUFFIX)
 BUILD_EXTENSION_TYPE_debug		=	D
 BUILD_EXTENSION_TYPE_coverage	=	D
 BUILD_EXTENSION_TYPE_profile	=	P

@@ -23,6 +23,7 @@ function tidyProject {
     rm -rf ${prefix}/${package}/coverage
     rm -rf ${prefix}/${package}/report
     rm -rf ${prefix}/${package}/makedependency
+    rm -rf ${prefix}/${package}/vera_exclusions
     echo
 }
 
