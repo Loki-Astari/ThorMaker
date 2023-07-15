@@ -157,7 +157,7 @@ PREFIX_MAN=${mandir}
 PREFIX_CONFIG=${prefix}/etc
 endif
 
-LINE_WIDTH			?= 180
+LINE_WIDTH			?= 110
 COVERAGE_REQUIRED	?= 80
 COVERAGE_REQUIRED_TEST = $(if $(filter-out MSYS_NT, $(filter-out MINGW64_NT, $(PLATFORM))), $(COVERAGE_REQUIRED), 0)
 
