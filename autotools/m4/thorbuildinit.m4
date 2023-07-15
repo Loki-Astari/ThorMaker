@@ -1255,7 +1255,7 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
 [
     dnl 1: =>   Name used for Macros:               ALL CAPS
     dnl 2: =>   Name for flags used by configure.   Camel Case
-    dnl 3: =>   Application name                    application
+    dnl 3: =>   Default application name            Command line tools application
     dnl 4: =>   File name extension for data.
     dnl 5: =>   Flags preceding host
     dnl 6: =>   statement to execute on 3
@@ -1293,10 +1293,15 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
 
     cli_tool=$3
 
-    AC_ARG_WITH([$3-tool], AS_HELP_STRING([--with-$3-tool=<alternative cli>], [The default tool name is $3. But this can be overridden with this flag]))
+    AC_ARG_WITH(
+        [$3-tool],
+        AS_HELP_STRING([--with-$3-tool=<alternative cli>], [The default tool name is $3. But this can be overridden with this flag])
+    )
 
-    AS_IF([test "x${with_$3_tool}" != "x"], [cli_tool=${with_$3_tool}])
-
+    AS_IF(
+        [test "x${with_$3_tool}" != "x"],
+        [cli_tool=${with_$3_tool}]
+    )
 
     echo "COMMAND: >$6<"
     echo "DB LINK: >${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db<" | sed -e 's/[Pp]ass/aasp/g'
