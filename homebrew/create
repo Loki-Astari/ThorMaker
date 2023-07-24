@@ -1,0 +1,66 @@
+#!/bin/bash
+
+
+function clone {
+
+    dst=$1
+    package=$(git remote -v | grep origin | awk '{print $2}' | head -1)
+    git clone --single-branch --branch master ${package} ${dst}
+    pushd ${dst}
+    git submodule update --init --recursive
+    popd
+}
+
+function fixModules {
+
+    dst=$1
+    pushd ${dst}
+
+    for mods in $(find . -name .gitmodules); do
+        sed -e 's#git@github.com:#https://github.com/#' ${mods} > /tmp/t1
+        mv /tmp/t1 ${mods}
+    done
+
+    popd
+}
+
+function pushToBranch {
+
+    branch=$1
+
+    subRepos=$(git status | awk '/\(modified content\)/ {print $2}')
+    echo "Found: >${subRepos}<"
+
+    for sub in ${subRepos}; do
+        echo "Pushing: ${sub}"
+        pushd ${sub}
+        pushToBranch ${branch}
+        popd
+        echo "Popping: ${sub}"
+    done
+
+    git branch ${branch}
+    git push origin +${branch}
+    git branch -D ${branch}
+    git checkout ${branch}
+
+    git commit -a -m "Setup for Homebrew"
+    git push
+}
+
+
+function pushToBranchRecursive {
+
+    dst=$1
+    branch=$2
+
+    pushd $1
+    pushToBranch $2
+    popd
+}
+
+dst=/tmp/hb
+rm -rf ${dst}
+clone ${dst}
+fixModules ${dst}
+pushToBranchRecursive ${dst} HB
