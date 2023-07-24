@@ -65,6 +65,11 @@ function convertPackageToHeaderOnly {
     echo "        Converting Config"
     awk "${awkScriptToConvertConfigFileToHeader}" ${directory}Config.h > ${packageDst}/${directory}Config.h
 
+    echo "        Vera Exclusions"
+    if [[ -e vera_exclusions ]]; then
+	    cp vera_exclusions ${packageDst}/vera_exclusions
+    fi
+
     if [[ -e test ]]; then
         echo "        Copying test files and data"
         cp -R test ${prefix}/${package}

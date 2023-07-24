@@ -167,14 +167,18 @@ install_defer_obj:		$(INSTALL_DEFER_OBJ)
 
 $(PREFIX_BIN)/%$(BUILD_EXTENSION):				$(TARGET_MODE)/%.app		| $(PREFIX_BIN).Dir
 	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
+	@$(LNSOFT) $(PREFIX_BIN)/$*$(BUILD_EXTENSION) $(PREFIX_BIN)/$*$(BUILD_SUFFIX)
 	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 
 $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).$(SO):		$(TARGET_MODE)/lib%.$(SO)	| $(PREFIX_LIB)$(PREFIX_LIB_SUB).Dir
 	@$(CP) $(TARGET_MODE)/lib$*.$(SO) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO)
+	@$(LNSOFT) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).$(SO)
+
 	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 
 $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).a:			$(TARGET_MODE)/lib%.a		| $(PREFIX_LIB)$(PREFIX_LIB_SUB).Dir
 	@$(CP) $(TARGET_MODE)/lib$*.a $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a
+	@$(LNSOFT) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).a
 	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 
 $(PREFIX_INC)/$(LIBBASENAME)/%:	%											| $(PREFIX_INC)/$(LIBBASENAME).Dir
@@ -197,14 +201,23 @@ $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/$(TARGET_MODE)/%:	%								| $(PREFIX_DEFER_OB
 uninstall_app_%:
 	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 	@$(RM) $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
+	@if [[ "$(shell readlink $(PREFIX_BIN)/$*$(BUILD_SUFFIX))" == "$(PREFIX_BIN)/$*$(BUILD_EXTENSION)" ]]; then \
+		$(RM) $(PREFIX_BIN)/$*$(BUILD_SUFFIX); \
+	fi
 
 uninstall_shared_lib_%:
 	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 	@$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO)
+	@if [[ "$(shell readlink $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).$(SO))" == "$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO)" ]]; then \
+		$(RM) $(PREFIX_BIN)/$*$(BUILD_SUFFIX); \
+	fi
 
 uninstall_static_lib_%:
 	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 	@$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a
+	@if [[ "$(shell readlink $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).a)" == "$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a" ]]; then \
+		$(RM) $(PREFIX_BIN)/$*$(BUILD_SUFFIX); \
+	fi
 
 uninstall_head_%:
 	@$(ECHO) $(call paragraph, Clean Header $*)

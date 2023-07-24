@@ -74,8 +74,9 @@ run_unit_test:
 	@$(ECHO) $(call section_title,Running Unit Tests)
 	-@$(RM) coverage/*gcda coverage/*gcov test/coverage/*gcda test/coverage/*gcov
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) test/coverage/unittest.app --gtest_filter=$(TESTNAME)"
-	@($(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) || \
-						($(ECHO) "$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) lldb test/coverage/unittest.app" && exit 1)) | tee report/test
+	@$(ECHO) "To easily debug use:"
+	@$(ECHO) "     $(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) lldb test/coverage/unittest.app"
+	@$(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.app --gtest_color=yes --gtest_filter=$(TESTNAME) | tee report/test; exit $${PIPESTATUS[0]}
 
 
 #
