@@ -227,8 +227,6 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 
     AX_THOR_FUNC_BUILD_LOCAL_DIR
 
-    AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS
-
     AX_THOR_CHECK_APP_COV
 
     subconfigure=""
@@ -241,6 +239,7 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 
     AX_THOR_FUNC_LANG_FLAG
 
+    AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD_LOCAL_DIR],
@@ -267,7 +266,8 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS],
         ])
     fi
     pushd build/third
-    ./setup "$CXX" || AC_MSG_ERROR([Failed to set up the test utilities])
+    ./setup "${CXX}  ${CXX_STD_FLAG}" || AC_MSG_ERROR([Failed to set up the test utilities])
+    exit 1
     popd
 ])
 
