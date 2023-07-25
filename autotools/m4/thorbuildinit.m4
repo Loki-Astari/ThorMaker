@@ -1194,7 +1194,7 @@ The coverage tool "${COV}" does not seem to be working.
 AC_DEFUN([AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION],
 [
     CXXFLAGS_SAVE=$CXXFLAGS
-    CXXFLAGS+=" -std=c++11 ${BOOST_CPPFLAGS}"
+    CXXFLAGS+=" ${CXX_STD_FLAG} ${BOOST_CPPFLAGS}"
 
     thor_boost_coroutine_versoin=no
     AC_MSG_NOTICE([Checking Boost CoRoutine Version])
