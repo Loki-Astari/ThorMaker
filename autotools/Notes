@@ -199,6 +199,15 @@ fi
 echo "Configuring"
 rm configure
 autoreconf --install
+cat - configure << SUBMODULE_UPDATE > config.tmp
+#!/bin/sh
+
+if git submodule status | grep build | grep --quiet '^-'; then
+    git submodule update --init build
+fi
+
+SUBMODULE_UPDATE
+mv config.tmp configure
 chmod +x configure
 echo "" > Makefile.extra.in
 rm -f configure~
