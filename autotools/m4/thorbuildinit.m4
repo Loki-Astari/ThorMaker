@@ -267,7 +267,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS],
     fi
     pushd build/third
     ./setup "${CXX}  ${CXX_STD_FLAG}" || AC_MSG_ERROR([Failed to set up the test utilities])
-    exit 1
     popd
 ])
 

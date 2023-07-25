@@ -70,7 +70,7 @@ coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMoc
 	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
-run_unit_test:
+run_unit_test: $(PRETEST)
 	@$(ECHO) $(call section_title,Running Unit Tests)
 	-@$(RM) coverage/*gcda coverage/*gcov test/coverage/*gcda test/coverage/*gcov
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" test/coverage/unittest.app --gtest_filter=$(TESTNAME)"
