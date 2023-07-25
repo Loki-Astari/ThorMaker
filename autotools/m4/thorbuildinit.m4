@@ -29,6 +29,10 @@
 #           LDFLAGS     += $(if $(sdl_ROOT_DIR), -L$(sdl_ROOT_DIR)/lib,)
 #           CXXFLAGS    += $(if $(sdl_ROOT_DIR), -I$(sdl_ROOT_DIR)/include)
 #
+#
+#   Features:
+#       AX_THOR_FEATURE_HEADER_ONLY_VARIANT
+#
 #   Checks Provided:
 #       AX_THOR_CHECK_USE_SDL
 #       AX_THOR_CHECK_USE_CRYPTO
@@ -236,7 +240,6 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
     AX_THOR_FUNC_BUILD_VERA_INIT
     AX_THOR_FUNC_BUILD_LIB_SELECT
     AX_THOR_FUNC_BUILD_COLOUR_MODE
-    AX_THOR_FUNC_BUILD_HEADER_ONLY_VARIABLES
 
     AC_CONFIG_SRCDIR([$3])
 
@@ -360,12 +363,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
     AC_SUBST([DARK_MODE], [${DARK_MODE}])
 ])
 
-AC_DEFUN([AX_THOR_FUNC_BUILD_HEADER_ONLY_VARIABLES],
-[
-    AC_DEFINE([HEADER_ONLY], [0], [Enable to use header only libraries])
-    AC_DEFINE([HEADER_ONLY_INCLUDE], [], [For header only convery to inline])
-])
-
 AC_DEFUN([AX_THOR_FUNC_BUILD_THIRD_PARTY_LIBS],
 [
     export cwd=$(pwd)
@@ -439,7 +436,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST],
     INCLUDE_DIR="-I${with_$2_root}"
     AS_IF(
         [test "x${with_$2_root}" == "x"],
-        [INCLUDE_DIR="-I${DefaultLinkDir}"]
+        [INCLUDE_DIR="-I${DefaultLinkDir}/include"]
     )
 
     ORIG_CXXFLAGS="${CXXFLAGS}"
@@ -549,6 +546,17 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
         ]
     )
 ])
+###################################################################################################
+
+
+AC_DEFUN([AX_THOR_FEATURE_HEADER_ONLY_VARIANT],
+[
+    AC_DEFINE([$1_HEADER_ONLY], [0], [Enable to use header only libraries])
+    AC_DEFINE([$1_HEADER_ONLY_INCLUDE], [], [For header only convert to inline])
+])
+
+
+
 ###################################################################################################
 
 
