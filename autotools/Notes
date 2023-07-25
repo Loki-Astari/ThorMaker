@@ -16,47 +16,19 @@ AC_PREREQ([2.65])
 
 AC_CONFIG_MACRO_DIR([build/autotools/m4])
 AC_CONFIG_AUX_DIR([build/autotools/build])
-AX_THOR_FUNC_BUILD
 
-
-AC_CONFIG_SRCDIR([src/${BaseName}/${BaseName}.cpp])
-
-# Find the C++ Copiler
-# The minimumm requirements.
-AC_PROG_CXX
-AX_CHECK_COMPILE_FLAG([-ansi], [AC_SUBST([CXXFLAGS], ["$CXXFLAGS -ansi"])])
-# Check what version of the C++ language is supported
-AX_THOR_FUNC_LANG_FLAG(17)
-
-# Find the code coverage tool.
-# All the testing will depend on this.
-AX_THOR_PROG_COV
-
-# Add support for shared libraries.
-LT_INIT
+AX_THOR_FUNC_INIT_BUILD([${BaseName}], [src/${BaseName}/${BaseName}.cpp])
 
 
 #
-# Add your defintions in here.
-# Note there are some predefined macros in build/autotools/m4/
+# Add extra configuration here
+#
 
 
+LT_INIT
 
-# Build all the Makefiles and configuration files.
-# Used by ThorMaker
-# Note: you can push the config file to sub directories in the AC_CONFIG_HEADERS macro (see example)
-# Note: Local Make variables should be placed in Makefile.config.in
-AM_INIT_AUTOMAKE([foreign])
-AH_TOP([
-#ifndef  THORS_${BaseName}_CONFIG_H
-#define  THORS_${BaseName}_CONFIG_H
-])
-AH_BOTTOM([
-#endif
-])
+AX_THOR_FUNC_TERM_BUILD([${BaseName}], [src/${BaseName}/${BaseName}Config.h])
 
-AC_CONFIG_HEADERS([config.h ${ConfFiles}])
-AC_CONFIG_FILES([Makefile.extra Makefile.config:build/autotools/build/Makefile.config.in:Makefile.config.in])
 AC_OUTPUT
 CONFIGUREAC
 }
@@ -111,6 +83,7 @@ addGitIgnore () {
 *.o
 *.lex.cpp
 .*.swp
+*.gcov
 
 unittest
 
@@ -226,15 +199,6 @@ fi
 echo "Configuring"
 rm configure
 autoreconf --install
-cat - configure << SUBMODULE_UPDATE > config.tmp
-#!/bin/sh
-
-if git submodule status | grep --quiet '^-'; then
-    git submodule update --init --recursive
-fi
-
-SUBMODULE_UPDATE
-mv config.tmp configure
 chmod +x configure
 echo "" > Makefile.extra.in
 rm -f configure~
