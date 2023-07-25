@@ -80,23 +80,21 @@ AC_DEFUN([AX_THOR_FUNC_LANG_FLAG],
     AX_THOR_FUNC_LANG_CHECK_FLAGS()
 
     AC_ARG_WITH(
-        [standard],
-        AS_HELP_STRING([--with-standard=<version>], [Use the specified version <version> of the C++ standard])
+        [standard-version],
+        AS_HELP_STRING([--with-standard-version=<version>], [Use the specified version <version> of the C++ standard. Default 17])
     )
 
-    minLangFeature=$1
-    askedLangFeature=${minLangFeature}
+    askedLangFeature=17
     AS_IF(
-        [test "x${with_standard}" != "x"],
+        [test "x${with_standard_version}" != "x"],
         [
-            askedLangFeature=${with_standard}
+            askedLangFeature=${with_standard_version}
+            subconfigure="${subconfigure} --with-standard-version=${with_standard_version}"
         ]
     )
 
-    AS_IF([test "$2" = ""], [maxLangFeature=$1], [maxLangFeature=$askedLangFeature])
+    minLangFeature=3
     AS_IF([test $minLangFeature -gt $askedLangFeature], AC_MSG_ERROR([Invalid Language requested: ${askedLangFeature}. Minimum: ${minLangFeature}]))
-    AS_IF([test $askedLangFeature -gt $maxLangFeature], AC_MSG_ERROR([Invalid Language requested: ${askedLangFeature}. Maximum: ${maxLangFeature}]))
-    AS_IF([test $minLangFeature -gt $maxLangFeature],   AC_MSG_ERROR([Invalid Language max: ${maxLangFeature} can not be less ${minLangFeature}]))
 
     CXXMaxLanguage=03
     CXXExpLanguage=03
@@ -104,15 +102,12 @@ AC_DEFUN([AX_THOR_FUNC_LANG_FLAG],
     AX_CHECK_COMPILE_FLAG([-std=c++14], [AC_SUBST([CXXMaxLanguage],14) AC_SUBST([StdFlag14],[-std=c++14])])
     AX_CHECK_COMPILE_FLAG([-std=c++17], [AC_SUBST([CXXMaxLanguage],17) AC_SUBST([StdFlag17],[-std=c++17])])
     AX_CHECK_COMPILE_FLAG([-std=c++20], [AC_SUBST([CXXMaxLanguage],20) AC_SUBST([StdFlag20],[-std=c++20])])
-    AX_CHECK_COMPILE_FLAG([-std=c++23], [AC_SUBST([CXXMaxLanguage],20) AC_SUBST([StdFlag20],[-std=c++20])])
+    AX_CHECK_COMPILE_FLAG([-std=c++23], [AC_SUBST([CXXMaxLanguage],23) AC_SUBST([StdFlag23],[-std=c++23])])
     AX_CHECK_COMPILE_FLAG([-std=c++1x], [AC_SUBST([CXXExpLanguage],11) AC_SUBST([ExpFlag11],[-std=c++1x])])
     AX_CHECK_COMPILE_FLAG([-std=c++1y], [AC_SUBST([CXXExpLanguage],14) AC_SUBST([ExpFlag14],[-std=c++1y])])
     AX_CHECK_COMPILE_FLAG([-std=c++1z], [AC_SUBST([CXXExpLanguage],17) AC_SUBST([ExpFlag17],[-std=c++1z])])
     AX_CHECK_COMPILE_FLAG([-std=c++2a], [AC_SUBST([CXXExpLanguage],20) AC_SUBST([ExpFlag20],[-std=c++2a])])
-    AX_CHECK_COMPILE_FLAG([-std=c++2b], [AC_SUBST([CXXExpLanguage],23) AC_SUBST([ExpFlag20],[-std=c++2b])])
-
-    #CXX_STD_FLAG
-    #CXXSTDVER
+    AX_CHECK_COMPILE_FLAG([-std=c++2b], [AC_SUBST([CXXExpLanguage],23) AC_SUBST([ExpFlag23],[-std=c++2b])])
 
     AS_IF(
         [test $askedLangFeature -le $CXXMaxLanguage],
@@ -241,9 +236,9 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
     AX_THOR_FUNC_BUILD_LIB_SELECT
     AX_THOR_FUNC_BUILD_COLOUR_MODE
 
-    AC_CONFIG_SRCDIR([$3])
+    AC_CONFIG_SRCDIR([$2])
 
-    AX_THOR_FUNC_LANG_FLAG([$2])
+    AX_THOR_FUNC_LANG_FLAG
 
 ])
 
