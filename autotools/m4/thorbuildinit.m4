@@ -692,55 +692,36 @@ Alternately if you have manually installed magic_enum you can specify its locati
 
 AC_DEFUN([AX_THOR_CHECK_USE_EVENT],
 [
-    event_ROOT_DIR=""
-    event_ROOT_LIB=""
-    AC_ARG_WITH(
-        [eventroot],
-        AS_HELP_STRING([--with-eventroot=<location>], [Directory of EVENT_ROOT])
-    )
-    if test "${with_eventroot}" == ""; then
-        with_eventroot="${DefaultLinkDir}"
-    fi
-    ORIG_LDFLAGS="${LDFLAGS}"
-    LDFLAGS="$LDFLAGS -L$with_eventroot/lib"
-
-    AC_CHECK_LIB(
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
         [event],
-        [event_dispatch],
+        [event],
+        [Event],
+        [event], [event_dispatch],
+        [event],
+        [EVENT],
+        [event],
+        [NotThor],
         [
-            AC_DEFINE([HAVE_EVENT], 1, [We have found libevent library])
-            event_ROOT_DIR="${with_eventroot}"
-            event_ROOT_LIB="event"
-        ],
-        [
-            AC_MSG_ERROR([
 
 Error: Could not find libevent
 
-You can solve this by installing libevent
-see http://libevent.org/
+    You can solve this by installing libevent
+    see http://libevent.org/
 
-If libevent is not installed in the default location (/usr/local or /opt/homebrew) then you will need to specify its location.
---with-eventroot=<location of event installation>
+    If libevent is not installed in the default location (/usr/local or /opt/homebrew) then you will need to specify its location.
+    --with-event-root=<location of event installation>
 
-                ]
-            )
+
         ]
-    )
 
-    LDFLAGS="${ORIG_LDFLAGS}"
-    AC_SUBST([event_ROOT_DIR], [${event_ROOT_DIR}])
-    AC_SUBST([event_ROOT_LIB], [${event_ROOT_LIB}])
+    )
 ])
 
 AC_DEFUN([AX_THOR_CHECK_USE_BOOST],
 [
-    AC_ARG_WITH(
-        [boost],
-        AS_HELP_STRING([--with-boost=<dir>], [Directory of Boost Headers])
-    )
-    BOOST_CPPFLAGS="-I$with_boost"
-    AC_SUBST([BOOST_CPPFLAGS], [${BOOST_CPPFLAGS}])
+    AX_BOOST_BASE([$1], [$2], [$3])
+    AC_SUBST([BOOST_ROOT_DIR], [${_AX_BOOST_BASE_boost_path}])
+    AC_SUBST([BOOST_ROOT_LIB], [])
 ])
 
 AC_DEFUN([AX_THOR_CHECK_USE_YAML],

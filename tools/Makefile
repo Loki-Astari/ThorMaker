@@ -232,6 +232,7 @@ LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE) $(EXLDLIBS)
 CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(CXX_EXTERN_HEADER_ONLY) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
+LDLIBS_EXTERN_BUILD_FILT	= $(foreach lib, $(1), $(patsubst -l%, %, $(lib)))
 
 GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_SRC)) $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_HEAD))
 

@@ -9,7 +9,7 @@
 TEST_FILES					= $(wildcard test/*.cpp test/*.h test/*.tpp)
 GCOV_LIB					= $(if $(GCOV_OBJ),objectarch)
 COVERAGE_LIB				= UnitTest$(strip $(DEFER_NAME))
-UNITTEST_LINK_LIBS_BULD		= $(if $(HEADER_ONLY), ,$(UNITTEST_LINK_LIBS))
+UNITTEST_LINK_LIBS_BULD		= $(if $(HEADER_ONLY), ,$(LINK_LIBS) $(UNITTEST_LINK_LIBS))
 
 
 ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
