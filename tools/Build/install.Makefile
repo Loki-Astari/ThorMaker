@@ -189,8 +189,8 @@ $(PREFIX_INC)/$(LIBBASENAME)/%:	%											| $(PREFIX_INC)/$(LIBBASENAME).Dir
 $(PREFIX_MAN)/%.man:	man/% | $(INSTALL_MAN_DIR)
 	$(CP) man/$* $(PREFIX_MAN)/$*
 
-$(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a:	coverage/libUnitTest$(DEFER_NAME).a	| $(PREFIX_DEFER_LIB).Dir
-	@$(CP) coverage/libUnitTest$(DEFER_NAME).a $(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a
+$(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a:	$(TARGET_MODE)/libUnitTest$(DEFER_NAME).a	| $(PREFIX_DEFER_LIB).Dir
+	@$(CP) $(TARGET_MODE)/libUnitTest$(DEFER_NAME).a $(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a
 	@$(ECHO) $(call paragraph, Install Defer - $(TARGET_MODE) - libUnitTest$(DEFER_NAME)$(BUILD_EXTENSION).a)
 
 $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/$(TARGET_MODE)/%:	%								| $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/$(TARGET_MODE).Dir
