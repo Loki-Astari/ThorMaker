@@ -817,6 +817,35 @@ Alternately specify install location with:
     )
 ])
 
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_DB],
+[
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [thorsdb],
+        [thorsdb],
+        [Thors DB],
+        [ThorsDB17], [_ZTSN10ThorsAnvil2DB6Access3Lib15ConnectionProxyE],
+        [ThorsDB],
+        [THORSDB],
+        [ThorsDB],
+        [ThorsDB],
+        [
+Error: Could not find libThorsDB17
+
+You can solve this by building ThorsDB
+    > git clone git@github.com:Loki-Astari/ThorsDB.git
+    > cd ThorsDB
+    > make
+    > sudo make install
+
+If you don't install in the default location (/use/local  (or /opt/homebrew on M1 mac))
+Then you can specify the install location with:
+
+    --with-thorsdb-root=<location of snappy installation>
+        ]
+
+    )
+])
+
 AC_DEFUN([AX_THOR_CHECK_USE_SMARTY],
 [
     AC_CHECK_LIB(
@@ -976,6 +1005,10 @@ Error: Could not find one or more of: echo wc awk
 
 AC_DEFUN([AX_THOR_CHECK_USE_STATIC_LOAD],
 [
+    #
+    # This function works in conjunction with the build/tools/Makefile
+    # See the macro: THORSANVIL_STATICLOADALL
+    #
     AX_CHECK_LINK_FLAG(
         [-Wl,-all_load],
         [AC_SUBST([THOR_STATIC_LOAD_FLAG],[-Wl,-all_load])]
