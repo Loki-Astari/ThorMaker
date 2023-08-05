@@ -817,6 +817,35 @@ Alternately specify install location with:
     )
 ])
 
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_DB],
+[
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [thorsdb],
+        [thorsdb],
+        [Thors DB],
+        [ThorsDB17], [_ZTSN10ThorsAnvil2DB6Access3Lib15ConnectionProxyE],
+        [ThorsDB],
+        [THORSDB],
+        [ThorsDB],
+        [ThorsDB],
+        [
+Error: Could not find libThorsDB17
+
+You can solve this by building ThorsDB
+    > git clone git@github.com:Loki-Astari/ThorsDB.git
+    > cd ThorsDB
+    > make
+    > sudo make install
+
+If you don't install in the default location (/use/local  (or /opt/homebrew on M1 mac))
+Then you can specify the install location with:
+
+    --with-thorsdb-root=<location of snappy installation>
+        ]
+
+    )
+])
+
 AC_DEFUN([AX_THOR_CHECK_USE_SMARTY],
 [
     AC_CHECK_LIB(
@@ -976,6 +1005,10 @@ Error: Could not find one or more of: echo wc awk
 
 AC_DEFUN([AX_THOR_CHECK_USE_STATIC_LOAD],
 [
+    #
+    # This function works in conjunction with the build/tools/Makefile
+    # See the macro: THORSANVIL_STATICLOADALL
+    #
     AX_CHECK_LINK_FLAG(
         [-Wl,-all_load],
         [AC_SUBST([THOR_STATIC_LOAD_FLAG],[-Wl,-all_load])]
@@ -988,112 +1021,6 @@ AC_DEFUN([AX_THOR_CHECK_USE_STATIC_LOAD],
         [-Wl,--whole-archive -Wl,--no-whole-archive],
         [AC_SUBST([THOR_STATIC_LOAD_FLAG],[-Wl,--whole-archive])]
         [AC_SUBST([THOR_STATIC_NOLOAD_FLAG],[-Wl,--no-whole-archive])]
-    )
-])
-
-AC_DEFUN([AX_THOR_CHECK_USE_THORSLIB_FOUND],
-[
-    AC_DEFINE([HAVE_Thors$1], 1, [When on code that uses Thors$1 will be compiled.])
-    local_ROOT_DIR="${with_Thors$1root}"
-    local_ROOT_LIB="$3"
-    HAVE_Thors$1=yes
-])
-
-AC_DEFUN([AX_THOR_CHECK_USE_THORSLIB],
-[
-    local_ROOT_DIR=""
-    local_ROOT_LIB=""
-    AC_SUBST(HAVE_Thors$1)
-    AC_ARG_WITH(
-        [Thors$1root],
-        AS_HELP_STRING([--with-Thors$1root=<location>], [Directory of Thors$1_ROOT])
-    )
-    AC_ARG_ENABLE(
-        [Thors$1],
-        AS_HELP_STRING([--disable-Thors$1], [Don't use Thors$1. This means features that use Thors$1 will be disabled.])
-    )
-    AS_IF(
-        flag=enable_Thors$1
-        [test "x${!flag}" != "xno"],
-
-        AC_MSG_NOTICE([Got HERE])
-        AC_MSG_NOTICE([Name: $1])
-        AC_MSG_NOTICE([With: ${with_Thors$1root}])
-        AC_MSG_NOTICE([Building BUILDING_$4 $BUILDING_$4])
-
-        if test "${with_Thors$1root}" == ""; then
-            declare with_Thors$1root="${DefaultLinkDir}"
-        fi
-        ORIG_LDFLAGS="${LDFLAGS}"
-        LDFLAGS="-std=c++17 $LDFLAGS -L${with_Thors$1root}/lib"
-        AC_MSG_NOTICE([LDFLAGS: ${LDFLAGS}])
-        AC_MSG_NOTICE([LIB: $5])
-        AC_MSG_NOTICE([Meth: $6])
-
-        AS_IF(
-            [test "x$BUILDING_$4" == "x1" ],
-            [
-                AX_THOR_CHECK_USE_THORSLIB_FOUND([$1], [$2], [$3])
-            ],
-            [
-        AC_CHECK_LIB(
-            [$5],
-            [$6],
-            [
-                AX_THOR_CHECK_USE_THORSLIB_FOUND([$1], [$2], [$3])
-            ],
-            [
-                AC_MSG_ERROR([
-
-Error: Could not find lib$5
-
-You can solve this by installing lib$3
-    $7
-
-Alternately specify install location with:
-    --with-Thors$1root=<location of Thors$1 installation>
-
-If you do not want to use features that need Thor$1 then it
-can be disabled with:
-    --disable-Thors$1
-
-                    ]
-                )
-            ],
-            [$8]
-        )
-            ])
-        LDFLAGS="${ORIG_LDFLAGS}"
-    )
-    AC_SUBST(Thors$1_ROOT_DIR, [${local_ROOT_DIR}])
-    AC_SUBST(Thors$1_ROOT_LIB, [${local_ROOT_LIB}])
-])
-
-AC_DEFUN([AX_THOR_CHECK_USE_THORS_DB],
-[
-    AX_THOR_CHECK_USE_THORSLIB(
-        [DB],
-        [$1],
-        [ThorsDB],
-        [ThorsDB],
-        [ThorsDB$1],
-        [_ZN10ThorsAnvil2DB6Access3Lib15ConnectionProxyD2Ev],
-        [https://github.com/Loki-Astari/ThorsDB],
-        []
-    )
-])
-
-AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE_OLD],
-[
-    AX_THOR_CHECK_USE_THORSLIB(
-        [Serialize],
-        [$1],
-        [ThorSerialize],
-        [ThorsSerializer],
-        [ThorSerialize$1],
-        [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv],
-        [https://github.com/Loki-Astari/ThorsSerializer],
-        [-ldl]
     )
 ])
 
