@@ -209,14 +209,14 @@ uninstall_shared_lib_%:
 	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).$(SO))
 	@$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO)
 	@if [[ "$(shell readlink $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).$(SO))" == "$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).$(SO)" ]]; then \
-		$(RM) $(PREFIX_BIN)/$*$(BUILD_SUFFIX); \
+		$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).$(SO); \
 	fi
 
 uninstall_static_lib_%:
 	@$(ECHO) $(call paragraph, Clean - $(TARGET_MODE) - lib$*$(BUILD_EXTENSION).a)
 	@$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a
 	@if [[ "$(shell readlink $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).a)" == "$(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_EXTENSION).a" ]]; then \
-		$(RM) $(PREFIX_BIN)/$*$(BUILD_SUFFIX); \
+		$(RM) $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib$*$(BUILD_SUFFIX).a; \
 	fi
 
 uninstall_head_%:

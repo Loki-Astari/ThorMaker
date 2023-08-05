@@ -402,7 +402,9 @@ include $(BUILD_ROOT)/tools/Build/coverage.Makefile
 include $(BUILD_ROOT)/tools/Build/vera.Makefile
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
+ifndef NODEP
 -include makedependency/*
+endif
 
 
 Note_%:

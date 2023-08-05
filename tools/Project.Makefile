@@ -13,7 +13,7 @@ SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
 all:		ACTION=build
 test:		ACTION=test
 clean:		ACTION=clean
-veryclean:	ACTION=veryclean
+veryclean:	ACTION=veryclean NODEP=1
 install:	ACTION=install
 uninstall:	ACTION=uninstall
 profile:	ACTION=profile
