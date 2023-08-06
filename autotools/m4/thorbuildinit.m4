@@ -49,7 +49,7 @@
 #
 #   Disable some functionality as it is only used in tests
 #       AX_THOR_DISABLE_TEST_REQUIREING_LOCK_FILES
-#       AX_THOR_DISABLE_TEST_REQUIREING_POSTGRESS_AUTHENTICATION
+#       AX_THOR_DISABLE_TEST_REQUIREING_POSTGRES_AUTHENTICATION
 #       AX_THOR_DISABLE_TEST_REQUIREING_MONGO_QUERY
 #
 #       == Old Need to verify usability
@@ -66,7 +66,7 @@
 #
 # Check if the DB is up and running and we can accesses it:
 #       AX_THOR_SERVICE_AVAILABLE_MYSQL
-#       AX_THOR_SERVICE_AVAILABLE_POSTGRESS
+#       AX_THOR_SERVICE_AVAILABLE_POSTGRES
 #       AX_THOR_SERVICE_AVAILABLE_MONGO
 #       AX_THOR_CHECK_SMARTY_AVAILABLE
 
@@ -902,19 +902,19 @@ Don't run these tests on Windows.
     )
 ])
 
-AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_POSTGRESS_AUTHENTICATION],
+AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_POSTGRES_AUTHENTICATION],
 [
     AX_THOR_DISABLE_TEST(
-        [with-postgress-auth],
-        [with_postgress_auth],
-        [THOR_DISABLE_TEST_WITH_POSTGRESS_AUTH],
-        [Disable test that require Authentication with Postgress server],
+        [with-postgres-auth],
+        [with_postgres_auth],
+        [THOR_DISABLE_TEST_WITH_POSTGRES_AUTH],
+        [Disable test that require Authentication with Postgres server],
         [
-The postgress functionality is still nacent (not much work completed here).
+The postgres functionality is still nacent (not much work completed here).
 As a result the authentication protocol is not working and so no tests that connect to the server can complete
 unless authentication has been completely turned off.
 
-Disable tests on Postgress where authentication required.
+Disable tests on Postgres where authentication required.
         ]
     )
 ])
@@ -1324,10 +1324,10 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
     AC_DEFINE_UNQUOTED([$1_MAJOR_VERSION], [${version}], ["Get $3 version into #define. That way we can turn off some tests"])
 ])
 
-AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_POSTGRESS],
+AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_POSTGRES],
 [
     AX_THOR_SERVICE_AVAILABLE_CHECK(
-        [POSTGRESS], [Postgress], [psql], [sql],
+        [POSTGRES], [Postgres], [psql], [sql],
         [-h],
         [select 3+4], [7],
         [3],
