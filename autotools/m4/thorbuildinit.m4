@@ -1255,7 +1255,7 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
 [
     dnl 1: =>   Name used for Macros:               ALL CAPS
     dnl 2: =>   Name for flags used by configure.   Camel Case
-    dnl 3: =>   Application name                    Command line tools application
+    dnl 3: =>   Application name                    application
     dnl 4: =>   File name extension for data.
     dnl 5: =>   Flags preceding host
     dnl 6: =>   statement to execute on 3
@@ -1268,6 +1268,7 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
     dnl 13: =>  Argument to specify user.
     dnl 14: =>  Argument to specify password
     dnl 15: =>  Environment variable to set
+    dnl 16: =>  Command line tool used to interact with $3
     dnl 16: =>  NOT USED. But needed so 14 is not the last argument.
 
     AC_ARG_WITH([Test$2Host], AS_HELP_STRING([--with-Test$2Host=<Host>], [Use an alternative $3 host for testing with Default(127.0.0.1)]))
@@ -1290,29 +1291,36 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
     AC_DEFINE_UNQUOTED([THOR_TESTING_$1_PASS], ["$$3_test_pw"],   [$3 DB password for testing])
     AC_DEFINE_UNQUOTED([THOR_TESTING_$1_DB],   ["$$3_test_db"],   [$3 DB for testing])
 
+    cli_tool=$3
+
+    AC_ARG_WITH([$3-tool], AS_HELP_STRING([--with-$3-tool=<alternative cli>], [The default tool name is $3. But this can be overridden with this flag]))
+
+    AS_IF([test "x${with_$3_tool}" != "x"], [cli_tool=${with_$3_tool}])
+
+
     echo "COMMAND: >$6<"
-    echo "DB LINK: >$3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db<" | sed -e 's/[Pp]ass/aasp/g'
-    echo "$6" | $15 $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
-    test_connect=`echo "$6" | $15 $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1 | sed -e 's/test>//' | xargs`
+    echo "DB LINK: >${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db<" | sed -e 's/[Pp]ass/aasp/g'
+    echo "$6" | $15 ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
+    test_connect=`echo "$6" | $15 ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1 | sed -e 's/test>//' | xargs`
     echo "RESULT:  >${test_connect}<"
     AS_IF([test "x$test_connect" != "x$7"],
     [
             AC_MSG_ERROR([
 
-    Error: Can not connect to $3 server for testing.
+    Error: Can not connect to server($1) using ${cli_tool} (Note: Default $3).
 
             This may be because the $3 server is not running or the test data has not been created.
 
             1: Install $2 server
             2: Make sure $2 is running
             3: Install the test data and users.
-                    cat ./src/$2/test/data/init.$4 | $3 $5 $$3_test_host $13root $14
-                    cat ./src/$2/test/data/data.$4 | $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
+                    cat ./src/$2/test/data/init.$4 | ${cli_tool} $5 $$3_test_host $13root $14
+                    cat ./src/$2/test/data/data.$4 | ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
 
             ])
     ])
 
-    version=`$15 $3 $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
+    version=`$15 ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
     AC_DEFINE_UNQUOTED([$1_MAJOR_VERSION], [${version}], ["Get $3 version into #define. That way we can turn off some tests"])
 ])
 
