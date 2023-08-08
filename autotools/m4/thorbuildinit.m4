@@ -811,7 +811,7 @@ You can solve this by installing Thors Serializer
     brew install thors-serializer
 
 Alternately specify install location with:
-    --with-thorserialize-root=<location of snappy installation>
+    --with-thorserialize-root=<location of ThorsDB installation>
         ]
 
     )
@@ -823,7 +823,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_DB],
         [thorsdb],
         [thorsdb],
         [Thors DB],
-        [ThorsDB17], [_ZTSN10ThorsAnvil2DB6Access3Lib15ConnectionProxyE],
+        [ThorsDB17], [_ZTVN10ThorsAnvil2DB5MySQL16PrepareStatementE],
         [ThorsDB],
         [THORSDB],
         [ThorsDB],
