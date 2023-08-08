@@ -222,11 +222,12 @@ DEFER_OBJ					= $(foreach dir, $(DEFER_OBJDIR), $(wildcard $(dir)/*.o))
 
 NOTHING						:=
 SPACE						:=$(NOTHING) $(NOTHING)
-CXX_EXTERN_HEADER_ONLY		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)HeaderOnly_ROOT_DIR), -I$($(lib)HeaderOnly_ROOT_DIR)))
-LDLIBS_EXTERN_LIB_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR), -L$($(lib)_ROOT_DIR)/lib))
-LDLIBS_EXTERN_INC_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR), -I$($(lib)_ROOT_DIR)/include))
-LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(foreach alib, $($(lib)_ROOT_LIB), -l$(alib)$(if $($(lib)_ISTHOR),$(BUILD_EXTENSION))))
-LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
+LDLIBS_EXTERN_BUILD_USE		= $(filter-out $(LDLIBS_FILTER), $(LDLIBS_EXTERN_BUILD))
+CXX_EXTERN_HEADER_ONLY		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)HeaderOnly_ROOT_DIR), -I$($(lib)HeaderOnly_ROOT_DIR)))
+LDLIBS_EXTERN_LIB_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR), -L$($(lib)_ROOT_DIR)/lib))
+LDLIBS_EXTERN_INC_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR), -I$($(lib)_ROOT_DIR)/include))
+LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(foreach alib, $($(lib)_ROOT_LIB), -lm -l$(alib)$(if $($(lib)_ISTHOR),$(BUILD_EXTENSION)) -lm ))
+LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);)
 LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE) $(EXLDLIBS)
 CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(CXX_EXTERN_HEADER_ONLY) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
@@ -381,10 +382,10 @@ test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
 build-honly:
 	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
-	@echo "CWD=$$(pwd);cd $(PREFIX);HEADER_ONLY=1 THORSANVIL_ROOT=$${CWD} CXXFLAGS=-I$(PREFIX) $(MAKE) test"
+	@echo "CWD=$$(pwd);cd $(PREFIX);HEADER_ONLY=1 THORSANVIL_ROOT=$${CWD} CXXFLAGS=-I$(PREFIX) LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) test"
 	@CWD="$$(pwd)";	\
 	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
-	HEADER_ONLY=1 THORSANVIL_ROOT="$${CWD}" CXXFLAGS="-I$(PREFIX)" $(MAKE) test
+	HEADER_ONLY=1 THORSANVIL_ROOT="$${CWD}" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) test
 	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
 

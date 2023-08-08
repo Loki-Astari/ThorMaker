@@ -61,6 +61,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)"		\
 			LINK_LIBS="$(UNITTEST_LINK_LIBS_BULD)"			\
 			EXLDLIBS="$(UNITTEST_LDLIBS) "					\
+			LDLIBS_FILTER="$(LDLIBS_FILTER)"				\
 			-C test											\
 			-f ../Makefile									\
 			item
