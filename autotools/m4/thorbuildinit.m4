@@ -63,6 +63,7 @@
 #       AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION
 #       AX_THOR_FUNC_TEST_COMP
 #       AX_THOR_FUNC_TEST_BINARY
+#       AX_THOR_FUNC_TEST_EWOULDBLOCK_DEFINED_AND_UNIQUE
 #
 # Check if the DB is up and running and we can accesses it:
 #       AX_THOR_SERVICE_AVAILABLE_MYSQL
@@ -1245,6 +1246,23 @@ NOTE:
                     ])
                 ]
             )
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_FUNC_TEST_EWOULDBLOCK_DEFINED_AND_UNIQUE],
+[
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#include <unistd.h>
+#if defined(EWOULDBLOCK) && (EWOULDBLOCK != EAGAIN)
+# error We have unique EWOULDBLOCK
+#endif
+        ]])],
+        [
+            AC_DEFINE([HAS_UNIQUE_EWOULDBLOCK], [0], [EWOULDBLOCK is not define or is defined and identical to EAGAIN])
+        ],
+        [
+            AC_DEFINE([HAS_UNIQUE_EWOULDBLOCK], [1], [EWOULDBLOCK is defined and different from EAGAIN])
         ]
     )
 ])
