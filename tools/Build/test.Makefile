@@ -67,7 +67,7 @@ test/coverage/unittest.app: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/covera
 			item
 	@rm test/unittest.cpp
 
-coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/ThorMock.h | coverage.Dir
+coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h | coverage.Dir
 	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
@@ -89,42 +89,14 @@ test/Mock.def:
 coverage/MockHeaders.h: test/Mock.def coverage/Mock.built | coverage.Dir
 	@touch coverage/Mock.built
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix coverage/MockHeaders.h
-	@if [[ -e test/Mock.def ]]; then \
-		perl -ne '/(#include .*)/ and print "$$1\n"' test/Mock.def >> coverage/MockHeaders.h; \
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.preamb >> coverage/MockHeaders.h; \
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "extern std::function<RemoveNoExceptType<decltype(::$$1)>> mock$$1;\n"' test/Mock.def >> coverage/MockHeaders.h; \
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.median >> coverage/MockHeaders.h; \
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#define $$1 ThorsAnvil::BuildTools::Mock::mock$$1\n"' test/Mock.def >> coverage/MockHeaders.h;\
-	fi
+	@perl -ne '/MOCK_TSYS\([ \t]*([^, \t]*),[ \t]*([^, \t]*)/ and print "$$1:$$2\n"' test/*.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "extern std::function<$$1> mock_$(THOR_PACKAGE_NAME)_$$2;\n"' >> coverage/MockHeaders.h
+	@perl -ne '/MOCK_SYS\([ \t]*([^, \t]*)/ and print "$$1\n"' test/*.cpp | sort | uniq | perl -ne '/(.*)/ and print "extern std::function<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1;\n"' >> coverage/MockHeaders.h
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
-
-coverage/ThorMock.h: coverage/MockHeaders.h | coverage.Dir
-	@cp $(THORSANVIL_ROOT)/build/mock/ThorMock.h.prefix coverage/ThorMock.h
-	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.preamb >> coverage/ThorMock.h
-	@if [ -e test/Mock.def ]; then		\
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' test/Mock.def >> coverage/ThorMock.h; \
-	fi
-	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.median >> coverage/ThorMock.h
-	@cat $(THORSANVIL_ROOT)/build/mock/ThorMock.h.suffix >> coverage/ThorMock.h
 
 coverage/MockHeaders.cpp: coverage/MockHeaders.h | coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.preamb >> coverage/MockHeaders.cpp
-	@if [ -e test/Mock.def ]; then		\
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "#undef $$1\n"' test/Mock.def >> coverage/MockHeaders.cpp; \
-	fi
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.median >> coverage/MockHeaders.cpp
-	@if [ -e test/Mock.def ]; then		\
-		perl -ne '/MOCK_SYSTEM_FUNC\(([^)]*)\)/ and print "std::function<RemoveNoExceptType<decltype(::$$1)>> mock$$1 = $$1;\n"' test/Mock.def >> coverage/MockHeaders.cpp; \
-	fi
+	@perl -ne '/MOCK_TSYS\([ \t]*([^, \t]*),[ \t]*([^, \t]*)/ and print "$$1:$$2\n"' test/*.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "std::function<$$1> mock_$(THOR_PACKAGE_NAME)_$$2 = ::$$2;\n"' >> coverage/MockHeaders.cpp
+	@perl -ne '/MOCK_SYS\([ \t]*([^, \t]*)/ and print "$$1\n"' test/*.cpp | sort | uniq | perl -ne '/(.*)/ and print "std::function<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1 = ::$$1;\n"' >> coverage/MockHeaders.cpp;
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
-
-
-#($(ECHO) "$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" lldb test/coverage/unittest.app" && exit 1)) | tee report/test;\
-## build_unit_test.old:
-## 	$(MAKE) -n $(PARALLEL) BASE=$(BASE) VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) objectarch
-## 		$(MAKE) $(PARALLEL) BASE=.. VERBOSE=$(VERBOSE) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER) TARGET_MODE=coverage INSTALL_ACTIVE=$(INSTALL_ACTIVE) -C test -f ../Makefile THORSANVIL_ROOT=$(THORSANVIL_ROOT) BUILD_ROOT=$(BUILD_ROOT) LOCAL_ROOT=$(LOCAL_ROOT) TEST_STATE=on TARGET=unittest.app LINK_LIBS="$(UNITTEST_LINK_LIBS)" EXLDLIBS="$(UNITTEST_LDLIBS)" COVERAGE_TARGET="$(COVERAGE_TARGET)" GCOV_LIBOBJ_PASS="$(GCOV_LIBOBJ)" item;	\
-##
-
 
 

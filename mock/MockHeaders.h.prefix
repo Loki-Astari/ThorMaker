@@ -8,5 +8,60 @@
 #ifndef THORSANVIL_BUILD_TOOLS_MOCK_H
 #define THORSANVIL_BUILD_TOOLS_MOCK_H
 
+#include "ThorsSocketConfig.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/socket.h>
+
+
 #include <functional>
+
+#define MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)          ThorsAnvil::BuildTools::Mock::mock_ ## package ## _ ## name
+#define MOCK_BUILD_MOCK_NAME_EXPAND(package, name)           MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)
+#define MOCK_BUILD_MOCK_NAME(name)                           MOCK_BUILD_MOCK_NAME_EXPAND(THOR_PACKAGE_NAME, name)
+
+#define MOCK_SYS_EXPAND_(type, func, mocked, lambda)        ThorsAnvil::BuildTools::Mock::MockOutFunction<type>  mockOutFunction_ ## func(mocked, lambda)
+#define MOCK_SYS_EXPAND(type, func, mocked, lambda)         MOCK_SYS_EXPAND_(type, func, mocked, lambda)
+
+
+#define MOCK_TSYS(type, func, lambda)                       MOCK_SYS_EXPAND(type, func, MOCK_BUILD_MOCK_NAME(func), lambda)
+#define MOCK_SYS(func, lambda)                              MOCK_TSYS(ThorsAnvil::BuildTools::Mock::RemoveNoExceptType<decltype(::func)>, func, lambda)
+
+
+#define MOCK_FUNC(x)                                        MOCK_BUILD_MOCK_NAME(x)
+
+namespace ThorsAnvil::BuildTools::Mock
+{
+    template<typename Func>
+    struct MockOutFunction
+    {
+        std::function<Func>     old;
+        std::function<Func>&    orig;
+        MockOutFunction(std::function<Func>& orig, std::function<Func>&& mock)
+            : old(std::move(mock))
+            , orig(orig)
+        {
+            swap(old, orig);
+        }
+        ~MockOutFunction()
+        {
+            swap(old, orig);
+        }
+    };
+
+    template <typename T>
+    struct RemoveNoExcept
+    {
+        using Type = T;
+    };
+
+    template <typename R, typename ...P>
+    struct RemoveNoExcept<R(P...) noexcept>
+    {
+        using Type = R(P...);
+    };
+
+    template <typename T>
+    using RemoveNoExceptType = typename RemoveNoExcept<T>::Type;
+
 
