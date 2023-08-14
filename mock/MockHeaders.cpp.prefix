@@ -6,3 +6,7 @@
 
 #include "MockHeaders.h"
 
+namespace ThorsAnvil::BuildTools::Mock
+{
+
+

@@ -226,7 +226,7 @@ LDLIBS_EXTERN_BUILD_USE		= $(filter-out $(LDLIBS_FILTER), $(LDLIBS_EXTERN_BUILD)
 CXX_EXTERN_HEADER_ONLY		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)HeaderOnly_ROOT_DIR), -I$($(lib)HeaderOnly_ROOT_DIR)))
 LDLIBS_EXTERN_LIB_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR), -L$($(lib)_ROOT_DIR)/lib))
 LDLIBS_EXTERN_INC_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR), -I$($(lib)_ROOT_DIR)/include))
-LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(foreach alib, $($(lib)_ROOT_LIB), -lm -l$(alib)$(if $($(lib)_ISTHOR),$(BUILD_EXTENSION)) -lm ))
+LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(foreach alib, $($(lib)_ROOT_LIB), -l$(alib)$(if $($(lib)_ISTHOR),$(BUILD_EXTENSION))))
 LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);)
 LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE) $(EXLDLIBS)
@@ -317,12 +317,18 @@ CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC
 
 ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS)
 
-MOCK_HEADERS_coverage		=	-include coverage/MockHeaders.h
+MOCK_HEADER_INCLUDES_FILES	=	$(wildcard MockHeaderInclude.h) $(wildcard test/MockHeaderInclude.h)
+MOCK_HEADER_INCLUDES		=   $(if $(MOCK_HEADER_INCLUDES_FILES), -include $(MOCK_HEADER_INCLUDES_FILES))
+MOCK_HEADERS_coverage		=	$(MOCK_HEADER_INCLUDES) -include coverage/MockHeaders.h
+MOCK_HEADERS_release		=   -DMOCK_FUNC\(x\)=::x
+MOCK_HEADERS_debug			=   -DMOCK_FUNC\(x\)=::x
 MOCK_FILES_coverage			=	$(BASE)/coverage/MockHeaders.h $(BASE)/coverage/MockHeaders.cpp
 MOCK_OBJECT_coverage		=	$(BASE)/coverage/MockHeaders.o
 MOCK_HEADERS				=	$(MOCK_HEADERS_$(TARGET_MODE))
 MOCK_FILES					=	$(MOCK_FILES_$(TARGET_MODE))
 MOCK_OBJECT					=	$(MOCK_OBJECT_$(TARGET_MODE))
+
+CXXFLAGS					+=  $(MOCK_HEADERS)
 
 PREFIX						?=	$(BUILD_ROOT)
 PREFIX_BIN					?=	$(PREFIX)/bin
@@ -528,11 +534,11 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
-	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS)  $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
+		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
@@ -681,6 +687,8 @@ Print_On:
 	@$(ECHO) "LDLIBS_EXTERN_SHARE:	$(LDLIBS_EXTERN_SHARE)"
 	@$(ECHO) "INSTALL_CONFIG:		$(INSTALL_CONFIG)"
 	@$(ECHO) "MODE_TEXT_COLOR		$(MODE_TEXT_COLOR)"
+	@$(ECHO) "MOCK_HEADERS:			$(MOCK_HEADERS)"
+	@$(ECHO) "MOCK_HEADER_INCLUDES_FILES: $(MOCK_HEADER_INCLUDES_FILES)"
 	@echo    "ECHO:                 $(ECHO)"
 
 tools:
