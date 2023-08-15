@@ -16,9 +16,9 @@
 
 #include <functional>
 
-#define MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)          ThorsAnvil::BuildTools::Mock::mock_ ## package ## _ ## name
-#define MOCK_BUILD_MOCK_NAME_EXPAND(package, name)           MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)
-#define MOCK_BUILD_MOCK_NAME(name)                           MOCK_BUILD_MOCK_NAME_EXPAND(THOR_PACKAGE_NAME, name)
+#define MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)         ThorsAnvil::BuildTools::Mock::mock_ ## package ## _ ## name
+#define MOCK_BUILD_MOCK_NAME_EXPAND(package, name)          MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)
+#define MOCK_BUILD_MOCK_NAME(name)                          MOCK_BUILD_MOCK_NAME_EXPAND(THOR_PACKAGE_NAME, name)
 
 #define MOCK_SYS_EXPAND_(type, func, mocked, lambda)        ThorsAnvil::BuildTools::Mock::MockOutFunction<type>  mockOutFunction_ ## func(mocked, lambda)
 #define MOCK_SYS_EXPAND(type, func, mocked, lambda)         MOCK_SYS_EXPAND_(type, func, mocked, lambda)
@@ -29,6 +29,7 @@
 
 
 #define MOCK_FUNC(x)                                        MOCK_BUILD_MOCK_NAME(x)
+#define MOCK_TFUNC(type, x)                                 MOCK_BUILD_MOCK_NAME(x)
 
 namespace ThorsAnvil::BuildTools::Mock
 {
