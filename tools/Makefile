@@ -320,8 +320,8 @@ ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS)
 MOCK_HEADER_INCLUDES_FILES	=	$(wildcard MockHeaderInclude.h) $(wildcard test/MockHeaderInclude.h)
 MOCK_HEADER_INCLUDES		=   $(if $(MOCK_HEADER_INCLUDES_FILES), -include $(MOCK_HEADER_INCLUDES_FILES))
 MOCK_HEADERS_coverage		=	$(MOCK_HEADER_INCLUDES) -include coverage/MockHeaders.h
-MOCK_HEADERS_release		=   -DMOCK_FUNC\(x\)=::x
-MOCK_HEADERS_debug			=   -DMOCK_FUNC\(x\)=::x
+MOCK_HEADERS_release		=   -DMOCK_FUNC\(x\)=::x -DMOCK_TFUNC\(x\)=::x
+MOCK_HEADERS_debug			=   -DMOCK_FUNC\(x\)=::x -DMOCK_TFUNC\(x\)=::x
 MOCK_FILES_coverage			=	$(BASE)/coverage/MockHeaders.h $(BASE)/coverage/MockHeaders.cpp
 MOCK_OBJECT_coverage		=	$(BASE)/coverage/MockHeaders.o
 MOCK_HEADERS				=	$(MOCK_HEADERS_$(TARGET_MODE))

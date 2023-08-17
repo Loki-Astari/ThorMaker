@@ -29,7 +29,7 @@
 
 
 #define MOCK_FUNC(x)                                        MOCK_BUILD_MOCK_NAME(x)
-#define MOCK_TFUNC(type, x)                                 MOCK_BUILD_MOCK_NAME(x)
+#define MOCK_TFUNC(x)                                       MOCK_BUILD_MOCK_NAME(x)
 
 namespace ThorsAnvil::BuildTools::Mock
 {

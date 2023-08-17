@@ -89,13 +89,13 @@ test/Mock.def:
 coverage/MockHeaders.h: test/Mock.def coverage/Mock.built | coverage.Dir
 	@touch coverage/Mock.built
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix coverage/MockHeaders.h
-	@perl -ne '/MOCK_TFUNC\([ \t]*([^, \t]*),[ \t]*([^\) \t]*)/ and print "$$1:$$2\n"' *.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "extern std::function<$$1> mock_$(THOR_PACKAGE_NAME)_$$2;\n"' >> coverage/MockHeaders.h
+	@perl -ne '/MOCK_TSYS\([ \t]*([^, \t]*),[ \t]*([^, \t]*)/ and print "$$1:$$2\n"' test/*.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "extern std::function<$$1> mock_$(THOR_PACKAGE_NAME)_$$2;\n"' >> coverage/MockHeaders.h
 	@perl -ne '/MOCK_FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' *.cpp | sort | uniq | perl -ne '/(.*)/ and print "extern std::function<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1;\n"' >> coverage/MockHeaders.h
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
 
 coverage/MockHeaders.cpp: coverage/MockHeaders.h | coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
-	@perl -ne '/MOCK_TFUNC\([ \t]*([^, \t]*),[ \t]*([^\) \t]*)/ and print "$$1:$$2\n"' *.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "std::function<$$1> mock_$(THOR_PACKAGE_NAME)_$$2 = ::$$2;\n"' >> coverage/MockHeaders.cpp
+	@perl -ne '/MOCK_TSYS\([ \t]*([^, \t]*),[ \t]*([^, \t]*)/ and print "$$1:$$2\n"' test/*.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "std::function<$$1> mock_$(THOR_PACKAGE_NAME)_$$2 = ::$$2;\n"' >> coverage/MockHeaders.cpp
 	@perl -ne '/MOCK_FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' *.cpp | sort | uniq | perl -ne '/(.*)/ and print "std::function<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1 = ::$$1;\n"' >> coverage/MockHeaders.cpp;
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
 
