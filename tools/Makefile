@@ -328,7 +328,6 @@ MOCK_HEADERS				=	$(MOCK_HEADERS_$(TARGET_MODE))
 MOCK_FILES					=	$(MOCK_FILES_$(TARGET_MODE))
 MOCK_OBJECT					=	$(MOCK_OBJECT_$(TARGET_MODE))
 
-CXXFLAGS					+=  $(MOCK_HEADERS)
 
 PREFIX						?=	$(BUILD_ROOT)
 PREFIX_BIN					?=	$(PREFIX)/bin
@@ -526,6 +525,27 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 		exit 1;											\
 	fi
 
+$(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
+	@if ( test "$(VERBOSE)" = "Off" ); then				\
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+	elif ( test "$(VERBOSE)" = "On" ); then				\
+		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
+	fi
+	@export tmpfile=$(shell $(MKTEMP));					\
+	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+	if [ $$? != 0 ];									\
+	then												\
+		$(ECHO) $(RED_ERROR);							\
+		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
+		$(ECHO) "========================================";\
+		cat $${tmpfile};								\
+		exit 1;											\
+	else 												\
+		$(ECHO) $(GREEN_OK);							\
+		$(RM) $${tmpfile};								\
+	fi
+
 $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
@@ -534,11 +554,11 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
-	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS));\
+		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
@@ -635,6 +655,7 @@ Print_Off:
 Print_NONE:
 Print_On:
 	@$(ECHO) "TARGET:               $(TARGET)"
+	@$(ECHO) "TARGET_ITEM:          $(TARGET_ITEM)"
 	@$(ECHO) "TARGET_ALL:           $(TARGET_ALL)"
 	@$(ECHO) "TARGET_MODE:          $(TARGET_MODE)"
 	@$(ECHO) "CPP_SRC:              $(CPP_SRC)"
