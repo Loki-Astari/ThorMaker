@@ -34,6 +34,7 @@
 #define MOCK_MEMBER_EXPAND(type, func)                      ThorsAnvil::BuildTools::Mock::MockOutFunction<type> mockOutFunction_ ## func
 #define MOCK_TMEMBER(type, func)                            MOCK_MEMBER_EXPAND(type, func)
 #define MOCK_MEMBER(func)                                   MOCK_MEMBER_EXPAND(decltype(::func), func)
+#define MOCK_TMEMBER(type, func)                            MOCK_MEMBER_EXPAND(type, func)
 #define MOCK_PARAM_EXPAND(func, name, lambda)               mockOutFunction_ ## func(name, lambda)
 #define MOCK_PARAM(func, lambda)                            MOCK_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), lambda)
 
