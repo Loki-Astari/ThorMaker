@@ -81,50 +81,6 @@ namespace ThorsAnvil::BuildTools::Mock
     template<typename F>
     using ParameterType = typename ParameterTypeExtractor<F>::Type;
 
-    template<typename Func>
-    struct MockFunctionHolder
-    {
-        using Param   = ParameterType<Func>;
-
-        std::function<Func>     action;
-        std::vector<Param>      expectedInput;
-        std::size_t             nextInput;
-
-        template<typename F>
-        MockFunctionHolder(F&& action)
-            : action(std::move(action))
-            , nextInput(0)
-        {}
-        template<typename... Args>
-        ReturnType<Func> operator()(Args&&... args)
-        {
-            if (nextInput < expectedInput.size()) {
-                EXPECT_EQ(expectedInput[nextInput], std::tie(args...));
-                ++nextInput;
-            }
-            return action(std::forward<Args>(args)...);
-        }
-    };
-    template<typename Func>
-    struct MockOutFunction
-    {
-        std::function<Func>         old;
-        MockFunctionHolder<Func>&   orig;
-        MockOutFunction(MockFunctionHolder<Func>& orig, std::function<Func>&& mock)
-            : old(std::move(mock))
-            , orig(orig)
-        {
-            swap(old, orig.action);
-        }
-        ~MockOutFunction()
-        {
-            swap(old, orig.action);
-            EXPECT_EQ(orig.nextInput, orig.expectedInput.size());
-            orig.nextInput = 0;
-            orig.expectedInput.clear();
-        }
-    };
-
     template <typename T>
     struct RemoveNoExcept
     {
@@ -149,38 +105,54 @@ namespace ThorsAnvil::BuildTools::Mock
         std::vector<std::string>    expectedError;
     };
 
+
+    template<typename Func>
+    struct MockFunctionHolder;
+
     class MockOverride
     {
+        static std::vector<MockOverride*>   activeOverride;
+
         enum State {Construct, Destruct, Error};
 
         State                   state;
         bool                    exceptionHappened;
-        std::size_t             nextExpected;
-        std::size_t             nextInSequence;
+        int                     nextExpected;
+        int                     nextInSequence;
         std::vector<MockAction> expected;
 
         public:
             MockOverride();
             ~MockOverride();
 
+        private:
+            template<typename Func>
+            friend struct MockFunctionHolder;
+
+            static void checkExpectedActive(std::string const& called);
             void checkExpected(std::string const& called);
-            //void setAction(std::string const& action, std::initializer_list<std::string> init, std::initializer_list<std::string> dest, std::initializer_list<std::string> optional);
+
+        private:
+            friend class MockActionThrowDetext;
+            static void pushActionActive(MockAction action);
+            static void popActionActive();
+            static void noteExceptionActive();
+
         private:
             bool peekDestructor(std::string const& called);
             void CheckExpectedConstruct(std::string const& called);
             void CheckExpectedDestruct(std::string const& called);
 
-            friend class MockActionThrowDetext;
             void pushAction(MockAction action);
             void popAction();
             void noteException();
+
     };
     class MockActionThrowDetext
     {
-        MockOverride& parent;
         public:
-            MockActionThrowDetext(MockOverride& parent);
-            MockActionThrowDetext(MockOverride& parent, MockAction action, std::initializer_list<std::string> errors = {});
+            MockActionThrowDetext();
+            MockActionThrowDetext(MockAction action, std::initializer_list<std::string> errors = {});
             ~MockActionThrowDetext();
     };
     class MockActionAddObject: public MockActionThrowDetext
@@ -192,6 +164,57 @@ namespace ThorsAnvil::BuildTools::Mock
     {
         public:
             using MockActionThrowDetext::MockActionThrowDetext;
+    };
+
+    template<typename Func>
+    struct MockFunctionHolder
+    {
+        using Param   = ParameterType<Func>;
+
+        std::string             name;
+        std::function<Func>     action;
+        std::vector<Param>      expectedInput;
+        std::size_t             nextInput;
+
+        template<typename F>
+        MockFunctionHolder(std::string const& name, F&& action)
+            : name(name)
+            , action(std::move(action))
+            , nextInput(0)
+        {}
+        template<typename... Args>
+        ReturnType<Func> operator()(Args&&... args)
+        {
+            MockOverride::checkExpectedActive(name);
+
+            if (nextInput < expectedInput.size()) {
+                EXPECT_EQ(expectedInput[nextInput], std::tie(args...));
+                ++nextInput;
+            }
+            return action(std::forward<Args>(args)...);
+        }
+    };
+
+    template<typename Func>
+    struct MockOutFunction
+    {
+        std::function<Func>         old;
+        MockFunctionHolder<Func>&   orig;
+        MockOutFunction(MockFunctionHolder<Func>& orig, std::function<Func>&& mock)
+            : old(std::move(mock))
+            , orig(orig)
+        {
+            //std::cerr << "Overriding: " << orig.name << "\n";
+            swap(old, orig.action);
+        }
+        ~MockOutFunction()
+        {
+            //std::cerr << "Resetting : " << orig.name << "\n";
+            swap(old, orig.action);
+            EXPECT_EQ(orig.nextInput, orig.expectedInput.size());
+            orig.nextInput = 0;
+            orig.expectedInput.clear();
+        }
     };
 
 

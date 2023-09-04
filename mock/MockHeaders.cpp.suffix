@@ -3,15 +3,21 @@
 
 using namespace ThorsAnvil::BuildTools::Mock;
 
+std::vector<MockOverride*>   MockOverride::activeOverride;
+
 MockOverride::MockOverride()
     : state(Construct)
     , exceptionHappened(false)
     , nextExpected(0)
     , nextInSequence(0)
-{}
+{
+    activeOverride.push_back(this);
+}
 
 MockOverride::~MockOverride()
 {
+    activeOverride.pop_back();
+
     // No expected state.
     if (expected.size() == 0) {
         return;
@@ -23,13 +29,19 @@ MockOverride::~MockOverride()
     }
     // Otherwise we expect some wind down.
     EXPECT_EQ(state, Destruct);
-    bool okEndPosition = nextExpected == std::size_t(-1) || (nextExpected == 0 && nextInSequence == expected[0].expectedDest.size());
+    bool okEndPosition = nextExpected == -1 || (nextExpected == 0 && nextInSequence == static_cast<int>(expected[0].expectedDest.size()));
     EXPECT_TRUE(okEndPosition);
+}
+
+void MockOverride::checkExpectedActive(std::string const& called)
+{
+    if (!activeOverride.empty()) {
+        activeOverride.back()->checkExpected(called);
+    }
 }
 
 void MockOverride::checkExpected(std::string const& called)
 {
-    //std::cerr << "Checking: " << called << "\n";
     if (expected.size() == 0) {
         return;
     }
@@ -38,6 +50,9 @@ void MockOverride::checkExpected(std::string const& called)
         case Construct:
         case Error:     CheckExpectedConstruct(called);break;
         case Destruct:  CheckExpectedDestruct(called);break;
+        default:
+            std::cerr << "BAD\n";
+            throw std::runtime_error("Failed");
     }
 }
 
@@ -60,13 +75,13 @@ bool MockOverride::peekDestructor(std::string const& called)
 void MockOverride::CheckExpectedConstruct(std::string const& called)
 {
     //std::cerr << "CheckExpectedConstruct: " << called << "\n";
-    while (nextExpected < expected.size())
+    while (nextExpected < static_cast<int>(expected.size()))
     {
         auto& optional  = expected[nextExpected].optional;
         auto& error     = expected[nextExpected].expectedError;
         auto& init      = (state == Construct) ? expected[nextExpected].expectedInit : expected[nextExpected].expectedError;
 
-        if (nextInSequence < init.size() && init[nextInSequence] == called) {
+        if (nextInSequence < static_cast<int>(init.size()) && init[nextInSequence] == called) {
             ++nextInSequence;
             return;
         }
@@ -89,7 +104,7 @@ void MockOverride::CheckExpectedConstruct(std::string const& called)
             CheckExpectedDestruct(called);
             return;
         }
-        if (nextInSequence != init.size())
+        if (nextInSequence != static_cast<int>(init.size()))
         {
             std::cerr << "Unexpected: " << called << " Expected: " << expected[nextExpected].action << ": " << expected[nextExpected].expectedInit[nextInSequence] << "\n";
             EXPECT_EQ(called, expected[nextExpected].expectedInit[nextInSequence]);
@@ -110,12 +125,12 @@ void MockOverride::CheckExpectedDestruct(std::string const& called)
     {
         auto& dest =  expected[nextExpected].expectedDest;
 
-        if (nextInSequence < dest.size()  && dest[nextInSequence] == called)
+        if (nextInSequence < static_cast<int>(dest.size())  && dest[nextInSequence] == called)
         {
             ++nextInSequence;
             return;
         }
-        if (nextInSequence != dest.size())
+        if (nextInSequence != static_cast<int>(dest.size()))
         {
             std::cerr << "Unexpected: " << called << " Expected: " << expected[nextExpected].action << ": " << expected[nextExpected].expectedDest[nextInSequence] << "\n";
             EXPECT_EQ(called, expected[nextExpected].expectedDest[nextInSequence]);
@@ -128,13 +143,6 @@ void MockOverride::CheckExpectedDestruct(std::string const& called)
     EXPECT_TRUE(false);
 }
 
-/*
-void MockOverride::setAction(std::string const& action, std::initializer_list<std::string> init, std::initializer_list<std::string> dest, std::initializer_list<std::string> optional)
-{
-    expected.emplace_back(MockAction{action, init, dest, optional, {}});
-}
-*/
-
 void MockOverride::pushAction(MockAction action)
 {
     expected.emplace_back(std::move(action));
@@ -142,7 +150,7 @@ void MockOverride::pushAction(MockAction action)
 
 void MockOverride::popAction()
 {
-    if (nextExpected == expected.size() - 1)
+    if (nextExpected == static_cast<int>(expected.size()) - 1)
     {
         if (!exceptionHappened && !expected[nextExpected].expectedDest.empty()) {
             EXPECT_EQ(state, Destruct);
@@ -157,27 +165,43 @@ void MockOverride::popAction()
 
 void MockOverride::noteException()
 {
-    exceptionHappened = true;
+    exceptionHappened = (std::uncaught_exceptions() != 0);
 }
-
-MockActionThrowDetext::MockActionThrowDetext(MockOverride& parent)
-    : parent(parent)
+void MockOverride::pushActionActive(MockAction action)
 {
-    parent.pushAction(MockAction{"ForceCheck", {}, {}, {}, {}});
+    if (!activeOverride.empty()) {
+        activeOverride.back()->pushAction(action);
+    }
 }
 
-MockActionThrowDetext::MockActionThrowDetext(MockOverride& parent, MockAction action, std::initializer_list<std::string> errors)
-    : parent(parent)
+void MockOverride::popActionActive()
+{
+    if (!activeOverride.empty()) {
+        activeOverride.back()->popAction();
+    }
+}
+
+void MockOverride::noteExceptionActive()
+{
+    if (!activeOverride.empty()) {
+        activeOverride.back()->noteException();
+    }
+}
+
+MockActionThrowDetext::MockActionThrowDetext()
+{
+    MockOverride::pushActionActive(MockAction{"ForceCheck", {}, {}, {}, {}});
+}
+
+MockActionThrowDetext::MockActionThrowDetext(MockAction action, std::initializer_list<std::string> errors)
 {
     action.expectedError = errors;
-    parent.pushAction(std::move(action));
+    MockOverride::pushActionActive(std::move(action));
 }
 
 MockActionThrowDetext::~MockActionThrowDetext()
 {
-    if (std::uncaught_exceptions() != 0) {
-        parent.noteException();
-    }
-    parent.popAction();
+    MockOverride::noteExceptionActive();
+    MockOverride::popActionActive();
 }
 
