@@ -1,4 +1,183 @@
 
+}
 
+using namespace ThorsAnvil::BuildTools::Mock;
+
+MockOverride::MockOverride()
+    : state(Construct)
+    , exceptionHappened(false)
+    , nextExpected(0)
+    , nextInSequence(0)
+{}
+
+MockOverride::~MockOverride()
+{
+    // No expected state.
+    if (expected.size() == 0) {
+        return;
+    }
+    // Threw in constructor of first set of expected actions.
+    // So no destructors or other code would be run.
+    if (exceptionHappened && state == Construct && nextExpected == 0) {
+        return;
+    }
+    // Otherwise we expect some wind down.
+    EXPECT_EQ(state, Destruct);
+    bool okEndPosition = nextExpected == std::size_t(-1) || (nextExpected == 0 && nextInSequence == expected[0].expectedDest.size());
+    EXPECT_TRUE(okEndPosition);
+}
+
+void MockOverride::checkExpected(std::string const& called)
+{
+    //std::cerr << "Checking: " << called << "\n";
+    if (expected.size() == 0) {
+        return;
+    }
+    switch (state)
+    {
+        case Construct:
+        case Error:     CheckExpectedConstruct(called);break;
+        case Destruct:  CheckExpectedDestruct(called);break;
+    }
+}
+
+bool MockOverride::peekDestructor(std::string const& called)
+{
+    //std::cerr << "peekDestructor\n";
+    int nextDestruct = nextExpected;
+    if (state == Construct || state == Error) {
+        --nextDestruct;
+    }
+    while (nextDestruct >= 0 && expected[nextDestruct].expectedDest.size() == 0) {
+        --nextDestruct;
+    }
+    if (nextDestruct >= 0 && expected[nextDestruct].expectedDest[0] == called) {
+        return true;
+    }
+    return false;
+}
+
+void MockOverride::CheckExpectedConstruct(std::string const& called)
+{
+    //std::cerr << "CheckExpectedConstruct: " << called << "\n";
+    while (nextExpected < expected.size())
+    {
+        auto& optional  = expected[nextExpected].optional;
+        auto& error     = expected[nextExpected].expectedError;
+        auto& init      = (state == Construct) ? expected[nextExpected].expectedInit : expected[nextExpected].expectedError;
+
+        if (nextInSequence < init.size() && init[nextInSequence] == called) {
+            ++nextInSequence;
+            return;
+        }
+        if (state != Error && !error.empty() && error[0] == called) {
+            state = Error;
+            nextInSequence = 1;
+            return;
+        }
+        auto find = std::find(std::begin(optional), std::end(optional), called);
+        if (find != std::end(optional)) {
+            return;
+        }
+        if (peekDestructor(called))
+        {
+            if (state == Construct || state == Error) {
+                --nextExpected;
+            }
+            state = Destruct;
+            nextInSequence = 0;
+            CheckExpectedDestruct(called);
+            return;
+        }
+        if (nextInSequence != init.size())
+        {
+            std::cerr << "Unexpected: " << called << " Expected: " << expected[nextExpected].action << ": " << expected[nextExpected].expectedInit[nextInSequence] << "\n";
+            EXPECT_EQ(called, expected[nextExpected].expectedInit[nextInSequence]);
+            return;
+        }
+        nextInSequence  = 0;
+        ++nextExpected;
+    }
+    state = Destruct;
+    --nextExpected;
+    CheckExpectedDestruct(called);
+}
+
+void MockOverride::CheckExpectedDestruct(std::string const& called)
+{
+    //std::cerr << "CheckExpectedDestruct: " << called << "\n";
+    while (nextExpected >= 0)
+    {
+        auto& dest =  expected[nextExpected].expectedDest;
+
+        if (nextInSequence < dest.size()  && dest[nextInSequence] == called)
+        {
+            ++nextInSequence;
+            return;
+        }
+        if (nextInSequence != dest.size())
+        {
+            std::cerr << "Unexpected: " << called << " Expected: " << expected[nextExpected].action << ": " << expected[nextExpected].expectedDest[nextInSequence] << "\n";
+            EXPECT_EQ(called, expected[nextExpected].expectedDest[nextInSequence]);
+            return;
+        }
+        --nextExpected;
+        nextInSequence = 0;
+    }
+    std::cerr << "Unexpected: " << called << "\n";
+    EXPECT_TRUE(false);
+}
+
+/*
+void MockOverride::setAction(std::string const& action, std::initializer_list<std::string> init, std::initializer_list<std::string> dest, std::initializer_list<std::string> optional)
+{
+    expected.emplace_back(MockAction{action, init, dest, optional, {}});
+}
+*/
+
+void MockOverride::pushAction(MockAction action)
+{
+    expected.emplace_back(std::move(action));
+}
+
+void MockOverride::popAction()
+{
+    if (nextExpected == expected.size() - 1)
+    {
+        if (!exceptionHappened && !expected[nextExpected].expectedDest.empty()) {
+            EXPECT_EQ(state, Destruct);
+            EXPECT_EQ(nextInSequence, expected[nextExpected].expectedDest.size());
+        }
+        state = Destruct;
+        --nextExpected;
+        nextInSequence = 0;
+    }
+    expected.pop_back();
+}
+
+void MockOverride::noteException()
+{
+    exceptionHappened = true;
+}
+
+MockActionThrowDetext::MockActionThrowDetext(MockOverride& parent)
+    : parent(parent)
+{
+    parent.pushAction(MockAction{"ForceCheck", {}, {}, {}, {}});
+}
+
+MockActionThrowDetext::MockActionThrowDetext(MockOverride& parent, MockAction action, std::initializer_list<std::string> errors)
+    : parent(parent)
+{
+    action.expectedError = errors;
+    parent.pushAction(std::move(action));
+}
+
+MockActionThrowDetext::~MockActionThrowDetext()
+{
+    if (std::uncaught_exceptions() != 0) {
+        parent.noteException();
+    }
+    parent.popAction();
 }
 
