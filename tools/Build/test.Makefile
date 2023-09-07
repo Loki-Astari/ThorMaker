@@ -85,6 +85,7 @@ run_unit_test: $(PRETEST)
 # Allows for easy mocking of system calls for unit tests.
 #
 coverage/Mock.built:	| coverage.Dir
+coverage/Mock2.built:	| coverage.Dir
 test/Mock.def:
 coverage/MockHeaders.h: test/Mock.def coverage/Mock.built | coverage.Dir
 	@touch coverage/Mock.built
@@ -93,10 +94,28 @@ coverage/MockHeaders.h: test/Mock.def coverage/Mock.built | coverage.Dir
 	@perl -ne '/MOCK_FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' *.cpp | sort | uniq | perl -ne '/(.*)/ and print "extern MockFunctionHolder<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1;\n"' >> coverage/MockHeaders.h
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
 
+coverage/MockHeaders2.h: coverage/Mock2.built | coverage.Dir
+	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders2.h.prefix coverage/MockHeaders2.h
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *.cpp								\
+		| sort																																		\
+		| uniq																																		\
+		| perl -ne '/([^-]*)-(.*)/ and print "extern MockFunctionHolder<RemoveNoExcept<$$1>> mock_$(THOR_PACKAGE_NAME)_$$2;\n"'							\
+		>> coverage/MockHeaders2.h
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders2.h.suffix >> coverage/MockHeaders2.h
+
 coverage/MockHeaders.cpp: coverage/MockHeaders.h | coverage.Dir
 	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
 	@perl -ne '/MOCK_TSYS\([ \t]*([^, \t]*),[ \t]*([^, \t]*)/ and print "$$1:$$2\n"' test/*.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "MockFunctionHolder<$$1> mock_$(THOR_PACKAGE_NAME)_$$2(\"$$2\", ::$$2);\n"' >> coverage/MockHeaders.cpp
 	@perl -ne '/MOCK_FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' *.cpp | sort | uniq | perl -ne '/(.*)/ and print "MockFunctionHolder<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1(\"$$1\", ::$$1);\n"' >> coverage/MockHeaders.cpp;
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
+
+coverage/MockHeaders2.cpp: coverage/MockHeaders2.h | coverage.Dir
+	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders2.cpp.prefix coverage/MockHeaders2.cpp
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *.cpp								\
+		| sort																																		\
+		| uniq																																		\
+		| perl -ne '/([^-]*)-(.*)/ and print "MockFunctionHolder<RemoveNoExcept<$$1>> mock_$(THOR_PACKAGE_NAME)_$$2(\"$$2\", ::$$2);\n"'				\
+		>> coverage/MockHeaders2.cpp
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders2.cpp.suffix >> coverage/MockHeaders2.cpp
 
 

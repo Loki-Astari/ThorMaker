@@ -182,6 +182,7 @@ namespace ThorsAnvil::BuildTools::Mock
             , action(std::move(action))
             , nextInput(0)
         {}
+        std::string const& getName() const {return name;}
         template<typename... Args>
         ReturnType<Func> operator()(Args&&... args)
         {
