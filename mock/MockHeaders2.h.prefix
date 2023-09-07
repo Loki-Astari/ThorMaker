@@ -1,0 +1,320 @@
+/*
+ * This is a generated file do not edit.
+ * See ThorBuilder for details
+ *
+ */
+
+
+#ifndef THORSANVIL_BUILD_TOOLS_MOCK2_H
+#define THORSANVIL_BUILD_TOOLS_MOCK2_H
+
+#include "coverage/MockHeaders.h"
+
+#include <string>
+#include <functional>
+
+#define MOCK2_BUILD_MOCK_NAME_EXPAND_(package, name)         ThorsAnvil::BuildTools::Mock2::mock_ ## package ## _ ## name
+#define MOCK2_BUILD_MOCK_NAME_EXPAND(package, name)          MOCK2_BUILD_MOCK_NAME_EXPAND_(package, name)
+#define MOCK2_BUILD_MOCK_NAME(name)                          MOCK2_BUILD_MOCK_NAME_EXPAND(THOR_PACKAGE_NAME, name)
+
+#define MOCK2_MEMBER_EXPAND(type, func)                      ThorsAnvil::BuildTools::Mock2::MockFunctionOveride<type> mockOutFunction_ ## func
+#define MOCK2_TMEMBER(type, func)                            MOCK2_MEMBER_EXPAND(type, func)
+#define MOCK2_MEMBER(func)                                   MOCK2_MEMBER_EXPAND(decltype(::func), func)
+#define MOCK2_TMEMBER(type, func)                            MOCK2_MEMBER_EXPAND(type, func)
+#define MOCK2_PARAM_EXPAND(func, name1, name2)               mockOutFunction_ ## func(name1, name2)
+#define MOCK2_PARAM(func)                                    MOCK2_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), MOCK2_BUILD_MOCK_NAME(func))
+
+namespace ThorsAnvil::BuildTools::Mock2
+{
+
+    /*
+     * Meta programming:
+     *  Extract information from Types
+     */
+
+    template<typename F>
+    struct ReturnTypeExtractor;
+    template<typename R, typename... Args>
+    struct ReturnTypeExtractor<R(Args...)>
+    {
+        using Type = R;
+    };
+
+    template<typename F>
+    struct ArgumentsExtractor;
+    template<typename R, typename... Args>
+    struct ArgumentsExtractor<R(Args...)>
+    {
+        using Type = std::tuple<Args...>;
+    };
+
+    template <typename T>
+    struct RemoveNoExceptExtractor
+    {
+        using Type = T;
+    };
+    template <typename R, typename... Args>
+    struct RemoveNoExceptExtractor<R(Args...) noexcept>
+    {
+        using Type = R(Args...);
+    };
+
+
+    template<typename R>
+    struct OutputTypeExtractor
+    {
+        using Type = R;
+    };
+    template<>
+    struct OutputTypeExtractor<void>
+    {
+        using Type = bool;
+    };
+
+    /*
+     * Simplify usage of Meta Types
+     */
+    template<typename F>
+    using ReturnType = typename ReturnTypeExtractor<F>::Type;
+
+    template<typename F>
+    using Arguments = typename ArgumentsExtractor<F>::Type;
+
+    template <typename F>
+    using RemoveNoExcept = typename RemoveNoExceptExtractor<F>::Type;
+
+    template<typename R>
+    using OutputType = typename OutputTypeExtractor<R>::Type;
+
+    /*
+     * Forward declarations
+     */
+    template<typename R, typename... Args>
+    class MockFunctionOveride;
+
+    template<typename Func>
+    class MockFunctionHolder;
+
+    class TA_Test;
+
+    template<typename MockDefaulter>
+    class TA_TestNoThrow;
+
+    /*
+     * Classes declarations:
+     */
+
+        class TA_Object
+        {
+            std::vector<std::function<void(TA_Test& parent, std::size_t index, bool last)>>   actions;
+            public:
+                template<typename A>
+                std::enable_if_t<std::is_same_v<typename A::Ret, void>, TA_Object>&
+                expectInit(A& action)
+                {
+                    actions.emplace_back([&action](TA_Test& parent, std::size_t index, bool last){action.expectInit(parent, index, last);});
+                    return *this;
+                }
+                template<typename A>
+                std::enable_if_t<!std::is_same_v<typename A::Ret, void>, TA_Object>&
+                expectInit(A& action)
+                {
+                    actions.emplace_back([&action](TA_Test& parent, std::size_t index, bool last){action.expectInit(parent, index, last, typename A::Ret{});});
+                    return *this;
+                }
+                template<typename A>
+                TA_Object& expectDest(A&)
+                {
+                    return *this;
+                }
+                template<typename A>
+                TA_Object& optional(A&)
+                {
+                    return *this;
+                }
+
+                void add(TA_Test& parent, std::size_t callOrder) const
+                {
+                    EXPECT_NE(0, actions.size());
+
+                    for (std::size_t loop = 0; loop < actions.size(); ++loop) {
+                        actions[loop](parent, loop + callOrder, loop == actions.size() - 1);
+                    }
+                }
+        };
+
+        inline TA_Object build()  {return {};}
+
+        class TA_Test
+        {
+            bool                            hasRun;
+            std::vector<TA_Object const*>   objects;
+            std::function<void()>           lambda;
+            std::size_t                     next;
+            std::size_t                     callOrder;
+
+            public:
+                template<typename Lambda>
+                TA_Test(Lambda&& lambda)
+                    : hasRun(false)
+                    , lambda(std::move(lambda))
+                    , next(0)
+                    , callOrder(0)
+                {}
+                ~TA_Test()
+                {
+                    EXPECT_TRUE(hasRun);
+                }
+
+                void run()
+                {
+                    hasRun = true;
+                    nextObject();
+                    EXPECT_NO_THROW(lambda());
+                }
+                void mockCalled(std::size_t order, bool last)
+                {
+                    EXPECT_EQ(order, callOrder);
+                    ++callOrder;
+
+                    if (last) {
+                        nextObject();
+                    }
+                }
+                void nextObject()
+                {
+                    if (next < objects.size()) {
+                        objects[next++]->add(*this, callOrder);
+                    }
+                }
+
+                template<typename A>
+                TA_Test& expectCall()
+                {
+                    return *this;
+                }
+
+                template<typename O>
+                TA_Test& expectObject(TA_Object const& object)
+                {
+                    objects.emplace_back(&object);
+                    return *this;
+                }
+
+        };
+
+        template<typename MockDefaulter>
+        class TA_TestNoThrow: public TA_Test
+        {
+            // Contains MockFunctionOveride<type> for each mocked function.
+            MockDefaulter                   defaultMockObjects;
+            public:
+                using TA_Test::TA_Test;
+        };
+
+        template<typename R, typename... Args>
+        class MockFunctionHolder<R(Args...)>
+        {
+            friend class MockFunctionOveride<R(Args...)>;
+            using OutputInfo = std::tuple<TA_Test*, std::size_t, bool, OutputType<R>>;
+            using InputInfo  = std::unique_ptr<std::tuple<Args...>>;
+
+            std::string                     name;
+            std::function<R(Args...)>       original;
+            std::vector<InputInfo>          input;
+            std::vector<OutputInfo>         output;
+            std::size_t                     next;
+
+            public:
+                using Ret = R;
+
+                template<typename F>
+                MockFunctionHolder(std::string const& name, F&& original)
+                    : name(name)
+                    , original(std::move(original))
+                    , next(0)
+                {}
+
+                std::string const& getName() const  {return name;}
+
+                void expectInit(TA_Test& parent, std::size_t index, bool last)
+                {
+                    output.emplace_back(OutputInfo{&parent, index, last, true});
+                }
+                template<typename RV>
+                std::enable_if<!std::is_same_v<RV, void>>
+                expectInit(TA_Test& parent, std::size_t index, bool last, RV&& value)
+                {
+                    output.emplace_back(OutputInfo{&parent, index, last, std::move(value)});
+                }
+
+                void clean()
+                {
+                    EXPECT_EQ(next, 0);
+
+                    input.clear();
+                    output.clear();
+                    next = 0;
+                }
+
+                R call(Args&&... args)
+                {
+                    if (next < input.size() && static_cast<bool>(input[next])) {
+                        std::tuple<Args...>&    expected = *input[next];
+                        EXPECT_EQ(std::tie(args...), expected);
+                    }
+                    if (next < output.size()) {
+                        OutputInfo& outputInfo = output[next++];
+                        std::get<0>(outputInfo)->mockCalled(std::get<1>(outputInfo), std::get<2>(outputInfo));
+
+                        if constexpr (std::is_same_v<R, void>) {
+                            ++next;
+                            return;
+                        }
+                        else {
+                            return std::get<3>(outputInfo);
+                        }
+                    }
+                    EXPECT_TRUE(next < output.size());
+                    std::cerr << "Unexpected: " << name << "\n";
+                    return original(std::forward<Args>(args)...);
+                }
+        };
+
+        /*
+         * An object that will replace the current definition of the function.
+         * Constructor sets its. Destructor replaces the original value.
+         */
+        template<typename R, typename... Args>
+        class MockFunctionOveride<R(Args...)>
+        {
+            using Version1Holder    = ThorsAnvil::BuildTools::Mock::MockFunctionHolder<R(Args...)>;
+            using Version2Holder    = ThorsAnvil::BuildTools::Mock2::MockFunctionHolder<R(Args...)>;
+
+            Version1Holder&                 v1Holder;
+            Version2Holder&                 v2Holder;
+            std::function<R(Args...)>       old;
+
+
+            public:
+                MockFunctionOveride(Version1Holder& v1Holder, Version2Holder& v2Holder)
+                    : v1Holder(v1Holder)
+                    , v2Holder(v2Holder)
+                    , old([&](Args&&... args){return v2Holder.call(std::forward<Args>(args)...);})
+                {
+                    std::swap(old, v1Holder.action);
+                }
+                ~MockFunctionOveride()
+                {
+                    std::swap(old, v1Holder.action);
+                    v2Holder.clean();
+                }
+
+        };
+
+        class MockFunctionGroupDefault
+        {
+        };
+
+
+
