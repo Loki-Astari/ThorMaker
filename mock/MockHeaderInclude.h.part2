@@ -1,0 +1,9 @@
+// PART-1-End
+namespace ThorsAnvil::BuildTools::Mock
+{
+
+// Please define all FuncType_<XXX> here
+// There should be one for each MOCK_TFUNC you use in the code.
+// The make files will provide the declaration but these need to be filled in by
+// the developer and committed to source control
+// PART-2-Start

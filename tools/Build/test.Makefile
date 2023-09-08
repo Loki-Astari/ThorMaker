@@ -67,7 +67,7 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 			item
 	@rm test/unittest.cpp
 
-coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h | coverage.Dir
+coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/MockHeaders.cpp test/MockHeaderInclude1.h | coverage.Dir
 	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
@@ -81,41 +81,97 @@ run_unit_test: $(PRETEST)
 
 
 #
-# Build the mock headers from the test/Mock.def file.
 # Allows for easy mocking of system calls for unit tests.
 #
+.FORCE:
 coverage/Mock.built:	| coverage.Dir
-coverage/Mock2.built:	| coverage.Dir
-test/Mock.def:
-coverage/MockHeaders.h: test/Mock.def coverage/Mock.built | coverage.Dir
-	@touch coverage/Mock.built
-	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix coverage/MockHeaders.h
-	@perl -ne '/MOCK_TSYS\([ \t]*([^, \t]*),[ \t]*([^, \t]*)/ and print "$$1:$$2\n"' test/*.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "extern MockFunctionHolder<$$1> mock_$(THOR_PACKAGE_NAME)_$$2;\n"' >> coverage/MockHeaders.h
-	@perl -ne '/MOCK_FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' *.cpp | sort | uniq | perl -ne '/(.*)/ and print "extern MockFunctionHolder<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1;\n"' >> coverage/MockHeaders.h
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >> coverage/MockHeaders.h
+$(BASE)/coverage/MockHeaders.h: test/MockHeaderInclude.h | coverage.Dir .FORCE
+	@rm -f coverage/MockHeaders.h.tmp
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix	>> coverage/MockHeaders.h.tmp
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *	\
+		| sort	| uniq																																	\
+		| perl -ne '/([^-]*)-(.*)/ and print "extern MockFunctionHolder<RemoveNoExcept<$$1>> MOCK_BUILD_MOCK_SNAME($$2);\n"'							\
+		>> coverage/MockHeaders.h.tmp
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *	\
+		| sort	| uniq																																	\
+		| perl -ne '/([^-]*)-(.*)/ and print "extern MockResultHolder<RemoveNoExcept<$$1>> MOCK2_BUILD_MOCK_SNAME($$2);\n"'								\
+		>> coverage/MockHeaders.h.tmp
+	@echo "class MockFunctionGroup {"						>>	coverage/MockHeaders.h.tmp
+	@echo "    int built;"									>>	coverage/MockHeaders.h.tmp
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "    MOCK2_$${1}MEMBER($$2);\n"' *.cpp *.h | sort | uniq >> coverage/MockHeaders.h.tmp
+	@echo "    public:"										>>	coverage/MockHeaders.h.tmp
+	@echo "        MockFunctionGroup(TA_Test& parent)"		>>	coverage/MockHeaders.h.tmp
+	@echo "            : built(1)"							>>	coverage/MockHeaders.h.tmp
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "            , MOCK2_$${1}MEM_PARAM($$2)\n"' *.cpp *.h | sort | uniq >> coverage/MockHeaders.h.tmp
+	@echo "        {}"										>>	coverage/MockHeaders.h.tmp
+	@echo "};"												>>	coverage/MockHeaders.h.tmp
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >>	coverage/MockHeaders.h.tmp
+	if [[ -e coverage/MockHeaders.h ]]; then							\
+		diff coverage/MockHeaders.h.tmp coverage/MockHeaders.h;			\
+		if [[ $$? == 1 ]]; then											\
+			echo "ReBuilt: coverage/MockHeaders.h";						\
+			mv coverage/MockHeaders.h.tmp coverage/MockHeaders.h;		\
+		else															\
+			rm coverage/MockHeaders.h.tmp;								\
+		fi;																\
+	else																\
+		echo "Built: coverage/MockHeaders.h";							\
+		mv coverage/MockHeaders.h.tmp coverage/MockHeaders.h;			\
+	fi
 
-coverage/MockHeaders2.h: coverage/Mock2.built | coverage.Dir
-	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders2.h.prefix coverage/MockHeaders2.h
-	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *.cpp								\
-		| sort																																		\
-		| uniq																																		\
-		| perl -ne '/([^-]*)-(.*)/ and print "extern MockFunctionHolder<RemoveNoExcept<$$1>> mock_$(THOR_PACKAGE_NAME)_$$2;\n"'							\
-		>> coverage/MockHeaders2.h
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders2.h.suffix >> coverage/MockHeaders2.h
 
-coverage/MockHeaders.cpp: coverage/MockHeaders.h | coverage.Dir
-	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix coverage/MockHeaders.cpp
-	@perl -ne '/MOCK_TSYS\([ \t]*([^, \t]*),[ \t]*([^, \t]*)/ and print "$$1:$$2\n"' test/*.cpp | sort | uniq | perl -ne '/([^:]*):(.*)/ and print "MockFunctionHolder<$$1> mock_$(THOR_PACKAGE_NAME)_$$2(\"$$2\", ::$$2);\n"' >> coverage/MockHeaders.cpp
-	@perl -ne '/MOCK_FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' *.cpp | sort | uniq | perl -ne '/(.*)/ and print "MockFunctionHolder<RemoveNoExceptType<decltype(::$$1)>> mock_$(THOR_PACKAGE_NAME)_$$1(\"$$1\", ::$$1);\n"' >> coverage/MockHeaders.cpp;
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp
+$(BASE)/coverage/MockHeaders.cpp: test/MockHeaderInclude.h coverage/Mock.built coverage/MockHeaders.h | coverage.Dir .FORCE
+	@rm -f coverage/MockHeaders.cpp.tmp
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix >> coverage/MockHeaders.cpp.tmp
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *	\
+		| sort	| uniq																																	\
+		| perl -ne '/([^-]*)-(.*)/ and print "MockFunctionHolder<RemoveNoExcept<$$1>> MOCK_BUILD_MOCK_SNAME($$2)(\"$$2\", ::$$2);\n"'					\
+		>> coverage/MockHeaders.cpp.tmp
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *	\
+		| sort	| uniq																																	\
+		| perl -ne '/([^-]*)-(.*)/ and print "MockResultHolder<RemoveNoExcept<$$1>> MOCK2_BUILD_MOCK_SNAME($$2)(\"$$2\", ::$$2);\n"'					\
+		>> coverage/MockHeaders.cpp.tmp
+	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp.tmp
+	if [[ -e coverage/MockHeaders.cpp ]]; then							\
+		diff coverage/MockHeaders.cpp.tmp coverage/MockHeaders.cpp;		\
+		if [[ $$? == 1 ]]; then											\
+			echo "ReBuilt: coverage/MockHeaders.cpp";					\
+			mv coverage/MockHeaders.cpp.tmp coverage/MockHeaders.cpp;	\
+		else															\
+			rm coverage/MockHeaders.cpp.tmp;							\
+		fi;																\
+	else																\
+		echo "Built: coverage/MockHeaders.cpp";							\
+		mv coverage/MockHeaders.cpp.tmp coverage/MockHeaders.cpp;		\
+	fi
 
-coverage/MockHeaders2.cpp: coverage/MockHeaders2.h | coverage.Dir
-	@cp $(THORSANVIL_ROOT)/build/mock/MockHeaders2.cpp.prefix coverage/MockHeaders2.cpp
-	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *.cpp								\
-		| sort																																		\
-		| uniq																																		\
-		| perl -ne '/([^-]*)-(.*)/ and print "MockFunctionHolder<RemoveNoExcept<$$1>> mock_$(THOR_PACKAGE_NAME)_$$2(\"$$2\", ::$$2);\n"'				\
-		>> coverage/MockHeaders2.cpp
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders2.cpp.suffix >> coverage/MockHeaders2.cpp
+$(BASE)/test/MockHeaderInclude1.h: .FORCE
+	@if [[ -e test ]]; then																				\
+		rm -f test/MockHeaderInclude.h.tmp;																\
+		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part1 >> test/MockHeaderInclude.h.tmp;	\
+		$(THORSANVIL_ROOT)/build/mock/copyPart PART-1				>> test/MockHeaderInclude.h.tmp;	\
+		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part2 >> test/MockHeaderInclude.h.tmp;	\
+		$(THORSANVIL_ROOT)/build/mock/copyPart PART-2				>> test/MockHeaderInclude.h.tmp;	\
+		perl -ne '/MOCK_TFUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' * | sort | uniq | $(THORSANVIL_ROOT)/build/mock/buildFuncType		>> test/MockHeaderInclude.h.tmp;	\
+		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part3 >> test/MockHeaderInclude.h.tmp;	\
+		$(THORSANVIL_ROOT)/build/mock/copyPart PART-3				>> test/MockHeaderInclude.h.tmp;	\
+		perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "$$2 $$1\n"' * | sort | uniq | $(THORSANVIL_ROOT)/build/mock/buildMEMBER	>> test/MockHeaderInclude.h.tmp;	\
+		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part4 >> test/MockHeaderInclude.h.tmp;	\
+		$(THORSANVIL_ROOT)/build/mock/copyPart PART-4				>> test/MockHeaderInclude.h.tmp;	\
+		perl -ne '/MOCK_T?FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' * | sort | uniq | $(THORSANVIL_ROOT)/build/mock/buildPARAM		>> test/MockHeaderInclude.h.tmp;	\
+		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part5 >> test/MockHeaderInclude.h.tmp;	\
+		if [[ -e test/MockHeaderInclude.h ]]; then														\
+			diff test/MockHeaderInclude.h.tmp test/MockHeaderInclude.h;									\
+			if [[ $$? == 1 ]]; then																		\
+				echo "ReBuilt: test/MockHeaderInclude.h";												\
+				mv test/MockHeaderInclude.h.tmp test/MockHeaderInclude.h;								\
+			else																						\
+				rm test/MockHeaderInclude.h.tmp;														\
+			fi;																							\
+		else																							\
+			echo "Built: test/MockHeaderInclude.h";														\
+			mv test/MockHeaderInclude.h.tmp test/MockHeaderInclude.h;									\
+		fi;																								\
+	fi
 
 

@@ -13,34 +13,78 @@
 #include <vector>
 #include <string>
 
-#define MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)         ThorsAnvil::BuildTools::Mock::mock_ ## package ## _ ## name
-#define MOCK_BUILD_MOCK_NAME_EXPAND(package, name)          MOCK_BUILD_MOCK_NAME_EXPAND_(package, name)
-#define MOCK_BUILD_MOCK_NAME(name)                          MOCK_BUILD_MOCK_NAME_EXPAND(THOR_PACKAGE_NAME, name)
+/*
+ * Macros to build unique names for mock functions.
+ */
+#define MOCK_BUILD_MOCK_NAME_EXPAND_(v, package, name)      mock_ ## v ## _ ## package ## _ ## name
+#define MOCK_BUILD_MOCK_NAME_EXPAND(v, package, name)       MOCK_BUILD_MOCK_NAME_EXPAND_(v, package, name)
+#define MOCK_BUILD_MOCK_SNAME(name)                         MOCK_BUILD_MOCK_NAME_EXPAND(1, THOR_PACKAGE_NAME, name)
+#define MOCK2_BUILD_MOCK_SNAME(name)                        MOCK_BUILD_MOCK_NAME_EXPAND(2, THOR_PACKAGE_NAME, name)
+#define MOCK_BUILD_MOCK_NAME(name)                          ThorsAnvil::BuildTools::Mock:: MOCK_BUILD_MOCK_NAME_EXPAND(1, THOR_PACKAGE_NAME, name)
+#define MOCK2_BUILD_MOCK_NAME(name)                         ThorsAnvil::BuildTools::Mock:: MOCK_BUILD_MOCK_NAME_EXPAND(2, THOR_PACKAGE_NAME, name)
 
+/*
+ * Defines unique name for local scope.
+ */
 #define MOCK_SYS_EXPAND_(type, func, mocked, lambda)        ThorsAnvil::BuildTools::Mock::MockOutFunction<type>  mockOutFunction_ ## func(mocked, lambda)
 #define MOCK_SYS_EXPAND(type, func, mocked, lambda)         MOCK_SYS_EXPAND_(type, func, mocked, lambda)
 
-
-#define MOCK_TSYS(type, func, lambda)                       MOCK_SYS_EXPAND(type, func, MOCK_BUILD_MOCK_NAME(func), lambda)
-#define MOCK_SYS(func, lambda)                              MOCK_TSYS(ThorsAnvil::BuildTools::Mock::RemoveNoExceptType<decltype(::func)>, func, lambda)
-
-#define MOCK_INPUT(func, ...)                               MOCK_BUILD_MOCK_NAME(func).expectedInput.emplace_back(__VA_ARGS__)
-
-
-
+/*
+ * Define a function as being mockable
+ */
 #define MOCK_FUNC(x)                                        MOCK_BUILD_MOCK_NAME(x)
 #define MOCK_TFUNC(x)                                       MOCK_BUILD_MOCK_NAME(x)
 
+/*
+ * Override a function in the unit tests with a lambda.
+ * This defines a scoped variable.
+ * Thus at the end of scope of the original function is reinstated.
+ */
+#define MOCK_TSYS(func, lambda)                             MOCK_SYS_EXPAND(ThorsAnvil::BuildTools::Mock::FuncType_ ## func, func, MOCK_BUILD_MOCK_NAME(func), lambda)
+#define MOCK_SYS(func, lambda)                              MOCK_SYS_EXPAND(ThorsAnvil::BuildTools::RemoveNoExcept<decltype(::func)>, func, MOCK_BUILD_MOCK_NAME(func), lambda)
+
+/*
+ * Level 1 override
+ * An object that overrides all mocked functions with a lambda to return a default value
+ * so that no mocked functions are called.
+ */
 #define MOCK_MEMBER_EXPAND(type, func)                      ThorsAnvil::BuildTools::Mock::MockOutFunction<type> mockOutFunction_ ## func
-#define MOCK_TMEMBER(type, func)                            MOCK_MEMBER_EXPAND(type, func)
+#define MOCK_TMEMBER(func)                                  MOCK_MEMBER_EXPAND(ThorsAnvil::BuildTools::Mock::FuncType_ ## func, func)
 #define MOCK_MEMBER(func)                                   MOCK_MEMBER_EXPAND(decltype(::func), func)
-#define MOCK_TMEMBER(type, func)                            MOCK_MEMBER_EXPAND(type, func)
 #define MOCK_PARAM_EXPAND(func, name, lambda)               mockOutFunction_ ## func(name, lambda)
 #define MOCK_PARAM(func, lambda)                            MOCK_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), lambda)
 
-namespace ThorsAnvil::BuildTools::Mock
+/*
+ * Level 2 override.
+ * These work to define members in an object.
+ * We use the object to store multiple return values.
+ */
+#define MOCK2_PARAM_EXPAND(func, name1, name2)              mockOutFunction_ ## func(parent, name1, name2)
+#define MOCK2_MEMBER_EXPAND(type, func)                     MockFunctionOveride<type> mockOutFunction_ ## func
+#define MOCK2_TMEMBER(func)                                 MOCK2_MEMBER_EXPAND(ThorsAnvil::BuildTools::Mock::FuncType_ ## func, func)
+#define MOCK2_MEMBER(func)                                  MOCK2_MEMBER_EXPAND(decltype(::func), func)
+#define MOCK2_TMEM_PARAM(func)                              MOCK2_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), MOCK2_BUILD_MOCK_NAME(func))
+#define MOCK2_MEM_PARAM(func)                               MOCK2_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), MOCK2_BUILD_MOCK_NAME(func))
+
+
+/*
+ * Macros used to convert a function name into appropriate variable
+ * Used with MOCK2_* calls 
+ */
+#define expectObjectTA(name)                                expectObject(ThorsAnvil::BuildTools::Mock:: name)
+
+#define expectInitTA(func)                                  expectInit(MOCK2_BUILD_MOCK_NAME(func))
+#define expectDestTA(func)                                  expectDest(MOCK2_BUILD_MOCK_NAME(func))
+#define expectCallTA(func)                                  expectCall(MOCK2_BUILD_MOCK_NAME(func))
+#define optionalTA(func)                                    optional(MOCK2_BUILD_MOCK_NAME(func))
+
+namespace ThorsAnvil::BuildTools
 {
-    // Return Type: Extracted from a function type.
+    /*
+     * Meta programming:
+     *  Extract information from Types
+     */
+
     template<typename F>
     struct ReturnTypeExtractor;
 
@@ -52,6 +96,8 @@ namespace ThorsAnvil::BuildTools::Mock
 
     template<typename F>
     using ReturnType = typename ReturnTypeExtractor<F>::Type;
+
+    // ---------
 
     // Standardize: Parameter Type for storage.
     template<typename P>
@@ -65,9 +111,11 @@ namespace ThorsAnvil::BuildTools::Mock
     {
         using Type = std::string;
     };
+
     template<typename P>
     using StandardParameter = typename StandardParameterTypeExtractor<P>::Type;
 
+    // ---------
 
     template<typename F>
     struct ParameterTypeExtractor;
@@ -81,141 +129,700 @@ namespace ThorsAnvil::BuildTools::Mock
     template<typename F>
     using ParameterType = typename ParameterTypeExtractor<F>::Type;
 
+    // ---------------
+
+    template<typename F>
+    struct ArgumentsExtractor;
+    template<typename R, typename... Args>
+    struct ArgumentsExtractor<R(Args...)>
+    {
+        using Type = std::tuple<Args...>;
+    };
+
+    template<typename F>
+    using Arguments = typename ArgumentsExtractor<F>::Type;
+
+    // -----------------
+
     template <typename T>
-    struct RemoveNoExcept
+    struct RemoveNoExceptExtractor
     {
         using Type = T;
     };
 
-    template <typename R, typename ...P>
-    struct RemoveNoExcept<R(P...) noexcept>
+    template <typename R, typename... Args>
+    struct RemoveNoExceptExtractor<R(Args...) noexcept>
     {
-        using Type = R(P...);
+        using Type = R(Args...);
     };
 
-    template <typename T>
-    using RemoveNoExceptType = typename RemoveNoExcept<T>::Type;
+    template <typename F>
+    using RemoveNoExcept = typename RemoveNoExceptExtractor<F>::Type;
 
-    struct MockAction
+    // ---------------------
+
+    template<typename R>
+    struct OutputTypeExtractor
     {
-        std::string                 action;
-        std::vector<std::string>    expectedInit;
-        std::vector<std::string>    expectedDest;
-        std::vector<std::string>    optional;
-        std::vector<std::string>    expectedError;
+        using Type = R;
+    };
+    template<>
+    struct OutputTypeExtractor<void>
+    {
+        using Type = bool;
     };
 
+    template<typename R>
+    using OutputType = typename OutputTypeExtractor<R>::Type;
 
-    template<typename Func>
-    struct MockFunctionHolder;
+    // ---------------------
+}
 
-    class MockOverride
-    {
-        static std::vector<MockOverride*>   activeOverride;
+namespace ThorsAnvil::BuildTools::Mock
+{
+    /*
+     *  template<typename Func>
+     *  struct MockFunctionHolder;
+     *
+     *  template<typename Func>
+     *  struct MockOutFunction;
+     *
+     *  class ActionStore;
+     *
+     *  template<typename MockObject>
+     *  class TA_ObjectOption;
+     *
+     *  class TA_Object;
+     *
+     *  template<typename MockObject>
+     *  class TA_Code;
+     *
+     *  class TA_Test;
+     *
+     *  template<typename R, typename... Args>
+     *  class MockResultHolder<R(Args...)>;
+     *
+     *  template<typename R, typename... Args>
+     *  class MockFunctionOveride<R(Args...)>;
+     *
+     */
 
-        enum State {Construct, Destruct, Error};
+        /*
+         * Enum
+         */
+        enum Action {Adding, Cleaning, AddError};
+        enum class Required {Yes, No};
+        enum class Order {InOrder, Any};
+        enum class Insert {Append, Inject};
 
-        State                   state;
-        bool                    exceptionHappened;
-        int                     nextExpected;
-        int                     nextInSequence;
-        std::vector<MockAction> expected;
+        using ActionInit = std::function<std::size_t(Action, std::size_t, bool)>;
 
-        public:
-            MockOverride();
-            ~MockOverride();
+        /*
+         * Forward declarations
+         */
+        template<typename R, typename... Args>
+        class MockFunctionOveride;
 
-        private:
-            template<typename Func>
-            friend struct MockFunctionHolder;
+        template<typename R, typename... Args>
+        class MockResultHolder;
 
-            static void checkExpectedActive(std::string const& called);
-            void checkExpected(std::string const& called);
+        class TA_Test;
 
-        private:
-            friend class MockActionThrowDetext;
-            static void pushActionActive(MockAction action);
-            static void popActionActive();
-            static void noteExceptionActive();
+        class TA_Object;
 
-        private:
-            bool peekDestructor(std::string const& called);
-            void CheckExpectedConstruct(std::string const& called);
-            void CheckExpectedDestruct(std::string const& called);
+        /*
+         * Functions
+         */
+        TA_Object build();
 
-            void pushAction(MockAction action);
-            void popAction();
-            void noteException();
+        /*
+         * Classes declarations:
+         */
 
-    };
-    class MockActionThrowDetext
-    {
-        public:
-            MockActionThrowDetext();
-            MockActionThrowDetext(MockAction action, std::initializer_list<std::string> errors = {});
-            ~MockActionThrowDetext();
-    };
-    class MockActionAddObject: public MockActionThrowDetext
-    {
-        public:
-            using MockActionThrowDetext::MockActionThrowDetext;
-    };
-    class MockActionAddCode: public MockActionThrowDetext
-    {
-        public:
-            using MockActionThrowDetext::MockActionThrowDetext;
-    };
-
-    template<typename Func>
-    struct MockFunctionHolder
-    {
-        using Param   = ParameterType<Func>;
-
-        std::string             name;
-        std::function<Func>     action;
-        std::vector<Param>      expectedInput;
-        std::size_t             nextInput;
-
-        template<typename F>
-        MockFunctionHolder(std::string const& name, F&& action)
-            : name(name)
-            , action(std::move(action))
-            , nextInput(0)
-        {}
-        std::string const& getName() const {return name;}
-        template<typename... Args>
-        ReturnType<Func> operator()(Args&&... args)
+        template<typename Func>
+        struct MockFunctionHolder
         {
-            MockOverride::checkExpectedActive(name);
+            using Param   = ParameterType<Func>;
 
-            if (nextInput < expectedInput.size()) {
-                EXPECT_EQ(expectedInput[nextInput], std::tie(args...));
-                ++nextInput;
+            std::string             name;
+            std::function<Func>     action;
+            std::vector<Param>      expectedInput;
+
+            template<typename F>
+            MockFunctionHolder(std::string const& name, F&& action);
+            std::string const& getName() const;
+            template<typename... Args>
+            ReturnType<Func> operator()(Args&&... args);
+        };
+
+        template<typename Func>
+        struct MockOutFunction
+        {
+            std::function<Func>         old;
+            MockFunctionHolder<Func>&   orig;
+            MockOutFunction(MockFunctionHolder<Func>& orig, std::function<Func>&& mock);
+            ~MockOutFunction();
+        };
+
+        class ActionStore
+        {
+            std::vector<ActionInit>     data;
+            std::size_t                 finalOrderedAction = -1;
+            public:
+            void add(Order order, ActionInit&& func)
+            {
+                if (order == Order::InOrder) {
+                    finalOrderedAction = data.size();
+                }
+                data.emplace_back(std::move(func));
             }
-            return action(std::forward<Args>(args)...);
-        }
-    };
+            bool        empty()             const {return data.empty();}
+            bool        hasNoRequired()     const {return finalOrderedAction == std::size_t(-1);}
+            std::size_t size()              const {return data.size();}
+            std::size_t lastOrderedAction() const {return finalOrderedAction;}
+            ActionInit const& operator[](std::size_t index) const {return data[index];}
+        };
 
-    template<typename Func>
-    struct MockOutFunction
+        template<typename MockObject>
+        class TA_ObjectOption
+        {
+            using ReturnType = typename MockObject::Ret;
+
+            TA_Object&      object;
+            ActionStore&    store;
+            MockObject*     mockObjectHolder;
+            std::size_t     count;
+            ReturnType      result;
+            Required        required;
+            Order           order;
+
+            public:
+                TA_ObjectOption(TA_Object& object, std::size_t count, ActionStore& store, MockObject& mockObjectHolder, Required required, Order order);
+
+                operator TA_Object& ();
+                TA_ObjectOption& toReturn(ReturnType&& ret);
+                TA_ObjectOption& anyOrder();
+
+                template<typename NextMockObject>
+                TA_ObjectOption<NextMockObject> expectInit(NextMockObject& action);
+                template<typename NextMockObject>
+                TA_ObjectOption<NextMockObject> expectDest(NextMockObject& action);
+                template<typename NextMockObject>
+                TA_ObjectOption<NextMockObject> optional(NextMockObject& action);
+            private:
+                void saveAction();
+        };
+
+        class TA_Object
+        {
+            template<typename MockObject>
+            friend class TA_ObjectOption;
+            template<typename MockObject>
+            friend class TA_Code;
+            friend class TA_Test;
+
+            ActionStore init;
+            ActionStore dest;
+            ActionStore opt;
+            ActionStore errors;
+            std::vector<std::function<void()>>     reset;
+
+            public:
+                template<typename MockObject>
+                TA_ObjectOption<MockObject> expectInit(MockObject& action);
+
+                template<typename MockObject>
+                TA_ObjectOption<MockObject> expectDest(MockObject& action);
+
+                template<typename MockObject>
+                TA_ObjectOption<MockObject> optional(MockObject& action);
+
+            private:
+                template<typename MockObject, typename Result>
+                void expectCall(MockObject& action, std::size_t count, Result&& result, Insert insert, Order order);
+
+                bool hasError() const;
+                bool addInit(std::size_t callOrder) const;
+                bool addDest(std::size_t callOrder) const;
+                bool addErrors(std::size_t callOrder) const;
+                void remInit(bool checkForError, bool removeOpt) const;
+                void remDest(bool checkForError) const;
+                void remErrors() const;
+        };
+
+        template<typename MockObject>
+        class TA_Code
+        {
+            protected:
+                TA_Test&    parent;
+                MockObject& action;
+                std::size_t count;
+                Insert      insert;
+                Order       order;
+                bool        callSaved;
+
+            public:
+                using Ret = typename MockObject::Ret;
+
+                TA_Code(TA_Test& parent, MockObject& action, Insert insert, Order order);
+
+                TA_Code& toReturn(Ret&& result);
+                TA_Code& inject();
+                TA_Code& anyOrder();
+
+                template<typename NextMockObject>
+                TA_Code<NextMockObject> expectCall(NextMockObject& nextAction);
+
+                TA_Test& expectObject(TA_Object const& object);
+                void run();
+            private:
+                void saveAction(Ret&& result);
+        };
+
+        class TA_Test
+        {
+            enum State {Init, Construct, Destruct, Error, Cleanup, Finished};
+            bool                            hasRun;
+            std::vector<TA_Object>          objects;
+            std::size_t                     callOrder;
+            std::size_t                     next;
+            bool                            lastInBlockReached;
+            bool                            exceptionSpotted;
+            State                           state;
+
+            public:
+                TA_Test();
+                ~TA_Test();
+
+                TA_Test& expectObject(TA_Object const& object);
+
+                template<typename MockObject>
+                TA_Code<MockObject> expectCall(MockObject& action);
+                void run();
+
+            protected:
+                bool isExceptionSpotted() const {return exceptionSpotted;}
+                bool unexpectedThrow(bool exceptionInProgress);
+                virtual void runLambda() = 0;
+
+            private:
+                template<typename R, typename... Args>
+                friend class MockResultHolder;
+
+                bool unexpected();
+                bool mockCalled(std::size_t order, bool last);
+
+            private:
+                template<typename MockObject>
+                friend class TA_Code;
+
+                bool addInit();
+                bool addDest();
+                bool addErrors();
+                void remInit(bool checkForError, bool removeOpt);
+                void remDest(bool checkForError);
+                void remErrors();
+                bool setDest(bool exceptionInProgress);
+        };
+
+        template<typename R, typename... Args>
+        class MockResultHolder<R(Args...)>
+        {
+            public:
+                using Ret = OutputType<R>;
+            private:
+                friend class MockFunctionOveride<R(Args...)>;
+                using OutputInfo = std::tuple<std::size_t, std::size_t, bool, Ret, Required>;
+                using InputInfo  = std::unique_ptr<std::tuple<Args...>>;
+
+                std::string                     name;
+                std::function<R(Args...)>       original;
+                std::vector<InputInfo>          input;
+                std::vector<OutputInfo>         output;
+                std::size_t                     next;
+                bool                            errorMode;
+
+            public:
+                template<typename F>
+                MockResultHolder(std::string const& name, F&& original);
+
+                std::string const& getName() const;
+                std::size_t expectInit(Action action, std::size_t index, std::size_t count, bool last, Ret&& value, Required required, Order order);
+                void reset();
+                R call(TA_Test& parent, Args&&... args);
+        };
+
+        /*
+         * An object that will replace the current definition of the function.
+         * Constructor sets its. Destructor replaces the original value.
+         */
+        template<typename R, typename... Args>
+        class MockFunctionOveride<R(Args...)>
+        {
+            using Version1Holder    = ThorsAnvil::BuildTools::Mock::MockFunctionHolder<R(Args...)>;
+            using Version2Holder    = ThorsAnvil::BuildTools::Mock::MockResultHolder<R(Args...)>;
+
+            TA_Test&                        parent;
+            Version1Holder&                 v1Holder;
+            Version2Holder&                 v2Holder;
+            std::function<R(Args...)>       old;
+
+
+            public:
+                MockFunctionOveride(TA_Test& parent, Version1Holder& v1Holder, Version2Holder& v2Holder);
+                ~MockFunctionOveride();
+        };
+
+// -------------------------
+// MockFunctionHolder
+// -------------------------
+
+template<typename Func>
+template<typename F>
+MockFunctionHolder<Func>::MockFunctionHolder(std::string const& name, F&& action)
+    : name(name)
+    , action(std::move(action))
+{}
+
+template<typename Func>
+std::string const& MockFunctionHolder<Func>::getName() const
+{
+    return name;
+}
+
+template<typename Func>
+template<typename... Args>
+ReturnType<Func> MockFunctionHolder<Func>::operator()(Args&&... args)
+{
+    return action(std::forward<Args>(args)...);
+}
+
+// -------------------------
+// TA_ObjectOption
+// -------------------------
+
+template<typename Func>
+MockOutFunction<Func>::MockOutFunction(MockFunctionHolder<Func>& orig, std::function<Func>&& mock)
+    : old(std::move(mock))
+    , orig(orig)
+{
+    //std::cerr << "Overriding: " << orig.name << "\n";
+    swap(old, orig.action);
+}
+
+template<typename Func>
+MockOutFunction<Func>::~MockOutFunction()
+{
+    //std::cerr << "Resetting : " << orig.name << "\n";
+    swap(old, orig.action);
+    orig.expectedInput.clear();
+}
+
+// -------------------------
+// TA_ObjectOption
+// -------------------------
+
+template<typename MockObject>
+TA_ObjectOption<MockObject>::TA_ObjectOption(TA_Object& object, std::size_t count, ActionStore& store, MockObject& mockObjectHolder, Required required, Order order)
+    : object(object)
+    , store(store)
+    , mockObjectHolder(&mockObjectHolder)
+    , count(count)
+    , result()
+    , required(required)
+    , order(order)
+{}
+
+template<typename MockObject>
+TA_ObjectOption<MockObject>::operator TA_Object& ()
+{
+    saveAction();
+    return object;
+}
+
+template<typename MockObject>
+TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::toReturn(ReturnType&& ret)
+{
+    result = std::move(ret);
+    return *this;
+}
+
+template<typename MockObject>
+TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::anyOrder()
+{
+    order = Order::Any;
+    return *this;
+}
+
+template<typename MockObject>
+template<typename NextMockObject>
+inline TA_ObjectOption<NextMockObject> TA_ObjectOption<MockObject>::expectInit(NextMockObject& action)
+{
+    saveAction();
+    return TA_ObjectOption<NextMockObject>(object, 1, object.init, action, Required::Yes, Order::InOrder);
+}
+template<typename MockObject>
+template<typename NextMockObject>
+inline TA_ObjectOption<NextMockObject> TA_ObjectOption<MockObject>::expectDest(NextMockObject& action)
+{
+    saveAction();
+    return TA_ObjectOption<NextMockObject>(object, 1, object.dest, action, Required::Yes, Order::InOrder);
+}
+template<typename MockObject>
+template<typename NextMockObject>
+inline TA_ObjectOption<NextMockObject> TA_ObjectOption<MockObject>::optional(NextMockObject& action)
+{
+    saveAction();
+    return TA_ObjectOption<NextMockObject>(object, -1, object.opt, action, Required::No, Order::Any);
+}
+
+template<typename MockObject>
+inline void TA_ObjectOption<MockObject>::saveAction()
+{
+    store.add(order, [mock = mockObjectHolder, r = std::move(result), c = count, re = required, o = order](Action action, std::size_t index, bool last) mutable {
+        return mock->expectInit(action, index, c, last, std::move(r), re, o);
+    });
+}
+
+// -------------------------
+// TA_Object
+// -------------------------
+template<typename MockObject>
+TA_ObjectOption<MockObject> TA_Object::expectInit(MockObject& action)
+{
+    return TA_ObjectOption(*this, 1, init, action, Required::Yes, Order::InOrder);
+}
+
+template<typename MockObject>
+TA_ObjectOption<MockObject> TA_Object::expectDest(MockObject& action)
+{
+    return TA_ObjectOption(*this, 1, dest, action, Required::Yes, Order::InOrder);
+}
+
+template<typename MockObject>
+TA_ObjectOption<MockObject> TA_Object::optional(MockObject& action)
+{
+    return TA_ObjectOption(*this, -1, opt, action, Required::No, Order::Any);
+}
+
+template<typename MockObject, typename Result>
+void TA_Object::expectCall(MockObject& action, std::size_t count, Result&& result, Insert insert, Order order)
+{
+    if (insert == Insert::Inject) {
+        reset.emplace_back([mockObject = &action](){mockObject->reset();});
+    }
+    errors.add(order, [mockObject = &action, c = count, r = std::forward<Result>(result), o = order](Action action, std::size_t index, bool last) mutable {
+        return mockObject->expectInit(action, index, c, last, std::move(r), Required::Yes, o);
+    });
+}
+
+// -------------------------
+// TA_Code
+// -------------------------
+
+template<typename MockObject>
+TA_Code<MockObject>::TA_Code(TA_Test& parent, MockObject& action, Insert insert, Order order)
+    : parent(parent)
+    , action(action)
+    , count(1)
+    , insert(insert)
+    , order(order)
+    , callSaved(false)
+{}
+
+template<typename MockObject>
+void TA_Code<MockObject>::run()
+{
+    if (!callSaved) {
+        saveAction({});
+    }
+    parent.run();
+}
+
+template<typename MockObject>
+TA_Code<MockObject>& TA_Code<MockObject>::toReturn(Ret&& result)
+{
+    saveAction(std::forward<Ret>(result));
+    return *this;
+}
+
+template<typename MockObject>
+TA_Code<MockObject>& TA_Code<MockObject>::inject()
+{
+    insert = Insert::Inject;
+    return *this;
+}
+
+template<typename MockObject>
+TA_Code<MockObject>& TA_Code<MockObject>::anyOrder()
+{
+    order = Order::Any;
+    return *this;
+}
+
+template<typename MockObject>
+inline TA_Test& TA_Code<MockObject>::expectObject(TA_Object const& object)
+{
+    if (!callSaved) {
+        saveAction({});
+    }
+    return parent.expectObject(object);
+}
+
+template<typename MockObject>
+template<typename NextMockObject>
+TA_Code<NextMockObject> TA_Code<MockObject>::expectCall(NextMockObject& nextAction)
+{
+    if (!callSaved) {
+        saveAction({});
+    }
+    return TA_Code<NextMockObject>(parent, nextAction, Insert::Append, Order::InOrder);
+}
+
+template<typename MockObject>
+void TA_Code<MockObject>::saveAction(Ret&& result)
+{
+    if (parent.objects.empty()) {
+        parent.objects.emplace_back();
+    }
+    callSaved = true;
+    parent.objects.back().expectCall(action, count, std::forward<Ret>(result), insert, order);
+}
+
+// -------------------------
+// TA_Test
+// -------------------------
+
+template<typename MockObject>
+TA_Code<MockObject> TA_Test::expectCall(MockObject& action)
+{
+    return TA_Code<MockObject>(*this, action, Insert::Append, Order::InOrder);
+}
+
+// -------------------------
+// MockResultHolder
+// -------------------------
+
+template<typename R, typename... Args>
+template<typename F>
+MockResultHolder<R(Args...)>::MockResultHolder(std::string const& name, F&& original)
+    : name(name)
+    , original(std::move(original))
+    , next(0)
+    , errorMode(false)
+{}
+
+template<typename R, typename... Args>
+std::string const& MockResultHolder<R(Args...)>::getName() const
+{
+    return name;
+}
+
+template<typename R, typename... Args>
+std::size_t MockResultHolder<R(Args...)>::expectInit(Action action, std::size_t index, std::size_t count, bool last, Ret&& value, Required required, Order order)
+{
+    switch (action)
     {
-        std::function<Func>         old;
-        MockFunctionHolder<Func>&   orig;
-        MockOutFunction(MockFunctionHolder<Func>& orig, std::function<Func>&& mock)
-            : old(std::move(mock))
-            , orig(orig)
+        case AddError:
+            if (!errorMode) {
+                output.clear();
+                errorMode = true;
+            }
+            // Fall through to Adding
+        case Adding:
         {
-            //std::cerr << "Overriding: " << orig.name << "\n";
-            swap(old, orig.action);
+            std::size_t indexOrder = -1;
+            if (order == Order::InOrder) {
+                indexOrder = index++;
+            }
+            output.emplace_back(OutputInfo{indexOrder, count, last, std::move(value), required});
+            break;
         }
-        ~MockOutFunction()
+        case Cleaning:
         {
-            //std::cerr << "Resetting : " << orig.name << "\n";
-            swap(old, orig.action);
-            EXPECT_EQ(orig.nextInput, orig.expectedInput.size());
-            orig.nextInput = 0;
-            orig.expectedInput.clear();
+            if (index == 0) {
+                std::size_t count = 0;
+                for (std::size_t loop = next; loop < output.size(); ++loop) {
+                    OutputInfo& outputInfo = output[loop];
+                    Required&   required   = std::get<4>(outputInfo);
+                    count += (required == Required::Yes) ? 1: 0;
+                }
+                EXPECT_EQ(count, 0)
+                        << "Function: " << getName() << " did not use all expected calls. "
+                        << (output.size() - next) << " left unused";
+            }
+            reset();
+            break;
         }
-    };
+    }
+    return index;
+}
 
+template<typename R, typename... Args>
+void MockResultHolder<R(Args...)>::reset()
+{
+    output.clear();
+    input.clear();
+    next = 0;
+    errorMode = false;
+}
+
+template<typename R, typename... Args>
+R MockResultHolder<R(Args...)>::call(TA_Test& parent, Args&&... args)
+{
+    //std::cerr << "Calling: " << getName() << "\n";
+    while (next == output.size()) {
+        if (!parent.unexpected()) {
+            // There are no more changes that can be made.
+            break;
+        }
+    }
+
+    if (next < input.size() && static_cast<bool>(input[next])) {
+        std::tuple<Args...>&    expected = *input[next];
+        EXPECT_EQ(std::tie(args...), expected) << "Function: " << getName() << " Input to function does not match expectations";
+    }
+    if (next < output.size()) {
+        OutputInfo& outputInfo = output[next];
+        std::size_t   nextCallIndex = std::get<0>(outputInfo);
+        std::size_t&  callCount     = std::get<1>(outputInfo);
+        bool          lastCall      = std::get<2>(outputInfo);
+
+        --callCount;
+        if (callCount == 0) {
+            ++next;
+        }
+
+        EXPECT_TRUE(parent.mockCalled(nextCallIndex, lastCall)) << "Function: " << getName() << "Called out of order";
+        if constexpr (std::is_same_v<R, void>) {
+            return;
+        }
+        else {
+            return std::get<3>(outputInfo);
+        }
+    }
+    EXPECT_TRUE(next < output.size()) << "Function: " << getName() << " called more times than expected";
+    throw std::runtime_error("Failed");
+    // return original(std::forward<Args>(args)...);
+}
+
+// -------------------------
+// MockFunctionOveride
+// -------------------------
+
+template<typename R, typename... Args>
+MockFunctionOveride<R(Args...)>::MockFunctionOveride(TA_Test& parent, Version1Holder& v1Holder, Version2Holder& v2Holder)
+    : parent(parent)
+    , v1Holder(v1Holder)
+    , v2Holder(v2Holder)
+    , old([&](Args&&... args){return v2Holder.call(parent, std::forward<Args>(args)...);})
+{
+    std::swap(old, v1Holder.action);
+}
+
+template<typename R, typename... Args>
+MockFunctionOveride<R(Args...)>::~MockFunctionOveride()
+{
+    std::swap(old, v1Holder.action);
+}
 

@@ -322,8 +322,8 @@ MOCK_HEADER_INCLUDES		=   $(if $(MOCK_HEADER_INCLUDES_FILES), -include $(MOCK_HE
 MOCK_HEADERS_coverage		=	$(MOCK_HEADER_INCLUDES) -include coverage/MockHeaders.h
 MOCK_HEADERS_release		=   -DMOCK_FUNC\(x\)=::x -DMOCK_TFUNC\(x\)=::x
 MOCK_HEADERS_debug			=   -DMOCK_FUNC\(x\)=::x -DMOCK_TFUNC\(x\)=::x
-MOCK_FILES_coverage			=	$(BASE)/coverage/MockHeaders.h $(BASE)/coverage/MockHeaders.cpp $(BASE)/coverage/MockHeaders2.h $(BASE)/coverage/MockHeaders2.cpp
-MOCK_OBJECT_coverage		=	$(BASE)/coverage/MockHeaders.o $(BASE)/coverage/MockHeaders2.o
+MOCK_FILES_coverage			=	$(BASE)/coverage/MockHeaders.h $(BASE)/coverage/MockHeaders.cpp
+MOCK_OBJECT_coverage		=	$(BASE)/coverage/MockHeaders.o
 MOCK_HEADERS				=	$(MOCK_HEADERS_$(TARGET_MODE))
 MOCK_FILES					=	$(MOCK_FILES_$(TARGET_MODE))
 MOCK_OBJECT					=	$(MOCK_OBJECT_$(TARGET_MODE))
@@ -526,27 +526,6 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 	fi
 
 $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
-	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
-	elif ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
-	fi
-	@export tmpfile=$(shell $(MKTEMP));					\
-	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
-	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
-	if [ $$? != 0 ];									\
-	then												\
-		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
-		$(ECHO) "========================================";\
-		cat $${tmpfile};								\
-		exit 1;											\
-	else 												\
-		$(ECHO) $(GREEN_OK);							\
-		$(RM) $${tmpfile};								\
-	fi
-
-$(BASE)/coverage/MockHeaders2.o: $(BASE)/coverage/MockHeaders2.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+
+
+while read line; do
+    split=(${line})
+    name=${split[0]}
+    type=${split[1]}
+
+    find=$(grep "MOCK_${type}MEMBER(${name});" test/MockHeaderInclude.h)
+    if [[ "${find}" == "" ]]; then
+        echo "    MOCK_${type}MEMBER(${name});"
+    fi
+done

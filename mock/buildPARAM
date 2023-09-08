@@ -1,0 +1,8 @@
+#!/bin/bash
+
+while read line; do
+    find=$(grep " MOCK_PARAM(${line}," test/MockHeaderInclude.h)
+    if [[ "${find}" == "" ]]; then
+        echo "            , MOCK_PARAM(${line},     []( Add expected parameters here ){return Add default value here;}),"
+    fi
+done

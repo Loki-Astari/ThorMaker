@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat ../../src/ThorsSocket/test/MockHeaderInclude.h | awk 'BEGIN {InSection=0;} /'$1'-Start/ {InSection=1;next;} /'$1'-End/ {InSection=0} {if (InSection == 1){print}}'

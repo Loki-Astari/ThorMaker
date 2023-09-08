@@ -1,4 +1,59 @@
 
+        class TA_TestNoThrow: public TA_Test
+        {
+            std::function<void()>           lambda;
+            MockFunctionGroup               defaultMockObjects;
+            public:
+                template<typename Lambda>
+                TA_TestNoThrow(Lambda&& lambda);
+            private:
+                virtual void runLambda();
+        };
+
+        template<typename Throws = std::runtime_error>
+        class TA_TestThrow: public TA_Test
+        {
+            std::function<void()>           lambda;
+            MockFunctionGroup               defaultMockObjects;
+            public:
+                template<typename Lambda>
+                TA_TestThrow(Lambda&& lambda);
+            private:
+                virtual void runLambda();
+        };
+
+// -------------------------
+// TA_TestNoThrow
+// -------------------------
+
+template<typename Lambda>
+TA_TestNoThrow::TA_TestNoThrow(Lambda&& lambda)
+    : TA_Test()
+    , lambda(std::forward<Lambda>(lambda))
+    , defaultMockObjects(*this)
+{}
+
+// -------------------------
+// TA_TestThrow
+// -------------------------
+
+template<typename Throws>
+template<typename Lambda>
+TA_TestThrow<Throws>::TA_TestThrow(Lambda&& lambda)
+    : TA_Test()
+    , lambda(std::forward<Lambda>(lambda))
+    , defaultMockObjects(*this)
+{}
+
+template<typename Throws>
+void TA_TestThrow<Throws>::runLambda()
+{
+    EXPECT_THROW(lambda(), Throws);
+    if (!isExceptionSpotted()) {
+        unexpectedThrow(true);
+    }
+}
+
 }
 
 #endif

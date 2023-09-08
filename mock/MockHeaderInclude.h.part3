@@ -1,0 +1,18 @@
+// PART-2-End
+// This default implementation of overridden functions
+// Please provide a lambda for the implementation
+// When you add/remove a MOCK_FUNC or MOCK_TFUNC to the source
+// This list will be updated.
+
+typedef int (*CB)(char*, int, int, void*);
+typedef int (*VCB)(int, X509_STORE_CTX*);
+}
+
+#include "coverage/MockHeaders.h"
+
+namespace ThorsAnvil::BuildTools::Mock
+{
+class MockAllDefaultFunctions
+{
+    int version;
+// PART-3-Start

@@ -9,4 +9,287 @@
 namespace ThorsAnvil::BuildTools::Mock
 {
 
+// -------------------------
+// TA_Object
+// -------------------------
+
+TA_Object build()
+{
+    return {};
+}
+
+bool TA_Object::hasError() const
+{
+    return !errors.empty();
+}
+
+bool TA_Object::addInit(std::size_t callOrder) const
+{
+    std::size_t expectedCallOrder = callOrder;
+    for (std::size_t loop = 0; loop < init.size(); ++loop) {
+        expectedCallOrder = init[loop](Adding, expectedCallOrder, loop == init.lastOrderedAction());
+    }
+    for (std::size_t loop = 0; loop < opt.size(); ++loop) {
+        opt[loop](Adding, -1, false);
+    }
+    for (std::size_t loop = 0; loop < reset.size(); ++loop) {
+        reset[loop]();
+    }
+
+    return init.hasNoRequired();
+}
+
+bool TA_Object::addDest(std::size_t callOrder) const
+{
+    std::size_t expectedCallOrder = callOrder;
+    for (std::size_t loop = 0; loop < dest.size(); ++loop) {
+        expectedCallOrder = dest[loop](Adding, expectedCallOrder, loop == dest.lastOrderedAction());
+    }
+    return dest.hasNoRequired();
+}
+
+bool TA_Object::addErrors(std::size_t callOrder) const
+{
+    std::size_t expectedCallOrder = callOrder;
+    for (std::size_t loop = 0; loop < errors.size(); ++loop) {
+        expectedCallOrder = errors[loop](AddError, expectedCallOrder, loop == errors.lastOrderedAction());
+    }
+    return errors.hasNoRequired();
+}
+
+void TA_Object::remInit(bool checkForError, bool removeOpt) const
+{
+    for (std::size_t loop = 0; loop < init.size(); ++loop) {
+        init[loop](Cleaning, checkForError ? 0 : -1, false);
+    }
+    if (removeOpt)
+    {
+        for (std::size_t loop = 0; loop < opt.size(); ++loop) {
+            opt[loop](Cleaning, -1, false);
+        }
+    }
+}
+
+void TA_Object::remDest(bool checkForError) const
+{
+    for (std::size_t loop = 0; loop < dest.size(); ++loop) {
+        dest[loop](Cleaning, checkForError ? 0 : -1, false);
+    }
+}
+
+void TA_Object::remErrors() const
+{
+    for (std::size_t loop = 0; loop < errors.size(); ++loop) {
+        errors[loop](Cleaning, -1, false);
+    }
+    for (std::size_t loop = 0; loop < opt.size(); ++loop) {
+        opt[loop](Cleaning, -1, false);
+    }
+}
+
+// -------------------------
+// TA_Test
+// -------------------------
+
+TA_Test::TA_Test()
+    : hasRun(false)
+    , callOrder(0)
+    , next(0)
+    , lastInBlockReached(true)
+    , exceptionSpotted(false)
+    , state(Init)
+{}
+
+TA_Test& TA_Test::expectObject(TA_Object const& object)
+{
+    objects.emplace_back(object);
+    return *this;
+}
+
+TA_Test::~TA_Test()
+{
+    EXPECT_TRUE(hasRun) << "You created a test. But it was not run";
+}
+
+void TA_Test::run()
+{
+    hasRun = true;
+    unexpected();
+    runLambda();
+    while (unexpected()) {
+        // If this call generates any required calls.
+        // Then we will get appropriate error messages generated.
+        // No Code here deliberately
+    }
+    if (!objects.empty()) {
+        EXPECT_EQ(state, Finished) << "Not all objects were used in this test";
+    }
+}
+
+bool TA_Test::mockCalled(std::size_t order, bool last)
+{
+    if (order == std::size_t(-1)) {
+        // This is an optional method.
+        return true;
+    }
+    EXPECT_EQ(order, callOrder) << " Functions called in wrong order";
+    ++callOrder;
+    lastInBlockReached = last;
+    return (callOrder - 1) == order;
+}
+
+bool TA_Test::setDest(bool exceptionInProgress)
+{
+    bool result = true;
+
+    if (!exceptionSpotted && exceptionInProgress) {
+        exceptionSpotted = true;
+        --next;
+    }
+    if (next > 0) {
+        result = addDest();
+        state = (next == 0) ? Cleanup : Destruct;
+    }
+    else {
+        state = Finished;
+        result = true;
+    }
+    return result;
+}
+
+bool TA_Test::unexpected()
+{
+    return unexpectedThrow(std::uncaught_exceptions() > 0);
+}
+
+bool TA_Test::unexpectedThrow(bool exceptionInProgress)
+{
+    //std::cerr << "Unexpected\n";
+    if (objects.size() == 0) {
+        return false;
+    }
+
+    if (state != Error && next > 0 && next <= objects.size() && objects[next-1].hasError()) {
+        //std::cerr << "  Setting Errors\n";
+        state = Error;
+        remInit(false, false);
+        lastInBlockReached = addErrors();
+        return true;
+    }
+
+    if (!exceptionSpotted && exceptionInProgress) {
+        //std::cerr << "  Exception in progress\n";
+        if (state == Construct || state == Error) {
+            EXPECT_EQ(next, objects.size()) << "Exception happened before all test objects used";
+        }
+    }
+
+    //std::cerr << "  Switching State\n";
+    switch (state)
+    {
+        case Init:
+        {
+            //std::cerr << "    Init -> Construct\n";
+            state = Construct;
+            lastInBlockReached = addInit();
+            break;
+        }
+        case Construct:
+        {
+            remInit(true, true);
+            if (next < objects.size()) {
+                //std::cerr << "    Construct -> Construct\n";
+                lastInBlockReached = addInit();
+            }
+            else {
+                //std::cerr << "    Construct -> Destruct\n";
+                lastInBlockReached = setDest(exceptionInProgress);
+            }
+            break;
+        }
+        case Destruct:
+        {
+            remDest(true);
+            lastInBlockReached = addDest();
+            if (next == 0) {
+                //std::cerr << "    Destruct -> Cleanup\n";
+                state = Cleanup;;
+            }
+            else {
+                //std::cerr << "    Destruct -> Destruct\n";
+            }
+            break;
+        }
+        case Error:
+        {
+            remErrors();
+            if (next < objects.size()) {
+                //std::cerr << "    Error -> Construct\n";
+                state = Construct;
+                lastInBlockReached = addInit();
+            }
+            else {
+                //std::cerr << "    Error -> Destruct\n";
+                lastInBlockReached = setDest(exceptionInProgress);
+            }
+            break;
+        }
+        case Cleanup:
+        {
+            //std::cerr << "    Cleanup -> Finished\n";
+            remDest(true);
+            state = Finished;
+            // Fall Through to Finished.
+        }
+        case Finished:
+        {
+            // There is no change in state that would help
+            // resolve an unexpected call.
+            lastInBlockReached = true;
+            //std::cerr << "    Finished -> Finished\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool TA_Test::addInit()
+{
+    return objects[next++].addInit(callOrder);
+}
+
+bool TA_Test::addDest()
+{
+    return objects[--next].addDest(callOrder);
+}
+
+bool TA_Test::addErrors()
+{
+    return objects[next-1].addErrors(callOrder);
+}
+
+void TA_Test::remInit(bool checkForError, bool removeOpt)
+{
+    objects[next-1].remInit(checkForError, removeOpt);
+}
+
+void TA_Test::remDest(bool checkForError)
+{
+    objects[next].remDest(checkForError);
+}
+
+void TA_Test::remErrors()
+{
+    objects[next-1].remErrors();
+}
+
+// -------------------------
+// TA_TestNoThrow
+// -------------------------
+
+void TA_TestNoThrow::runLambda()
+{
+    EXPECT_NO_THROW(lambda());
+}
+
 
