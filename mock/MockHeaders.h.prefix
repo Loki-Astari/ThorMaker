@@ -383,7 +383,7 @@ namespace ThorsAnvil::BuildTools::Mock
         {
             enum State {Init, Construct, Destruct, Error, Cleanup, Finished};
             bool                            hasRun;
-            std::vector<TA_Object>          objects;
+            std::vector<TA_Object>          codeBlocks;
             std::size_t                     callOrder;
             std::size_t                     next;
             bool                            lastInBlockReached;
@@ -682,11 +682,11 @@ TA_Code<NextMockObject> TA_Code<MockObject>::expectCall(NextMockObject& nextActi
 template<typename MockObject>
 void TA_Code<MockObject>::saveAction(Ret&& result)
 {
-    if (parent.objects.empty()) {
-        parent.objects.emplace_back();
+    if (parent.codeBlocks.empty()) {
+        parent.codeBlocks.emplace_back();
     }
     callSaved = true;
-    parent.objects.back().expectCall(action, count, std::forward<Ret>(result), insert, order);
+    parent.codeBlocks.back().expectCall(action, count, std::move(result), insert, order);
 }
 
 // -------------------------

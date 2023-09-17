@@ -102,7 +102,7 @@ TA_Test::TA_Test()
 
 TA_Test& TA_Test::expectObject(TA_Object const& object)
 {
-    objects.emplace_back(object);
+    codeBlocks.emplace_back(object);
     return *this;
 }
 
@@ -121,8 +121,8 @@ void TA_Test::run()
         // Then we will get appropriate error messages generated.
         // No Code here deliberately
     }
-    if (!objects.empty()) {
-        EXPECT_EQ(state, Finished) << "Not all objects were used in this test";
+    if (!codeBlocks.empty()) {
+        EXPECT_EQ(state, Finished) << "Not all codeBlocks(s) were used in this test";
     }
 }
 
@@ -165,11 +165,11 @@ bool TA_Test::unexpected()
 bool TA_Test::unexpectedThrow(bool exceptionInProgress)
 {
     //std::cerr << "Unexpected\n";
-    if (objects.size() == 0) {
+    if (codeBlocks.size() == 0) {
         return false;
     }
 
-    if (state != Error && next > 0 && next <= objects.size() && objects[next-1].hasExtraCode()) {
+    if (state != Error && next > 0 && next <= codeBlocks.size() && codeBlocks[next-1].hasExtraCode()) {
         //std::cerr << "  Setting Errors\n";
         state = Error;
         remInit(false, false);
@@ -180,7 +180,7 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
     if (!exceptionSpotted && exceptionInProgress) {
         //std::cerr << "  Exception in progress\n";
         if (state == Construct || state == Error) {
-            EXPECT_EQ(next, objects.size()) << "Exception happened before all test objects used";
+            EXPECT_EQ(next, codeBlocks.size()) << "Exception happened before all test codeBlocks used";
         }
     }
 
@@ -197,7 +197,7 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
         case Construct:
         {
             remInit(true, true);
-            if (next < objects.size()) {
+            if (next < codeBlocks.size()) {
                 //std::cerr << "    Construct -> Construct\n";
                 lastInBlockReached = addInit();
             }
@@ -223,7 +223,7 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
         case Error:
         {
             remExtraCode();
-            if (next < objects.size()) {
+            if (next < codeBlocks.size()) {
                 //std::cerr << "    Error -> Construct\n";
                 state = Construct;
                 lastInBlockReached = addInit();
@@ -255,32 +255,32 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
 
 bool TA_Test::addInit()
 {
-    return objects[next++].addInit(callOrder);
+    return codeBlocks[next++].addInit(callOrder);
 }
 
 bool TA_Test::addDest()
 {
-    return objects[--next].addDest(callOrder);
+    return codeBlocks[--next].addDest(callOrder);
 }
 
 bool TA_Test::addExtraCode()
 {
-    return objects[next-1].addExtraCode(callOrder);
+    return codeBlocks[next-1].addExtraCode(callOrder);
 }
 
 void TA_Test::remInit(bool checkForExtraCode, bool removeOpt)
 {
-    objects[next-1].remInit(checkForExtraCode, removeOpt);
+    codeBlocks[next-1].remInit(checkForExtraCode, removeOpt);
 }
 
 void TA_Test::remDest(bool checkForExtraCode)
 {
-    objects[next].remDest(checkForExtraCode);
+    codeBlocks[next].remDest(checkForExtraCode);
 }
 
 void TA_Test::remExtraCode()
 {
-    objects[next-1].remExtraCode();
+    codeBlocks[next-1].remExtraCode();
 }
 
 // -------------------------
