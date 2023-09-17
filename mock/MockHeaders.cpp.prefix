@@ -20,70 +20,70 @@ TA_Object build()
 
 bool TA_Object::hasExtraCode() const
 {
-    return !extraCode.empty();
+    return !block[BlockType::Extra].empty();
 }
 
 bool TA_Object::addInit(std::size_t callOrder) const
 {
     std::size_t expectedCallOrder = callOrder;
-    for (std::size_t loop = 0; loop < init.size(); ++loop) {
-        expectedCallOrder = init[loop](Adding, expectedCallOrder, loop == init.lastOrderedAction());
+    for (std::size_t loop = 0; loop < block[BlockType::Init].size(); ++loop) {
+        expectedCallOrder = block[BlockType::Init][loop](Adding, expectedCallOrder, loop == block[BlockType::Init].lastOrderedAction());
     }
-    for (std::size_t loop = 0; loop < opt.size(); ++loop) {
-        opt[loop](Adding, -1, false);
+    for (std::size_t loop = 0; loop < block[BlockType::Opt].size(); ++loop) {
+        block[BlockType::Opt][loop](Adding, -1, false);
     }
     for (std::size_t loop = 0; loop < reset.size(); ++loop) {
         reset[loop]();
     }
 
-    return init.hasNoRequired();
+    return block[BlockType::Init].hasNoRequired();
 }
 
 bool TA_Object::addDest(std::size_t callOrder) const
 {
     std::size_t expectedCallOrder = callOrder;
-    for (std::size_t loop = 0; loop < dest.size(); ++loop) {
-        expectedCallOrder = dest[loop](Adding, expectedCallOrder, loop == dest.lastOrderedAction());
+    for (std::size_t loop = 0; loop < block[BlockType::Dest].size(); ++loop) {
+        expectedCallOrder = block[BlockType::Dest][loop](Adding, expectedCallOrder, loop == block[BlockType::Dest].lastOrderedAction());
     }
-    return dest.hasNoRequired();
+    return block[BlockType::Dest].hasNoRequired();
 }
 
 bool TA_Object::addExtraCode(std::size_t callOrder) const
 {
     std::size_t expectedCallOrder = callOrder;
-    for (std::size_t loop = 0; loop < extraCode.size(); ++loop) {
-        expectedCallOrder = extraCode[loop](AddExtra, expectedCallOrder, loop == extraCode.lastOrderedAction());
+    for (std::size_t loop = 0; loop < block[BlockType::Extra].size(); ++loop) {
+        expectedCallOrder = block[BlockType::Extra][loop](AddExtra, expectedCallOrder, loop == block[BlockType::Extra].lastOrderedAction());
     }
-    return extraCode.hasNoRequired();
+    return block[BlockType::Extra].hasNoRequired();
 }
 
 void TA_Object::remInit(bool checkForExtraCode, bool removeOpt) const
 {
-    for (std::size_t loop = 0; loop < init.size(); ++loop) {
-        init[loop](Cleaning, checkForExtraCode ? 0 : -1, false);
+    for (std::size_t loop = 0; loop < block[BlockType::Init].size(); ++loop) {
+        block[BlockType::Init][loop](Cleaning, checkForExtraCode ? 0 : -1, false);
     }
     if (removeOpt)
     {
-        for (std::size_t loop = 0; loop < opt.size(); ++loop) {
-            opt[loop](Cleaning, -1, false);
+        for (std::size_t loop = 0; loop < block[BlockType::Opt].size(); ++loop) {
+            block[BlockType::Opt][loop](Cleaning, -1, false);
         }
     }
 }
 
 void TA_Object::remDest(bool checkForExtraCode) const
 {
-    for (std::size_t loop = 0; loop < dest.size(); ++loop) {
-        dest[loop](Cleaning, checkForExtraCode ? 0 : -1, false);
+    for (std::size_t loop = 0; loop < block[BlockType::Dest].size(); ++loop) {
+        block[BlockType::Dest][loop](Cleaning, checkForExtraCode ? 0 : -1, false);
     }
 }
 
 void TA_Object::remExtraCode() const
 {
-    for (std::size_t loop = 0; loop < extraCode.size(); ++loop) {
-        extraCode[loop](Cleaning, -1, false);
+    for (std::size_t loop = 0; loop < block[BlockType::Extra].size(); ++loop) {
+        block[BlockType::Extra][loop](Cleaning, -1, false);
     }
-    for (std::size_t loop = 0; loop < opt.size(); ++loop) {
-        opt[loop](Cleaning, -1, false);
+    for (std::size_t loop = 0; loop < block[BlockType::Opt].size(); ++loop) {
+        block[BlockType::Opt][loop](Cleaning, -1, false);
     }
 }
 
