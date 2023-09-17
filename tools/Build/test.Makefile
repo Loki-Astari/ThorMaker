@@ -83,9 +83,8 @@ run_unit_test: $(PRETEST)
 #
 # Allows for easy mocking of system calls for unit tests.
 #
-.FORCE:
 coverage/Mock.built:	| coverage.Dir
-$(BASE)/coverage/MockHeaders.h: test/MockHeaderInclude.h | coverage.Dir .FORCE
+$(BASE)/coverage/MockHeaders.h: $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix test/MockHeaderInclude.h | coverage.Dir
 	@rm -f coverage/MockHeaders.h.tmp
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix	>> coverage/MockHeaders.h.tmp
 	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *	\
@@ -120,7 +119,7 @@ $(BASE)/coverage/MockHeaders.h: test/MockHeaderInclude.h | coverage.Dir .FORCE
 	fi
 
 
-$(BASE)/coverage/MockHeaders.cpp: test/MockHeaderInclude.h coverage/Mock.built coverage/MockHeaders.h | coverage.Dir .FORCE
+$(BASE)/coverage/MockHeaders.cpp: $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix test/MockHeaderInclude.h coverage/Mock.built coverage/MockHeaders.h | coverage.Dir
 	@rm -f coverage/MockHeaders.cpp.tmp
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix >> coverage/MockHeaders.cpp.tmp
 	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' *	\
@@ -145,5 +144,5 @@ $(BASE)/coverage/MockHeaders.cpp: test/MockHeaderInclude.h coverage/Mock.built c
 		mv coverage/MockHeaders.cpp.tmp coverage/MockHeaders.cpp;		\
 	fi
 
-$(BASE)/test/MockHeaderInclude.h: .FORCE
+$(BASE)/test/MockHeaderInclude.h: $(THORSANVIL_ROOT)/build/mock/buildMockHeaderInclude
 	$(THORSANVIL_ROOT)/build/mock/buildMockHeaderInclude

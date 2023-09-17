@@ -461,8 +461,8 @@ namespace ThorsAnvil::BuildTools::Mock
                 MockResultHolder(std::string const& name, F&& original);
 
                 std::string const& getName() const;
-                std::size_t expectInit(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order);
-                void reset();
+                std::size_t setUpExpectedCall(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order);
+                void tearDownExpectedCall(bool checkUsage);
                 R call(TA_Test& parent, Args&&... args);
         };
 
@@ -609,7 +609,11 @@ template<typename MockObject>
 inline void TA_ObjectOption<MockObject>::saveCall()
 {
     store.add(order, [mock = mockObjectHolder, r = std::move(result), in = std::move(input), c = callCount, re = required, o = order](Action action, std::size_t index, bool last) mutable {
-            return mock->expectInit(action, index, c, last, std::move(r), std::move(in), re, o);
+                if (action == Action::Cleaning) {
+                    mock->tearDownExpectedCall(index == 0);
+                    return std::size_t(0);
+                }
+                return mock->setUpExpectedCall(action, index, c, last, std::move(r), std::move(in), re, o);
             });
 }
 
@@ -638,10 +642,14 @@ template<typename MockObject>
 void TA_Object::saveCall(MockObject& action, std::size_t callCount, std::optional<typename MockObject::Ret>&& result, std::optional<typename MockObject::Param>&& input, Insert insert, Order order)
 {
     if (insert == Insert::Inject) {
-        reset.emplace_back([mockObject = &action](){mockObject->reset();});
+        reset.emplace_back([mockObject = &action](){mockObject->tearDownExpectedCall(false);});
     }
     extraCode.add(order, [mockObject = &action, c = callCount, r = std::move(result), in = std::move(input), o = order](Action action, std::size_t index, bool last) mutable {
-        return mockObject->expectInit(action, index, c, last, std::move(r), std::move(in), Required::Yes, o);
+        if (action == Action::Cleaning) {
+            mockObject->tearDownExpectedCall(index == 0);
+            return std::size_t(0);
+        }
+        return mockObject->setUpExpectedCall(action, index, c, last, std::move(r), std::move(in), Required::Yes, o);
     });
 }
 
@@ -772,48 +780,35 @@ std::string const& MockResultHolder<R(Args...)>::getName() const
 }
 
 template<typename R, typename... Args>
-std::size_t MockResultHolder<R(Args...)>::expectInit(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order)
+std::size_t MockResultHolder<R(Args...)>::setUpExpectedCall(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order)
 {
-    switch (action)
-    {
-        case AddExtra:
-            if (!errorMode) {
-                expected.clear();
-                errorMode = true;
-            }
-            // Fall through to Adding
-        case Adding:
-        {
-            std::size_t indexOrder = -1;
-            if (order == Order::InOrder) {
-                indexOrder = index++;
-            }
-            expected.emplace_back(Expected{indexOrder, count, last, std::move(value), std::move(input), required});
-            break;
-        }
-        case Cleaning:
-        {
-            if (index == 0) {
-                std::size_t count = 0;
-                for (std::size_t loop = next; loop < expected.size(); ++loop) {
-                    Expected&   expectedInfo = expected[loop];
-                    Required&   required     = std::get<5>(expectedInfo);
-                    count += (required == Required::Yes) ? 1: 0;
-                }
-                EXPECT_EQ(count, 0)
-                        << "Function: " << getName() << " did not use all expected calls. "
-                        << (expected.size() - next) << " left unused";
-            }
-            reset();
-            break;
-        }
+    if (action == AddExtra && !errorMode) {
+        expected.clear();
+        errorMode = true;
     }
+    std::size_t indexOrder = -1;
+    if (order == Order::InOrder) {
+        indexOrder = index++;
+    }
+    expected.emplace_back(Expected{indexOrder, count, last, std::move(value), std::move(input), required});
     return index;
 }
 
 template<typename R, typename... Args>
-void MockResultHolder<R(Args...)>::reset()
+void MockResultHolder<R(Args...)>::tearDownExpectedCall(bool checkUsage)
 {
+    if (checkUsage)
+    {
+        std::size_t count = 0;
+        for (std::size_t loop = next; loop < expected.size(); ++loop) {
+            Expected&   expectedInfo = expected[loop];
+            Required&   required     = std::get<5>(expectedInfo);
+            count += (required == Required::Yes) ? 1: 0;
+        }
+        EXPECT_EQ(count, 0)
+                << "Function: " << getName() << " did not use all expected calls. "
+                << (expected.size() - next) << " left unused";
+    }
     expected.clear();
     next = 0;
     errorMode = false;
