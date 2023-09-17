@@ -1,0 +1,145 @@
+#!/bin/bash
+
+IFS='%' read -r -d '' -a fileTemplate <<PREFIX
+#ifndef THORSANVIl_THORS_SOCKET_MOCK_HEADER_INCLUDE
+#define THORSANVIl_THORS_SOCKET_MOCK_HEADER_INCLUDE
+
+#include <functional>
+
+// Please add includes for all mocked libraries here.
+// PART-1-Start%// PART-1-End
+namespace ThorsAnvil::BuildTools::Mock
+{
+
+// Please define all FuncType_<XXX> here
+// There should be one for each MOCK_TFUNC you use in the code.
+// The make files will provide the declaration but these need to be filled in by
+// the developer and committed to source control
+// PART-2-Start%// PART-2-End
+// This default implementation of overridden functions
+// Please provide a lambda for the implementation
+// When you add/remove a MOCK_FUNC or MOCK_TFUNC to the source
+// This list will be updated.
+
+}
+
+#include "coverage/MockHeaders.h"
+
+namespace ThorsAnvil::BuildTools::Mock
+{
+class MockAllDefaultFunctions
+{
+    int version;
+// PART-3-Start%// PART-3-End
+
+    public:
+        MockAllDefaultFunctions()
+            : version(2)
+// PART-4-Start%// PART-4-End
+        {}
+};
+
+
+}
+
+#endif
+PREFIX
+
+function copyPart {
+
+    local fileName=$1
+    local section=$2
+
+    cat ${fileName} | awk 'BEGIN {InSection=0;} /'PART-${section}'-Start/ {InSection=1;next;} /PART-'${section}'-End/ {InSection=0} {if (InSection == 1){print}}'
+}
+
+function getFunctions {
+    perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "$2 $1\n"' * | sort | uniq
+}
+
+function buildFuncType {
+    local fileName=$1
+
+    while read line; do
+        split=(${line})
+        name=${split[0]}
+        type=${split[1]}
+
+        if [[ "${type}" == "T" ]]; then
+            find=$(grep "using FuncType_${name}[ \t]*=" "${fileName}")
+            if [[ "${find}" == "" ]]; then
+                echo "using FuncType_${name}        = /* Add function type info here */;"
+            fi
+        fi
+    done < <(getFunctions)
+}
+
+function buildMEMBER {
+    local fileName=$1
+
+    while read line; do
+        split=(${line})
+        name=${split[0]}
+        type=${split[1]}
+
+        find=$(grep "MOCK_${type}MEMBER(${name});" "${fileName}")
+        if [[ "${find}" == "" ]]; then
+            echo "    MOCK_${type}MEMBER(${name});"
+        fi
+    done < <(getFunctions)
+}
+
+function buildPARAM {
+    local fileName=$1
+
+    while read line; do
+        split=(${line})
+        name=${split[0]}
+
+        find=$(grep " MOCK_PARAM(${name}," "${fileName}")
+        if [[ "${find}" == "" ]]; then
+            echo "            , MOCK_PARAM(${name},     []( Add expected parameters here ){return Add default value here;}),"
+        fi
+    done < <(getFunctions)
+}
+
+function createFile {
+    local fileName=$1
+
+    echo "${fileTemplate[0]}"
+    copyPart "${fileName}" 1
+    echo "${fileTemplate[1]}"
+    copyPart "${fileName}" 2
+    buildFuncType ${fileName}
+    echo "${fileTemplate[2]}"
+    copyPart "${fileName}" 3
+    buildMEMBER ${fileName}
+    echo "${fileTemplate[3]}"
+    copyPart "${fileName}" 4
+    buildPARAM ${fileName}
+    echo "${fileTemplate[4]}"
+}
+
+function buildFile {
+
+    local fileName=$1
+
+    if [[ -e test ]]; then
+        createFile ${fileName} > ${fileName}.tmp
+        if [[ -e ${fileName} ]]; then
+            diff ${fileName}.tmp ${fileName}
+            if [[ $? == 1 ]]; then
+                echo "ReBuilt: ${fileName}"
+                mv ${fileName}.tmp ${fileName}
+            else                                                                                        \
+                rm ${fileName}.tmp
+            fi
+        else                                                                                            \
+            echo "Built: ${fileName}"
+            mv ${fileName}.tmp ${fileName}
+        fi
+    fi
+}
+
+buildFile test/MockHeaderInclude.h
+

@@ -67,7 +67,7 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 			item
 	@rm test/unittest.cpp
 
-coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/MockHeaders.cpp test/MockHeaderInclude1.h | coverage.Dir
+coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/MockHeaders.cpp test/MockHeaderInclude.h | coverage.Dir
 	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
@@ -145,33 +145,5 @@ $(BASE)/coverage/MockHeaders.cpp: test/MockHeaderInclude.h coverage/Mock.built c
 		mv coverage/MockHeaders.cpp.tmp coverage/MockHeaders.cpp;		\
 	fi
 
-$(BASE)/test/MockHeaderInclude1.h: .FORCE
-	@if [[ -e test ]]; then																				\
-		rm -f test/MockHeaderInclude.h.tmp;																\
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part1 >> test/MockHeaderInclude.h.tmp;	\
-		$(THORSANVIL_ROOT)/build/mock/copyPart PART-1				>> test/MockHeaderInclude.h.tmp;	\
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part2 >> test/MockHeaderInclude.h.tmp;	\
-		$(THORSANVIL_ROOT)/build/mock/copyPart PART-2				>> test/MockHeaderInclude.h.tmp;	\
-		perl -ne '/MOCK_TFUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' * | sort | uniq | $(THORSANVIL_ROOT)/build/mock/buildFuncType		>> test/MockHeaderInclude.h.tmp;	\
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part3 >> test/MockHeaderInclude.h.tmp;	\
-		$(THORSANVIL_ROOT)/build/mock/copyPart PART-3				>> test/MockHeaderInclude.h.tmp;	\
-		perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "$$2 $$1\n"' * | sort | uniq | $(THORSANVIL_ROOT)/build/mock/buildMEMBER	>> test/MockHeaderInclude.h.tmp;	\
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part4 >> test/MockHeaderInclude.h.tmp;	\
-		$(THORSANVIL_ROOT)/build/mock/copyPart PART-4				>> test/MockHeaderInclude.h.tmp;	\
-		perl -ne '/MOCK_T?FUNC\([ \t]*([^\) \t]*)/ and print "$$1\n"' * | sort | uniq | $(THORSANVIL_ROOT)/build/mock/buildPARAM		>> test/MockHeaderInclude.h.tmp;	\
-		cat $(THORSANVIL_ROOT)/build/mock/MockHeaderInclude.h.part5 >> test/MockHeaderInclude.h.tmp;	\
-		if [[ -e test/MockHeaderInclude.h ]]; then														\
-			diff test/MockHeaderInclude.h.tmp test/MockHeaderInclude.h;									\
-			if [[ $$? == 1 ]]; then																		\
-				echo "ReBuilt: test/MockHeaderInclude.h";												\
-				mv test/MockHeaderInclude.h.tmp test/MockHeaderInclude.h;								\
-			else																						\
-				rm test/MockHeaderInclude.h.tmp;														\
-			fi;																							\
-		else																							\
-			echo "Built: test/MockHeaderInclude.h";														\
-			mv test/MockHeaderInclude.h.tmp test/MockHeaderInclude.h;									\
-		fi;																								\
-	fi
-
-
+$(BASE)/test/MockHeaderInclude.h: .FORCE
+	$(THORSANVIL_ROOT)/build/mock/buildMockHeaderInclude

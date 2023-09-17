@@ -1,6 +1,0 @@
-// PART-3-End
-
-    public:
-        MockAllDefaultFunctions()
-            : version(2)
-// PART-4-Start

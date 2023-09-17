@@ -1,8 +1,0 @@
-#!/bin/bash
-
-while read line; do
-    find=$(grep "using FuncType_${line}[ \t]*=" test/MockHeaderInclude.h)
-    if [[ "${find}" == "" ]]; then
-        echo "using FuncType_${line}        = /* Add function type info here */;"
-    fi
-done
