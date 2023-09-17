@@ -291,17 +291,18 @@ namespace ThorsAnvil::BuildTools::Mock
             TA_Object&      object;
             ActionStore&    store;
             MockObject*     mockObjectHolder;
-            std::size_t     count;
+            std::size_t     callCount;
             ReturnType      result;
             Required        required;
             Order           order;
 
             public:
-                TA_ObjectOption(TA_Object& object, std::size_t count, ActionStore& store, MockObject& mockObjectHolder, Required required, Order order);
+                TA_ObjectOption(TA_Object& object, std::size_t callCount, ActionStore& store, MockObject& mockObjectHolder, Required required, Order order);
 
                 operator TA_Object& ();
                 TA_ObjectOption& toReturn(ReturnType&& ret);
                 TA_ObjectOption& anyOrder();
+                TA_ObjectOption& count(int newCount);
 
                 template<typename NextMockObject>
                 TA_ObjectOption<NextMockObject> expectInit(NextMockObject& action);
@@ -356,7 +357,7 @@ namespace ThorsAnvil::BuildTools::Mock
             protected:
                 TA_Test&    parent;
                 MockObject& action;
-                std::size_t count;
+                std::size_t callCount;
                 Insert      insert;
                 Order       order;
                 bool        callSaved;
@@ -369,6 +370,7 @@ namespace ThorsAnvil::BuildTools::Mock
                 TA_Code& toReturn(Ret&& result);
                 TA_Code& inject();
                 TA_Code& anyOrder();
+                TA_Code& count(int newCount);
 
                 template<typename NextMockObject>
                 TA_Code<NextMockObject> expectCall(NextMockObject& nextAction);
@@ -525,11 +527,11 @@ MockOutFunction<Func>::~MockOutFunction()
 // -------------------------
 
 template<typename MockObject>
-TA_ObjectOption<MockObject>::TA_ObjectOption(TA_Object& object, std::size_t count, ActionStore& store, MockObject& mockObjectHolder, Required required, Order order)
+TA_ObjectOption<MockObject>::TA_ObjectOption(TA_Object& object, std::size_t callCount, ActionStore& store, MockObject& mockObjectHolder, Required required, Order order)
     : object(object)
     , store(store)
     , mockObjectHolder(&mockObjectHolder)
-    , count(count)
+    , callCount(callCount)
     , result()
     , required(required)
     , order(order)
@@ -553,6 +555,13 @@ template<typename MockObject>
 TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::anyOrder()
 {
     order = Order::Any;
+    return *this;
+}
+
+template<typename MockObject>
+TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::count(int newCount)
+{
+    callCount = newCount;
     return *this;
 }
 
@@ -581,9 +590,9 @@ inline TA_ObjectOption<NextMockObject> TA_ObjectOption<MockObject>::optional(Nex
 template<typename MockObject>
 inline void TA_ObjectOption<MockObject>::saveAction()
 {
-    store.add(order, [mock = mockObjectHolder, r = std::move(result), c = count, re = required, o = order](Action action, std::size_t index, bool last) mutable {
-        return mock->expectInit(action, index, c, last, std::move(r), re, o);
-    });
+    store.add(order, [mock = mockObjectHolder, r = std::move(result), c = callCount, re = required, o = order](Action action, std::size_t index, bool last) mutable {
+            return mock->expectInit(action, index, c, last, std::move(r), re, o);
+            });
 }
 
 // -------------------------
@@ -626,7 +635,7 @@ template<typename MockObject>
 TA_Code<MockObject>::TA_Code(TA_Test& parent, MockObject& action, Insert insert, Order order)
     : parent(parent)
     , action(action)
-    , count(1)
+    , callCount(1)
     , insert(insert)
     , order(order)
     , callSaved(false)
@@ -663,7 +672,14 @@ TA_Code<MockObject>& TA_Code<MockObject>::anyOrder()
 }
 
 template<typename MockObject>
-inline TA_Test& TA_Code<MockObject>::expectObject(TA_Object const& object)
+TA_Code<MockObject>& TA_Code<MockObject>::count(int newCount)
+{
+    callCount = newCount;
+    return *this;
+}
+
+template<typename MockObject>
+TA_Test& TA_Code<MockObject>::expectObject(TA_Object const& object)
 {
     if (!callSaved) {
         saveAction({});
@@ -675,7 +691,7 @@ template<typename MockObject>
 TA_Test& TA_Code<MockObject>::expectCode(TA_Object const& object)
 {
     if (!callSaved) {
-        saveCall({});
+        saveAction({});
     }
     return parent.expectCode(object);
 }
@@ -697,7 +713,7 @@ void TA_Code<MockObject>::saveAction(Ret&& result)
         parent.codeBlocks.emplace_back();
     }
     callSaved = true;
-    parent.codeBlocks.back().expectCall(action, count, std::move(result), insert, order);
+    parent.codeBlocks.back().expectCall(action, callCount, std::move(result), insert, order);
 }
 
 // -------------------------
