@@ -106,6 +106,12 @@ TA_Test& TA_Test::expectObject(TA_Object const& object)
     return *this;
 }
 
+TA_Test& TA_Test::expectCode(TA_Object const& object)
+{
+    codeBlocks.emplace_back(object);
+    return *this;
+}
+
 TA_Test::~TA_Test()
 {
     EXPECT_TRUE(hasRun) << "You created a test. But it was not run";

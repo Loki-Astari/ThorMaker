@@ -374,6 +374,7 @@ namespace ThorsAnvil::BuildTools::Mock
                 TA_Code<NextMockObject> expectCall(NextMockObject& nextAction);
 
                 TA_Test& expectObject(TA_Object const& object);
+                TA_Test& expectCode(TA_Object const& object);
                 void run();
             private:
                 void saveAction(Ret&& result);
@@ -395,6 +396,7 @@ namespace ThorsAnvil::BuildTools::Mock
                 ~TA_Test();
 
                 TA_Test& expectObject(TA_Object const& object);
+                TA_Test& expectCode(TA_Object const& object);
 
                 template<typename MockObject>
                 TA_Code<MockObject> expectCall(MockObject& action);
@@ -667,6 +669,15 @@ inline TA_Test& TA_Code<MockObject>::expectObject(TA_Object const& object)
         saveAction({});
     }
     return parent.expectObject(object);
+}
+
+template<typename MockObject>
+TA_Test& TA_Code<MockObject>::expectCode(TA_Object const& object)
+{
+    if (!callSaved) {
+        saveCall({});
+    }
+    return parent.expectCode(object);
 }
 
 template<typename MockObject>
