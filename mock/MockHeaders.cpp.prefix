@@ -18,9 +18,9 @@ TA_Object build()
     return {};
 }
 
-bool TA_Object::hasError() const
+bool TA_Object::hasExtraCode() const
 {
-    return !errors.empty();
+    return !extraCode.empty();
 }
 
 bool TA_Object::addInit(std::size_t callOrder) const
@@ -48,19 +48,19 @@ bool TA_Object::addDest(std::size_t callOrder) const
     return dest.hasNoRequired();
 }
 
-bool TA_Object::addErrors(std::size_t callOrder) const
+bool TA_Object::addExtraCode(std::size_t callOrder) const
 {
     std::size_t expectedCallOrder = callOrder;
-    for (std::size_t loop = 0; loop < errors.size(); ++loop) {
-        expectedCallOrder = errors[loop](AddError, expectedCallOrder, loop == errors.lastOrderedAction());
+    for (std::size_t loop = 0; loop < extraCode.size(); ++loop) {
+        expectedCallOrder = extraCode[loop](AddExtra, expectedCallOrder, loop == extraCode.lastOrderedAction());
     }
-    return errors.hasNoRequired();
+    return extraCode.hasNoRequired();
 }
 
-void TA_Object::remInit(bool checkForError, bool removeOpt) const
+void TA_Object::remInit(bool checkForExtraCode, bool removeOpt) const
 {
     for (std::size_t loop = 0; loop < init.size(); ++loop) {
-        init[loop](Cleaning, checkForError ? 0 : -1, false);
+        init[loop](Cleaning, checkForExtraCode ? 0 : -1, false);
     }
     if (removeOpt)
     {
@@ -70,17 +70,17 @@ void TA_Object::remInit(bool checkForError, bool removeOpt) const
     }
 }
 
-void TA_Object::remDest(bool checkForError) const
+void TA_Object::remDest(bool checkForExtraCode) const
 {
     for (std::size_t loop = 0; loop < dest.size(); ++loop) {
-        dest[loop](Cleaning, checkForError ? 0 : -1, false);
+        dest[loop](Cleaning, checkForExtraCode ? 0 : -1, false);
     }
 }
 
-void TA_Object::remErrors() const
+void TA_Object::remExtraCode() const
 {
-    for (std::size_t loop = 0; loop < errors.size(); ++loop) {
-        errors[loop](Cleaning, -1, false);
+    for (std::size_t loop = 0; loop < extraCode.size(); ++loop) {
+        extraCode[loop](Cleaning, -1, false);
     }
     for (std::size_t loop = 0; loop < opt.size(); ++loop) {
         opt[loop](Cleaning, -1, false);
@@ -169,11 +169,11 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
         return false;
     }
 
-    if (state != Error && next > 0 && next <= objects.size() && objects[next-1].hasError()) {
+    if (state != Error && next > 0 && next <= objects.size() && objects[next-1].hasExtraCode()) {
         //std::cerr << "  Setting Errors\n";
         state = Error;
         remInit(false, false);
-        lastInBlockReached = addErrors();
+        lastInBlockReached = addExtraCode();
         return true;
     }
 
@@ -222,7 +222,7 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
         }
         case Error:
         {
-            remErrors();
+            remExtraCode();
             if (next < objects.size()) {
                 //std::cerr << "    Error -> Construct\n";
                 state = Construct;
@@ -263,24 +263,24 @@ bool TA_Test::addDest()
     return objects[--next].addDest(callOrder);
 }
 
-bool TA_Test::addErrors()
+bool TA_Test::addExtraCode()
 {
-    return objects[next-1].addErrors(callOrder);
+    return objects[next-1].addExtraCode(callOrder);
 }
 
-void TA_Test::remInit(bool checkForError, bool removeOpt)
+void TA_Test::remInit(bool checkForExtraCode, bool removeOpt)
 {
-    objects[next-1].remInit(checkForError, removeOpt);
+    objects[next-1].remInit(checkForExtraCode, removeOpt);
 }
 
-void TA_Test::remDest(bool checkForError)
+void TA_Test::remDest(bool checkForExtraCode)
 {
-    objects[next].remDest(checkForError);
+    objects[next].remDest(checkForExtraCode);
 }
 
-void TA_Test::remErrors()
+void TA_Test::remExtraCode()
 {
-    objects[next-1].remErrors();
+    objects[next-1].remExtraCode();
 }
 
 // -------------------------

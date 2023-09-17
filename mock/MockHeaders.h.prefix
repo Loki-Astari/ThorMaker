@@ -210,7 +210,7 @@ namespace ThorsAnvil::BuildTools::Mock
         /*
          * Enum
          */
-        enum Action {Adding, Cleaning, AddError};
+        enum Action {Adding, Cleaning, AddExtra};
         enum class Required {Yes, No};
         enum class Order {InOrder, Any};
         enum class Insert {Append, Inject};
@@ -324,7 +324,7 @@ namespace ThorsAnvil::BuildTools::Mock
             ActionStore init;
             ActionStore dest;
             ActionStore opt;
-            ActionStore errors;
+            ActionStore extraCode;
             std::vector<std::function<void()>>     reset;
 
             public:
@@ -341,13 +341,13 @@ namespace ThorsAnvil::BuildTools::Mock
                 template<typename MockObject, typename Result>
                 void expectCall(MockObject& action, std::size_t count, Result&& result, Insert insert, Order order);
 
-                bool hasError() const;
+                bool hasExtraCode() const;
                 bool addInit(std::size_t callOrder) const;
                 bool addDest(std::size_t callOrder) const;
-                bool addErrors(std::size_t callOrder) const;
-                void remInit(bool checkForError, bool removeOpt) const;
-                void remDest(bool checkForError) const;
-                void remErrors() const;
+                bool addExtraCode(std::size_t callOrder) const;
+                void remInit(bool checkForExtraCode, bool removeOpt) const;
+                void remDest(bool checkForExtraCode) const;
+                void remExtraCode() const;
         };
 
         template<typename MockObject>
@@ -418,10 +418,10 @@ namespace ThorsAnvil::BuildTools::Mock
 
                 bool addInit();
                 bool addDest();
-                bool addErrors();
-                void remInit(bool checkForError, bool removeOpt);
-                void remDest(bool checkForError);
-                void remErrors();
+                bool addExtraCode();
+                void remInit(bool checkForExtraCode, bool removeOpt);
+                void remDest(bool checkForExtraCode);
+                void remExtraCode();
                 bool setDest(bool exceptionInProgress);
         };
 
@@ -611,7 +611,7 @@ void TA_Object::expectCall(MockObject& action, std::size_t count, Result&& resul
     if (insert == Insert::Inject) {
         reset.emplace_back([mockObject = &action](){mockObject->reset();});
     }
-    errors.add(order, [mockObject = &action, c = count, r = std::forward<Result>(result), o = order](Action action, std::size_t index, bool last) mutable {
+    extraCode.add(order, [mockObject = &action, c = count, r = std::forward<Result>(result), o = order](Action action, std::size_t index, bool last) mutable {
         return mockObject->expectInit(action, index, c, last, std::move(r), Required::Yes, o);
     });
 }
@@ -723,7 +723,7 @@ std::size_t MockResultHolder<R(Args...)>::expectInit(Action action, std::size_t 
 {
     switch (action)
     {
-        case AddError:
+        case AddExtra:
             if (!errorMode) {
                 output.clear();
                 errorMode = true;
