@@ -286,14 +286,17 @@ namespace ThorsAnvil::BuildTools::Mock
         template<typename MockObject>
         class TA_ObjectOption
         {
-            using ReturnType = typename MockObject::Ret;
-            using ReturnStore= std::optional<ReturnType>;
+            using Param      = typename MockObject::Param;
+            using Ret        = typename MockObject::Ret;
+            using ParamStore = std::optional<Param>;
+            using ReturnStore= std::optional<Ret>;
 
             TA_Object&      object;
             ActionStore&    store;
             MockObject*     mockObjectHolder;
             std::size_t     callCount;
             ReturnStore     result;
+            ParamStore      input;
             Required        required;
             Order           order;
 
@@ -301,9 +304,11 @@ namespace ThorsAnvil::BuildTools::Mock
                 TA_ObjectOption(TA_Object& object, std::size_t callCount, ActionStore& store, MockObject& mockObjectHolder, Required required, Order order);
 
                 operator TA_Object& ();
-                TA_ObjectOption& toReturn(ReturnType&& ret);
+                TA_ObjectOption& toReturn(Ret&& ret);
                 TA_ObjectOption& anyOrder();
                 TA_ObjectOption& count(int newCount);
+                template<typename... Args>
+                TA_ObjectOption& checkInput(Args... args);
 
                 template<typename NextMockObject>
                 TA_ObjectOption<NextMockObject> expectInit(NextMockObject& action);
@@ -340,8 +345,8 @@ namespace ThorsAnvil::BuildTools::Mock
                 TA_ObjectOption<MockObject> optional(MockObject& action);
 
             private:
-                template<typename MockObject, typename Result>
-                void saveCall(MockObject& action, std::size_t callCount, std::optional<Result>&& result, Insert insert, Order order);
+                template<typename MockObject>
+                void saveCall(MockObject& action, std::size_t callCount, std::optional<typename MockObject::Ret>&& result, std::optional<typename MockObject::Param>&& input, Insert insert, Order order);
 
                 bool hasExtraCode() const;
                 bool addInit(std::size_t callOrder) const;
@@ -355,10 +360,13 @@ namespace ThorsAnvil::BuildTools::Mock
         template<typename MockObject>
         class TA_Code
         {
+            using Param         = typename MockObject::Param;
+            using ParamStore    = std::optional<Param>;
             protected:
                 TA_Test&    parent;
                 MockObject& action;
                 std::size_t callCount;
+                ParamStore  input;
                 Insert      insert;
                 Order       order;
                 bool        callSaved;
@@ -372,6 +380,8 @@ namespace ThorsAnvil::BuildTools::Mock
                 TA_Code& inject();
                 TA_Code& anyOrder();
                 TA_Code& count(int newCount);
+                template<typename... Args>
+                TA_Code& checkInput(Args... args);
 
                 template<typename NextMockObject>
                 TA_Code<NextMockObject> expectCall(NextMockObject& nextAction);
@@ -434,16 +444,15 @@ namespace ThorsAnvil::BuildTools::Mock
         class MockResultHolder<R(Args...)>
         {
             public:
-                using Ret = OutputType<R>;
+                using Ret   = OutputType<R>;
+                using Param = ParameterType<R(Args...)>;
             private:
                 friend class MockFunctionOveride<R(Args...)>;
-                using OutputInfo = std::tuple<std::size_t, std::size_t, bool, std::optional<Ret>, Required>;
-                using InputInfo  = std::unique_ptr<std::tuple<Args...>>;
+                using Expected = std::tuple<std::size_t, std::size_t, bool, std::optional<Ret>, std::optional<Param>, Required>;
 
                 std::string                     name;
                 std::function<R(Args...)>       original;
-                std::vector<InputInfo>          input;
-                std::vector<OutputInfo>         output;
+                std::vector<Expected>           expected;
                 std::size_t                     next;
                 bool                            errorMode;
 
@@ -452,7 +461,7 @@ namespace ThorsAnvil::BuildTools::Mock
                 MockResultHolder(std::string const& name, F&& original);
 
                 std::string const& getName() const;
-                std::size_t expectInit(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, Required required, Order order);
+                std::size_t expectInit(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order);
                 void reset();
                 R call(TA_Test& parent, Args&&... args);
         };
@@ -546,7 +555,7 @@ TA_ObjectOption<MockObject>::operator TA_Object& ()
 }
 
 template<typename MockObject>
-TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::toReturn(ReturnType&& ret)
+TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::toReturn(Ret&& ret)
 {
     result = std::move(ret);
     return *this;
@@ -556,6 +565,14 @@ template<typename MockObject>
 TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::anyOrder()
 {
     order = Order::Any;
+    return *this;
+}
+
+template<typename MockObject>
+template<typename... Args>
+TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::checkInput(Args... args)
+{
+    input = std::make_tuple(args...);
     return *this;
 }
 
@@ -591,8 +608,8 @@ inline TA_ObjectOption<NextMockObject> TA_ObjectOption<MockObject>::optional(Nex
 template<typename MockObject>
 inline void TA_ObjectOption<MockObject>::saveCall()
 {
-    store.add(order, [mock = mockObjectHolder, r = std::move(result), c = callCount, re = required, o = order](Action action, std::size_t index, bool last) mutable {
-            return mock->expectInit(action, index, c, last, std::move(r), re, o);
+    store.add(order, [mock = mockObjectHolder, r = std::move(result), in = std::move(input), c = callCount, re = required, o = order](Action action, std::size_t index, bool last) mutable {
+            return mock->expectInit(action, index, c, last, std::move(r), std::move(in), re, o);
             });
 }
 
@@ -617,14 +634,14 @@ TA_ObjectOption<MockObject> TA_Object::optional(MockObject& action)
     return TA_ObjectOption(*this, -1, opt, action, Required::No, Order::Any);
 }
 
-template<typename MockObject, typename Result>
-void TA_Object::saveCall(MockObject& action, std::size_t callCount, std::optional<Result>&& result, Insert insert, Order order)
+template<typename MockObject>
+void TA_Object::saveCall(MockObject& action, std::size_t callCount, std::optional<typename MockObject::Ret>&& result, std::optional<typename MockObject::Param>&& input, Insert insert, Order order)
 {
     if (insert == Insert::Inject) {
         reset.emplace_back([mockObject = &action](){mockObject->reset();});
     }
-    extraCode.add(order, [mockObject = &action, c = callCount, r = std::move(result), o = order](Action action, std::size_t index, bool last) mutable {
-        return mockObject->expectInit(action, index, c, last, std::move(r), Required::Yes, o);
+    extraCode.add(order, [mockObject = &action, c = callCount, r = std::move(result), in = std::move(input), o = order](Action action, std::size_t index, bool last) mutable {
+        return mockObject->expectInit(action, index, c, last, std::move(r), std::move(in), Required::Yes, o);
     });
 }
 
@@ -680,6 +697,14 @@ TA_Code<MockObject>& TA_Code<MockObject>::count(int newCount)
 }
 
 template<typename MockObject>
+template<typename... Args>
+TA_Code<MockObject>& TA_Code<MockObject>::checkInput(Args... args)
+{
+    input = std::make_tuple(args...);
+    return *this;
+}
+
+template<typename MockObject>
 TA_Test& TA_Code<MockObject>::expectObject(TA_Object const& object)
 {
     if (!callSaved) {
@@ -714,7 +739,7 @@ void TA_Code<MockObject>::saveCall(std::optional<Ret>&& result)
         parent.codeBlocks.emplace_back();
     }
     callSaved = true;
-    parent.codeBlocks.back().saveCall(action, callCount, std::move(result), insert, order);
+    parent.codeBlocks.back().saveCall(action, callCount, std::move(result), std::move(input), insert, order);
 }
 
 // -------------------------
@@ -747,13 +772,13 @@ std::string const& MockResultHolder<R(Args...)>::getName() const
 }
 
 template<typename R, typename... Args>
-std::size_t MockResultHolder<R(Args...)>::expectInit(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, Required required, Order order)
+std::size_t MockResultHolder<R(Args...)>::expectInit(Action action, std::size_t index, std::size_t count, bool last, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order)
 {
     switch (action)
     {
         case AddExtra:
             if (!errorMode) {
-                output.clear();
+                expected.clear();
                 errorMode = true;
             }
             // Fall through to Adding
@@ -763,21 +788,21 @@ std::size_t MockResultHolder<R(Args...)>::expectInit(Action action, std::size_t 
             if (order == Order::InOrder) {
                 indexOrder = index++;
             }
-            output.emplace_back(OutputInfo{indexOrder, count, last, std::move(value), required});
+            expected.emplace_back(Expected{indexOrder, count, last, std::move(value), std::move(input), required});
             break;
         }
         case Cleaning:
         {
             if (index == 0) {
                 std::size_t count = 0;
-                for (std::size_t loop = next; loop < output.size(); ++loop) {
-                    OutputInfo& outputInfo = output[loop];
-                    Required&   required   = std::get<4>(outputInfo);
+                for (std::size_t loop = next; loop < expected.size(); ++loop) {
+                    Expected&   expectedInfo = expected[loop];
+                    Required&   required     = std::get<5>(expectedInfo);
                     count += (required == Required::Yes) ? 1: 0;
                 }
                 EXPECT_EQ(count, 0)
                         << "Function: " << getName() << " did not use all expected calls. "
-                        << (output.size() - next) << " left unused";
+                        << (expected.size() - next) << " left unused";
             }
             reset();
             break;
@@ -789,8 +814,7 @@ std::size_t MockResultHolder<R(Args...)>::expectInit(Action action, std::size_t 
 template<typename R, typename... Args>
 void MockResultHolder<R(Args...)>::reset()
 {
-    output.clear();
-    input.clear();
+    expected.clear();
     next = 0;
     errorMode = false;
 }
@@ -799,26 +823,27 @@ template<typename R, typename... Args>
 R MockResultHolder<R(Args...)>::call(TA_Test& parent, Args&&... args)
 {
     //std::cerr << "Calling: " << getName() << "\n";
-    while (next == output.size()) {
+    while (next == expected.size()) {
         if (!parent.unexpected()) {
             // There are no more changes that can be made.
             break;
         }
     }
 
-    if (next < input.size() && static_cast<bool>(input[next])) {
-        std::tuple<Args...>&    expected = *input[next];
-        EXPECT_EQ(std::tie(args...), expected) << "Function: " << getName() << " Input to function does not match expectations";
-    }
-    if (next < output.size()) {
-        OutputInfo& outputInfo = output[next];
-        std::size_t   nextCallIndex = std::get<0>(outputInfo);
-        std::size_t&  callCount     = std::get<1>(outputInfo);
-        bool          lastCall      = std::get<2>(outputInfo);
+    if (next < expected.size()) {
+        Expected&               expectedInfo  = expected[next];
+        std::size_t             nextCallIndex = std::get<0>(expectedInfo);
+        std::size_t&            callCount     = std::get<1>(expectedInfo);
+        bool                    lastCall      = std::get<2>(expectedInfo);
+        std::optional<Param>&   input         = std::get<4>(expectedInfo);
 
         --callCount;
         if (callCount == 0) {
             ++next;
+        }
+
+        if (input.has_value()) {
+            EXPECT_EQ(input.value(), std::make_tuple(args...));
         }
 
         EXPECT_TRUE(parent.mockCalled(nextCallIndex, lastCall)) << "Function: " << getName() << "Called out of order";
@@ -826,14 +851,14 @@ R MockResultHolder<R(Args...)>::call(TA_Test& parent, Args&&... args)
             return;
         }
         else {
-            std::optional<R>& resultOpt = std::get<3>(outputInfo);
+            std::optional<R>& resultOpt = std::get<3>(expectedInfo);
             if (resultOpt.has_value()) {
                 return resultOpt.value();
             }
             return {};
         }
     }
-    EXPECT_TRUE(next < output.size()) << "Function: " << getName() << " called more times than expected";
+    EXPECT_TRUE(next < expected.size()) << "Function: " << getName() << " called more times than expected";
     throw std::runtime_error("Failed");
     // return original(std::forward<Args>(args)...);
 }
