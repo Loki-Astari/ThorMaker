@@ -23,49 +23,45 @@ bool TA_Object::hasExtraCode() const
     return !block[BlockType::Extra].empty();
 }
 
-bool TA_Object::addInit(std::size_t callOrder) const
+void TA_Object::addInit(std::size_t callOrder) const
 {
     std::size_t expectedCallOrder = callOrder;
     for (std::size_t loop = 0; loop < block[BlockType::Init].size(); ++loop) {
-        expectedCallOrder = block[BlockType::Init][loop](Adding, expectedCallOrder, loop == block[BlockType::Init].lastOrderedAction());
+        expectedCallOrder = block[BlockType::Init][loop](Adding, expectedCallOrder);
     }
     for (std::size_t loop = 0; loop < block[BlockType::Opt].size(); ++loop) {
-        block[BlockType::Opt][loop](Adding, -1, false);
+        block[BlockType::Opt][loop](Adding, -1);
     }
     for (std::size_t loop = 0; loop < reset.size(); ++loop) {
         reset[loop]();
     }
-
-    return block[BlockType::Init].hasNoRequired();
 }
 
-bool TA_Object::addDest(std::size_t callOrder) const
+void TA_Object::addDest(std::size_t callOrder) const
 {
     std::size_t expectedCallOrder = callOrder;
     for (std::size_t loop = 0; loop < block[BlockType::Dest].size(); ++loop) {
-        expectedCallOrder = block[BlockType::Dest][loop](Adding, expectedCallOrder, loop == block[BlockType::Dest].lastOrderedAction());
+        expectedCallOrder = block[BlockType::Dest][loop](Adding, expectedCallOrder);
     }
-    return block[BlockType::Dest].hasNoRequired();
 }
 
-bool TA_Object::addExtraCode(std::size_t callOrder) const
+void TA_Object::addExtraCode(std::size_t callOrder) const
 {
     std::size_t expectedCallOrder = callOrder;
     for (std::size_t loop = 0; loop < block[BlockType::Extra].size(); ++loop) {
-        expectedCallOrder = block[BlockType::Extra][loop](AddExtra, expectedCallOrder, loop == block[BlockType::Extra].lastOrderedAction());
+        expectedCallOrder = block[BlockType::Extra][loop](AddExtra, expectedCallOrder);
     }
-    return block[BlockType::Extra].hasNoRequired();
 }
 
 void TA_Object::remInit(bool checkForExtraCode, bool removeOpt) const
 {
     for (std::size_t loop = 0; loop < block[BlockType::Init].size(); ++loop) {
-        block[BlockType::Init][loop](Cleaning, checkForExtraCode ? 0 : -1, false);
+        block[BlockType::Init][loop](Cleaning, checkForExtraCode ? 0 : -1);
     }
     if (removeOpt)
     {
         for (std::size_t loop = 0; loop < block[BlockType::Opt].size(); ++loop) {
-            block[BlockType::Opt][loop](Cleaning, -1, false);
+            block[BlockType::Opt][loop](Cleaning, -1);
         }
     }
 }
@@ -73,17 +69,17 @@ void TA_Object::remInit(bool checkForExtraCode, bool removeOpt) const
 void TA_Object::remDest(bool checkForExtraCode) const
 {
     for (std::size_t loop = 0; loop < block[BlockType::Dest].size(); ++loop) {
-        block[BlockType::Dest][loop](Cleaning, checkForExtraCode ? 0 : -1, false);
+        block[BlockType::Dest][loop](Cleaning, checkForExtraCode ? 0 : -1);
     }
 }
 
 void TA_Object::remExtraCode() const
 {
     for (std::size_t loop = 0; loop < block[BlockType::Extra].size(); ++loop) {
-        block[BlockType::Extra][loop](Cleaning, -1, false);
+        block[BlockType::Extra][loop](Cleaning, -1);
     }
     for (std::size_t loop = 0; loop < block[BlockType::Opt].size(); ++loop) {
-        block[BlockType::Opt][loop](Cleaning, -1, false);
+        block[BlockType::Opt][loop](Cleaning, -1);
     }
 }
 
@@ -95,7 +91,6 @@ TA_Test::TA_Test()
     : hasRun(false)
     , callOrder(0)
     , next(0)
-    , lastInBlockReached(true)
     , exceptionSpotted(false)
     , state(Init)
 {}
@@ -132,7 +127,7 @@ void TA_Test::run()
     }
 }
 
-bool TA_Test::mockCalled(std::size_t order, bool last)
+bool TA_Test::mockCalled(std::size_t order)
 {
     if (order == std::size_t(-1)) {
         // This is an optional method.
@@ -140,27 +135,22 @@ bool TA_Test::mockCalled(std::size_t order, bool last)
     }
     EXPECT_EQ(order, callOrder) << " Functions called in wrong order";
     ++callOrder;
-    lastInBlockReached = last;
     return (callOrder - 1) == order;
 }
 
-bool TA_Test::setDest(bool exceptionInProgress)
+void TA_Test::setDest(bool exceptionInProgress)
 {
-    bool result = true;
-
     if (!exceptionSpotted && exceptionInProgress) {
         exceptionSpotted = true;
         --next;
     }
     if (next > 0) {
-        result = addDest();
+        addDest();
         state = (next == 0) ? Cleanup : Destruct;
     }
     else {
         state = Finished;
-        result = true;
     }
-    return result;
 }
 
 bool TA_Test::unexpected()
@@ -179,7 +169,7 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
         //std::cerr << "  Setting Errors\n";
         state = Error;
         remInit(false, false);
-        lastInBlockReached = addExtraCode();
+        addExtraCode();
         return true;
     }
 
@@ -197,7 +187,7 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
         {
             //std::cerr << "    Init -> Construct\n";
             state = Construct;
-            lastInBlockReached = addInit();
+            addInit();
             break;
         }
         case Construct:
@@ -205,18 +195,18 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
             remInit(true, true);
             if (next < codeBlocks.size()) {
                 //std::cerr << "    Construct -> Construct\n";
-                lastInBlockReached = addInit();
+                addInit();
             }
             else {
                 //std::cerr << "    Construct -> Destruct\n";
-                lastInBlockReached = setDest(exceptionInProgress);
+                setDest(exceptionInProgress);
             }
             break;
         }
         case Destruct:
         {
             remDest(true);
-            lastInBlockReached = addDest();
+            addDest();
             if (next == 0) {
                 //std::cerr << "    Destruct -> Cleanup\n";
                 state = Cleanup;;
@@ -232,11 +222,11 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
             if (next < codeBlocks.size()) {
                 //std::cerr << "    Error -> Construct\n";
                 state = Construct;
-                lastInBlockReached = addInit();
+                addInit();
             }
             else {
                 //std::cerr << "    Error -> Destruct\n";
-                lastInBlockReached = setDest(exceptionInProgress);
+                setDest(exceptionInProgress);
             }
             break;
         }
@@ -251,7 +241,6 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
         {
             // There is no change in state that would help
             // resolve an unexpected call.
-            lastInBlockReached = true;
             //std::cerr << "    Finished -> Finished\n";
             return false;
         }
@@ -259,19 +248,19 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
     return true;
 }
 
-bool TA_Test::addInit()
+void TA_Test::addInit()
 {
-    return codeBlocks[next++].addInit(callOrder);
+    codeBlocks[next++].addInit(callOrder);
 }
 
-bool TA_Test::addDest()
+void TA_Test::addDest()
 {
-    return codeBlocks[--next].addDest(callOrder);
+    codeBlocks[--next].addDest(callOrder);
 }
 
-bool TA_Test::addExtraCode()
+void TA_Test::addExtraCode()
 {
-    return codeBlocks[next-1].addExtraCode(callOrder);
+    codeBlocks[next-1].addExtraCode(callOrder);
 }
 
 void TA_Test::remInit(bool checkForExtraCode, bool removeOpt)
