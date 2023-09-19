@@ -782,7 +782,8 @@ std::size_t MockResultHolder<R(Args...)>::setUpExpectedCall(Action action, std::
     }
     std::size_t indexOrder = -1;
     if (order == Order::InOrder) {
-        indexOrder = index++;
+        indexOrder = index;
+        index += count;
     }
     expected.emplace_back(Expected{indexOrder, count, last, std::move(value), std::move(input), required});
     return index;
@@ -831,11 +832,12 @@ R MockResultHolder<R(Args...)>::call(TA_Test& parent, Args&&... args)
             ++next;
         }
 
+        EXPECT_TRUE(parent.mockCalled(nextCallIndex, lastCall)) << "Function: " << getName() << "Called out of order";
+
         if (input.has_value()) {
             EXPECT_EQ(input.value(), std::make_tuple(args...));
         }
 
-        EXPECT_TRUE(parent.mockCalled(nextCallIndex, lastCall)) << "Function: " << getName() << "Called out of order";
         if constexpr (std::is_same_v<R, void>) {
             return;
         }
