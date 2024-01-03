@@ -136,9 +136,9 @@ Rather then re-write and copy build files from project to project, I have my own
 
         To build a static-library specify the *.a extension
         To build a shared-library specify the *.slib extension
-        To build an application specify the *.app extension.
+        To build an application specify the *.prog extension.
 
-        Note: For applications the .app is not placed on the final executable.
+        Note: For applications the .prog is not placed on the final executable.
 
         For libraries       All *.c *.cpp *.lex *.yacc files are compiled into the libraies.
                             Except any files that have the same name as an application target in the same directory.

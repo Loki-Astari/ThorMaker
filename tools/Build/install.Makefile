@@ -62,8 +62,8 @@ INSTALL_MAN_PAGE			= $(patsubst man/%, $(PREFIX_MAN)/%.man, $(INSTALL_MAN_SRC))
 INSTALL_CONFIG_LOCAL		= $(if $(CONFIG) $(INSTALL_APP_NAME), $(patsubst %, install_config_local_$(INSTALL_ACTIVE)_%, $(wildcard *.$(CONFIG))))
 INSTALL_CONFIG_ROOT			= $(if $(CONFIG) $(INSTALL_APP_NAME), $(patsubst %, install_config_root_$(INSTALL_ACTIVE)_%, $(wildcard *.$(CONFIG))))
 
-INSTALL_APP_NAME			= $(strip $(patsubst %.app,   %,					$(filter %.app,  $(TARGET_ALL))))
-INSTALL_APP					= $(patsubst %.app,   install_app_%,		$(filter %.app,  $(TARGET_ALL)))
+INSTALL_APP_NAME			= $(strip $(patsubst %.prog,   %,					$(filter %.prog,  $(TARGET_ALL))))
+INSTALL_APP					= $(patsubst %.prog,   install_app_%,		$(filter %.prog,  $(TARGET_ALL)))
 INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
 INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
 INSTALL_HEADER				= $(patsubst %,		  install_head_%,		$(LIBBASENAME))
@@ -165,8 +165,8 @@ install_defer_lib:		$(PREFIX_DEFER_LIB)/libUnitTest$(DEFER_NAME)$(BUILD_EXTENSIO
 install_defer_obj:		$(INSTALL_DEFER_OBJ)
 
 
-$(PREFIX_BIN)/%$(BUILD_EXTENSION):				$(TARGET_MODE)/%.app		| $(PREFIX_BIN).Dir
-	@$(CP) $(TARGET_MODE)/$*.app $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
+$(PREFIX_BIN)/%$(BUILD_EXTENSION):				$(TARGET_MODE)/%.prog		| $(PREFIX_BIN).Dir
+	@$(CP) $(TARGET_MODE)/$*.prog $(PREFIX_BIN)/$*$(BUILD_EXTENSION)
 	@$(LNSOFT) $(PREFIX_BIN)/$*$(BUILD_EXTENSION) $(PREFIX_BIN)/$*$(BUILD_SUFFIX)
 	@$(ECHO) $(call paragraph, Install - $(TARGET_MODE) - $*$(BUILD_EXTENSION))
 

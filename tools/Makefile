@@ -8,7 +8,7 @@ SHELL=/bin/bash
 # The TARGET variable may include multiple things to build
 #
 #
-# A name with a *.app  extension is an executable			(the app will NOT be part of the final name)
+# A name with a *.prog  extension is an executable			(the app will NOT be part of the final name)
 # A name with a *.dir  extension builds a subdirectory
 #
 # Build a library.
@@ -26,7 +26,7 @@ SHELL=/bin/bash
 #
 #		Note: This will build a shared library with the appropriate platform specific extension
 #			  In the directory TARGET_Mode (debug/release)
-#		Note: You can build multiple *.dir or *.app targets.
+#		Note: You can build multiple *.dir or *.prog targets.
 #				These will install an application in ${PREFIX_BIN}/<App-Name>
 #			  But you can only build **ONE** lib
 #			  A lib will consist of:
@@ -35,8 +35,8 @@ SHELL=/bin/bash
 #					2) A lib with the appropriate extension.
 #					   Installed into ${PREFIX_LIB}/<Lib-Name><Type>.<Ext>
 #					   It will be built from all the source files in the current directory.
-#					   After removing any source files that match *.app target names.
-#					   i.e. If you have a TARGET=bob.app glib.slib
+#					   After removing any source files that match *.prog target names.
+#					   i.e. If you have a TARGET=bob.prog glib.slib
 #					   then glib.so will not include the source file bob.cpp
 #
 # A name with a *.defer	builds the object files and but does not build a library.
@@ -196,8 +196,8 @@ TARGET_GENERIC_EXPAND		= $(foreach exp, $(THOR_TARGETLIBS), $(foreach lib, $(TAR
 TARGET_ALL					= $(filter-out %.lib, $(TARGET)) $(TARGET_GENERIC_EXPAND)
 TARGET_ITEM					= $(if $(TARGET_OVERRIDE), $(TARGET_OVERRIDE), $(TARGET_ALL))
 
-APP_SRC						= $(filter %.cpp,$(patsubst %.app,%.cpp,$(TARGET_ALL)))
-APP_HEAD					= $(filter %.h,$(patsubst %.app,%.h,$(TARGET_ALL)))
+APP_SRC						= $(filter %.cpp,$(patsubst %.prog,%.cpp,$(TARGET_ALL)))
+APP_HEAD					= $(filter %.h,$(patsubst %.prog,%.h,$(TARGET_ALL)))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
 CPP_HDR						= $(filter-out %.lex.h   %.tab.h %.tab.hpp  %.gperf.h             ,$(wildcard *.h *.hpp))
 LEX_SRC						= $(wildcard *.l)
@@ -317,7 +317,7 @@ CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC
 
 ALL_LDLIBS					+=	$(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS)
 
-MOCK_HEADER_INCLUDES_FILES	=	$(wildcard MockHeaderInclude.h) $(wildcard test/MockHeaderInclude.h)
+MOCK_HEADER_INCLUDES_FILES	=	$(strip $(wildcard MockHeaderInclude.h) $(wildcard test/MockHeaderInclude.h))
 MOCK_HEADER_INCLUDES		=   $(if $(MOCK_HEADER_INCLUDES_FILES), -include $(MOCK_HEADER_INCLUDES_FILES))
 MOCK_HEADERS_coverage		=	$(MOCK_HEADER_INCLUDES) -include coverage/MockHeaders.h
 MOCK_HEADERS_release		=   -DMOCK_FUNC\(x\)=::x -DMOCK_TFUNC\(x\)=::x
@@ -418,7 +418,7 @@ Note_%:
 
 .PRECIOUS:	$(OBJ)
 .PRECIOUS:	$(GCOV_OBJ)
-.PRECIOUS:	$(TARGET_MODE)/%.app
+.PRECIOUS:	$(TARGET_MODE)/%.prog
 .PRECIOUS:	$(TARGET_MODE)/lib%.$(SO)
 .PRECIOUS:  $(TARGET_MODE)/lib%.a
 .PRECIOUS:	%.tab.cpp
@@ -429,7 +429,7 @@ Note_%:
 .PRECIOUS:	%.vera
 
 
-.PHONY:	%.app %.slib %.head %.defer %.test
+.PHONY:	%.prog %.slib %.head %.defer %.test
 .PHONY:	run_test vera vera_head vera_body
 
 %.head:
@@ -438,7 +438,7 @@ Note_%:
 %.test:
 	@$(ECHO) $(call subsection_title, Nothing to build for $*)
 
-%.app:		buildDir $(TARGET_MODE)/%.app
+%.prog:		buildDir $(TARGET_MODE)/%.prog
 	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/$*)
 
 %.a:		buildDir $(TARGET_MODE)/lib%.a
@@ -456,7 +456,7 @@ Note_%:
 	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/defer)
 
 
-$(TARGET_MODE)/%.app:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).Dir
+$(TARGET_MODE)/%.prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then \
 		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ;	fi

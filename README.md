@@ -117,7 +117,7 @@ The standard Makefile contains only three lines.
 
     THORSANVIL_ROOT				?= $(realpath ../../)
 
-    TARGET						= Apolication.app
+    TARGET						= Apolication.prog
 
     include $(THORSANVIL_ROOT)/build/tools/Makefile
 
@@ -128,7 +128,7 @@ Lots of details can be found at the top of the `build/tools/Makefile` about how 
 
 #### Building an Application
 
-    TARGET  = Executable.app
+    TARGET  = Executable.prog
 
 This will build the application "Executable" (for release) and "ExecutableD" (for debug).  
 This will be built into the directory `$(THORSANVIL_ROOT)/build/bin` for "build" target.  
