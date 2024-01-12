@@ -85,7 +85,12 @@ AC_DEFUN([AX_THOR_FUNC_LANG_FLAG],
         AS_HELP_STRING([--with-standard-version=<version>], [Use the specified version <version> of the C++ standard. Default 17])
     )
 
-    askedLangFeature=17
+
+    AS_IF(
+        [test "x$1" == "x"],
+        [askedLangFeature=17],
+        [askedLangFeature=$1]
+    )
     AS_IF(
         [test "x${with_standard_version}" != "x"],
         [
@@ -240,7 +245,7 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 
     AC_CONFIG_SRCDIR([$2])
 
-    AX_THOR_FUNC_LANG_FLAG
+    AX_THOR_FUNC_LANG_FLAG([$3])
 
     AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS
 ])
