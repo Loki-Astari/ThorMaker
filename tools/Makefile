@@ -166,7 +166,7 @@ COVERAGE_REQUIRED_TEST = $(if $(filter-out MSYS_NT, $(filter-out MINGW64_NT, $(P
 # These value may have platform specific values.
 # They are defined here as a last resort (i.e. default values)
 YACC			?= bison
-LEX				?= flex
+LEX				 = flex
 GPERF			?= gperf --ignore-case
 CP				?= cp
 LNSOFT			?= ln -f -s
@@ -618,18 +618,18 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 
 %.lex.cpp: %.l
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(LEX) $^") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(LEX) -P $* $^") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(LEX) -t $< > $@' ;					\
+		$(ECHO) '$(LEX) -P $* -t $< > $@' ;					\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	export errorFile=$(shell $(MKTEMP));				\
-	$(LEX) -t --c++ --header-file=$*.lex.h $< > $${tmpfile} 2> $${errorFile};	\
+	$(LEX) -P $* -t --c++ --header-file=$*.lex.h $< > $${tmpfile} 2> $${errorFile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) "Failed in Lexer Generator";			\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(LEX) -t $< > $@;						\
+		$(ECHO) $(LEX) -P $* -t $< > $@;				\
 		$(ECHO) "========================================";\
 		cat $${errorFile};								\
 		exit 1;											\
@@ -641,7 +641,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 				-e 's/int yy_buf_size;/std::size_t yy_buf_size;/'	\
 				> $@;									\
 		if ( test "$(VERBOSE)" = "NONE" ); then			\
-			$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(LEX) $^") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+			$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(LEX) -P $* $^") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 		fi;												\
 		$(ECHO) $(GREEN_OK);							\
 		$(RM) $${errorFile} $${tmpFile};				\
