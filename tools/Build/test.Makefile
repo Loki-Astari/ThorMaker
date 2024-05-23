@@ -102,7 +102,9 @@ $(BASE)/coverage/MockHeaders.h: $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.pref
 	@echo "        MockFunctionGroup(TA_Test& parent)"		>>	coverage/MockHeaders.h.tmp
 	@echo "            : built(1)"							>>	coverage/MockHeaders.h.tmp
 	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "            , MOCK2_$${1}MEM_PARAM($$2)\n"' *.cpp *.h | sort | uniq >> coverage/MockHeaders.h.tmp
-	@echo "        {}"										>>	coverage/MockHeaders.h.tmp
+	@echo "        {"										>>	coverage/MockHeaders.h.tmp
+	@echo "				((void)parent);"					>>	coverage/MockHeaders.h.tmp
+	@echo "        }"										>>	coverage/MockHeaders.h.tmp
 	@echo "};"												>>	coverage/MockHeaders.h.tmp
 	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >>	coverage/MockHeaders.h.tmp
 	if [[ -e coverage/MockHeaders.h ]]; then							\

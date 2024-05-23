@@ -527,17 +527,17 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 
 $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
+		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
-	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+	$(CXX) -c $< -o $@ -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
+		$(ECHO) $(CXX) -c $< -o $@ -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
@@ -548,17 +548,17 @@ $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 
 $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
-		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
+		$(ECHO) '$(CXX) -c $< -o $@ -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
-	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
+	$(CXX) -c $< -o $@ -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
+		$(ECHO) $(CXX) -c $< -o $@ -DTHOR_PACKAGE_NAME=$(THOR_PACKAGE_NAME) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile};								\
 		exit 1;											\
