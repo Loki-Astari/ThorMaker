@@ -691,7 +691,7 @@ You can install this with
     brew install magic_enum
 
 Alternately if you have manually installed magic_enum you can specify its location with
-    --with-magicenum-root=<location of magic_enum installation>
+    --with-magicenum-header-only-root=<location of magic_enum installation>/include
 
             ])
         ]

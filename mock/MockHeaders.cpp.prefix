@@ -236,6 +236,7 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
             remDest(true);
             state = Finished;
             // Fall Through to Finished.
+            [[fallthrough]];
         }
         case Finished:
         {
