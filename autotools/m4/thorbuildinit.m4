@@ -803,12 +803,16 @@ Could not find the header file <ThorSerialize/ThorsSerializerUtil.h>
 
 AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
 [
+    remove="$1"
+    libs="ThorSerialize ThorsSocket ThorsStorage ThorsLogging"
+    libs=${libs//"${remove}"/}
+    echo "Libs: ${libs}"
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
         [thorserialize],
         [thorserialize],
         [Thors Serializer],
         [ThorSerialize17], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv],
-        [ThorSerialize ThorsSocket ThorsStorage ThorsLogging],
+        [${libs}],
         [THORSSERIALIZER],
         [ThorSerialize],
         [ThorsSerializer],
