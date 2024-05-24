@@ -7,3 +7,4 @@ obj
 dobj
 dlib
 .build
+*.swp
