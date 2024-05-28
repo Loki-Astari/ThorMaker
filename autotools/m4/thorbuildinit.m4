@@ -1264,9 +1264,13 @@ NOTE:
 AC_DEFUN([AX_THOR_FUNC_TEST_EWOULDBLOCK_DEFINED_AND_UNIQUE],
 [
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#ifdef __WINNT__
+# error We have unique EWOULDBLOCK
+#else
 #include <unistd.h>
 #if defined(EWOULDBLOCK) && (EWOULDBLOCK != EAGAIN)
 # error We have unique EWOULDBLOCK
+#endif
 #endif
         ]])],
         [
