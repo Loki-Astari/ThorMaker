@@ -7,14 +7,16 @@ function get_awkScriptToConvertSourceToHeader {
     namespace=$2
     awkScriptToConvertSourceToHeader=$(
 cat << AWK_SCRIPT_CONVERT_SRC
-BEGIN                           {PRINT=1;DEPTH=0;}
+BEGIN                           {PRINT=1;DEPTH=0;NS=0;}
 /^#include "${includeToIgnore}"/{next;}
-/^using namespace ${namespace};/{printf("namespace ${namespace}\n{\n");next;}
+/^using namespace ${namespace}(.*);/{if (NS==0){sub(";","", \$3);printf("namespace %s\n{\n", \$3);NS=1;next;}}
+/^using namespace/              {print;next}
+/^using [^=]*;$/                {if (NS==1){printf("using ::%s\n", \$2);}else{print};next;}
 /^#ifdef COVERAGE_TEST/         {if (PRINT==1){SAVEDEPTH=DEPTH;PRINT=0;}}
 /^#if/                          {DEPTH+=1;}
 /^#endif/                       {DEPTH-=1;if (PRINT == 0 && SAVEDEPTH==DEPTH){PRINT=1;}}
                                 {if (PRINT) {print;}}
-END                             {print "}\n"}
+END                             {if(NS==1){print "}\n";}}
 AWK_SCRIPT_CONVERT_SRC
 )
     echo "${awkScriptToConvertSourceToHeader}"
@@ -82,7 +84,8 @@ function convertPackageToHeaderOnly {
         file=${loop##*/}
         base=${file%%.cpp}
         echo "        Converting ${loop}  Into: ${packageDst}/${base}.source"
-        awk "$(get_awkScriptToConvertSourceToHeader ${base}.h ${namespace})" ${loop} >  ${packageDst}/${base}.source
+        script=$(get_awkScriptToConvertSourceToHeader ${base}.h ${namespace})
+        awk "${script}" ${loop} >  ${packageDst}/${base}.source
     done
     echo
 }
