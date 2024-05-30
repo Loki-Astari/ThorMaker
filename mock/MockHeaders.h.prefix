@@ -50,7 +50,7 @@
  */
 #define MOCK_MEMBER_EXPAND(type, func)                      ThorsAnvil::BuildTools::Mock::MockOutFunction<type> mockOutFunction_ ## func
 #define MOCK_TMEMBER(func)                                  MOCK_MEMBER_EXPAND(ThorsAnvil::BuildTools::Mock::FuncType_ ## func, func)
-#define MOCK_MEMBER(func)                                   MOCK_MEMBER_EXPAND(decltype(::func), func)
+#define MOCK_MEMBER(func)                                   MOCK_MEMBER_EXPAND(RemoveNoExcept<decltype(::func)>, func)
 #define MOCK_PARAM_EXPAND(func, name, lambda)               mockOutFunction_ ## func(name, lambda)
 #define MOCK_PARAM(func, lambda)                            MOCK_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), lambda)
 
@@ -62,7 +62,7 @@
 #define MOCK2_PARAM_EXPAND(func, name1, name2)              mockOutFunction_ ## func(parent, name1, name2)
 #define MOCK2_MEMBER_EXPAND(type, func)                     MockFunctionOveride<type> mockOutFunction_ ## func
 #define MOCK2_TMEMBER(func)                                 MOCK2_MEMBER_EXPAND(ThorsAnvil::BuildTools::Mock::FuncType_ ## func, func)
-#define MOCK2_MEMBER(func)                                  MOCK2_MEMBER_EXPAND(decltype(::func), func)
+#define MOCK2_MEMBER(func)                                  MOCK2_MEMBER_EXPAND(RemoveNoExcept<decltype(::func)>, func)
 #define MOCK2_TMEM_PARAM(func)                              MOCK2_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), MOCK2_BUILD_MOCK_NAME(func))
 #define MOCK2_MEM_PARAM(func)                               MOCK2_PARAM_EXPAND(func, MOCK_BUILD_MOCK_NAME(func), MOCK2_BUILD_MOCK_NAME(func))
 
