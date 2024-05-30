@@ -203,7 +203,7 @@ cat - configure << SUBMODULE_UPDATE > config.tmp
 #!/bin/sh
 
 if git submodule status | grep build | grep --quiet '^-'; then
-    git submodule update --init build
+    git submodule update --init --recursive build
 fi
 
 SUBMODULE_UPDATE
