@@ -72,6 +72,7 @@
  * Used with MOCK2_* calls 
  */
 #define expectObjectTA(name)                                expectObject(ThorsAnvil::BuildTools::Mock:: name)
+#define expectCodeTA(name)                                  expectCode(ThorsAnvil::BuildTools::Mock:: name)
 
 #define expectInitTA(func)                                  expectInit(MOCK2_BUILD_MOCK_NAME(func))
 #define expectDestTA(func)                                  expectDest(MOCK2_BUILD_MOCK_NAME(func))
@@ -242,6 +243,7 @@ namespace ThorsAnvil::BuildTools::Mock
         template<typename Func>
         struct MockFunctionHolder
         {
+            using Ret     = ReturnType<Func>;
             using Param   = ParameterType<Func>;
 
             std::string             name;
@@ -268,6 +270,7 @@ namespace ThorsAnvil::BuildTools::Mock
         {
             using Param      = typename MockObject::Param;
             using Ret        = typename MockObject::Ret;
+            using Func       = typename MockObject::Func;
             using ParamStore = std::optional<Param>;
             using ReturnStore= std::optional<Ret>;
 
@@ -279,6 +282,7 @@ namespace ThorsAnvil::BuildTools::Mock
             ParamStore      input;
             Required        required;
             Order           order;
+            Func            specialAction;
 
             public:
                 TA_ObjectOption(TA_Object& object, BlockType blockType, std::size_t callCount, MockObject& mockObjectHolder, Required required, Order order);
@@ -289,6 +293,8 @@ namespace ThorsAnvil::BuildTools::Mock
                 TA_ObjectOption& count(int newCount);
                 template<typename... Args>
                 TA_ObjectOption& checkInput(Args... args);
+                template<typename Lambda>
+                TA_ObjectOption& execute(Lambda&& func);
 
                 template<typename NextMockObject>
                 TA_ObjectOption<NextMockObject> expectInit(NextMockObject& action);
@@ -323,7 +329,7 @@ namespace ThorsAnvil::BuildTools::Mock
 
             private:
                 template<typename MockObject>
-                void saveCall(MockObject& action, BlockType blockType, std::size_t callCount, std::optional<typename MockObject::Ret>&& result, std::optional<typename MockObject::Param>&& input, Insert insert, Order order);
+                void saveCall(MockObject& action, BlockType blockType, std::size_t callCount, std::optional<typename MockObject::Ret>&& result, std::optional<typename MockObject::Param>&& input, Insert insert, Order order, typename MockObject::Func&& func);
 
                 bool hasExtraCode() const;
                 void addInit(std::size_t callOrder) const;
@@ -337,6 +343,7 @@ namespace ThorsAnvil::BuildTools::Mock
         template<typename MockObject>
         class TA_Code
         {
+            using Func          = typename MockObject::Func;
             using Param         = typename MockObject::Param;
             using ParamStore    = std::optional<Param>;
             protected:
@@ -347,6 +354,7 @@ namespace ThorsAnvil::BuildTools::Mock
                 Insert      insert;
                 Order       order;
                 bool        callSaved;
+                Func        specialAction;
 
             public:
                 using Ret = typename MockObject::Ret;
@@ -359,6 +367,8 @@ namespace ThorsAnvil::BuildTools::Mock
                 TA_Code& count(int newCount);
                 template<typename... Args>
                 TA_Code& checkInput(Args... args);
+                template<typename Lambda>
+                TA_Code& execute(Lambda&& func);
 
                 template<typename NextMockObject>
                 TA_Code<NextMockObject> expectCall(NextMockObject& nextAction);
@@ -420,11 +430,12 @@ namespace ThorsAnvil::BuildTools::Mock
         class MockResultHolder<R(Args...)>
         {
             public:
+                using Func  = std::function<R(Args...)>;
                 using Ret   = OutputType<R>;
                 using Param = ParameterType<R(Args...)>;
             private:
                 friend class MockFunctionOveride<R(Args...)>;
-                using Expected = std::tuple<std::size_t, std::size_t, std::optional<Ret>, std::optional<Param>, Required>;
+                using Expected = std::tuple<std::size_t, std::size_t, std::optional<Ret>, std::optional<Param>, Required, Func>;
 
                 std::string                     name;
                 std::function<R(Args...)>       original;
@@ -437,7 +448,7 @@ namespace ThorsAnvil::BuildTools::Mock
                 MockResultHolder(std::string const& name, F&& original);
 
                 std::string const& getName() const;
-                std::size_t setUpExpectedCall(Action action, std::size_t index, std::size_t count, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order);
+                std::size_t setUpExpectedCall(Action action, std::size_t index, std::size_t count, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order, Func&&);
                 void tearDownExpectedCall(bool checkUsage);
                 R call(TA_Test& parent, Args&&... args);
         };
@@ -552,6 +563,14 @@ TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::checkInput(Args... arg
 }
 
 template<typename MockObject>
+template<typename Lambda>
+TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::execute(Lambda&& func)
+{
+    specialAction = std::move(func);
+    return *this;
+}
+
+template<typename MockObject>
 TA_ObjectOption<MockObject>& TA_ObjectOption<MockObject>::count(int newCount)
 {
     callCount = newCount;
@@ -585,7 +604,7 @@ TA_ObjectOption<NextMockObject> TA_ObjectOption<MockObject>::optional(NextMockOb
 template<typename MockObject>
 void TA_ObjectOption<MockObject>::saveCall()
 {
-    object.saveCall(*mockObjectHolder, blockType, callCount, std::move(result), std::move(input), Insert::Append, order);
+    object.saveCall(*mockObjectHolder, blockType, callCount, std::move(result), std::move(input), Insert::Append, order, std::move(specialAction));
 }
 
 // -------------------------
@@ -610,17 +629,17 @@ TA_ObjectOption<MockObject> TA_Object::optional(MockObject& action)
 }
 
 template<typename MockObject>
-void TA_Object::saveCall(MockObject& action, BlockType blockType, std::size_t callCount, std::optional<typename MockObject::Ret>&& result, std::optional<typename MockObject::Param>&& input, Insert insert, Order order)
+void TA_Object::saveCall(MockObject& action, BlockType blockType, std::size_t callCount, std::optional<typename MockObject::Ret>&& result, std::optional<typename MockObject::Param>&& input, Insert insert, Order order, typename MockObject::Func&& func)
 {
     if (insert == Insert::Inject) {
         reset.emplace_back([mockObject = &action](){mockObject->tearDownExpectedCall(false);});
     }
-    block[blockType].emplace_back([mockObject = &action, c = callCount, r = std::move(result), in = std::move(input), o = order](Action action, std::size_t index) mutable {
+    block[blockType].emplace_back([mockObject = &action, c = callCount, r = std::move(result), in = std::move(input), o = order, f = std::move(func)](Action action, std::size_t index) mutable {
         if (action == Action::Cleaning) {
             mockObject->tearDownExpectedCall(index == 0);
             return std::size_t(0);
         }
-        return mockObject->setUpExpectedCall(action, index, c, std::move(r), std::move(in), Required::Yes, o);
+        return mockObject->setUpExpectedCall(action, index, c, std::move(r), std::move(in), Required::Yes, o, std::move(f));
     });
 }
 
@@ -684,6 +703,15 @@ TA_Code<MockObject>& TA_Code<MockObject>::checkInput(Args... args)
 }
 
 template<typename MockObject>
+template<typename Lambda>
+TA_Code<MockObject>& TA_Code<MockObject>::execute(Lambda&& func)
+{
+    specialAction = std::move(func);
+    saveCall({});
+    return *this;
+}
+
+template<typename MockObject>
 TA_Test& TA_Code<MockObject>::expectObject(TA_Object const& object)
 {
     if (!callSaved) {
@@ -718,7 +746,7 @@ void TA_Code<MockObject>::saveCall(std::optional<Ret>&& result)
         parent.codeBlocks.emplace_back();
     }
     callSaved = true;
-    parent.codeBlocks.back().saveCall(action, BlockType::Extra, callCount, std::move(result), std::move(input), insert, order);
+    parent.codeBlocks.back().saveCall(action, BlockType::Extra, callCount, std::move(result), std::move(input), insert, order, std::move(specialAction));
 }
 
 // -------------------------
@@ -751,7 +779,7 @@ std::string const& MockResultHolder<R(Args...)>::getName() const
 }
 
 template<typename R, typename... Args>
-std::size_t MockResultHolder<R(Args...)>::setUpExpectedCall(Action action, std::size_t index, std::size_t count, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order)
+std::size_t MockResultHolder<R(Args...)>::setUpExpectedCall(Action action, std::size_t index, std::size_t count, std::optional<Ret>&& value, std::optional<Param>&& input, Required required, Order order, Func&& func)
 {
     if (action == AddExtra && !errorMode) {
         expected.clear();
@@ -762,7 +790,7 @@ std::size_t MockResultHolder<R(Args...)>::setUpExpectedCall(Action action, std::
         indexOrder = index;
         index += count;
     }
-    expected.emplace_back(Expected{indexOrder, count, std::move(value), std::move(input), required});
+    expected.emplace_back(Expected{indexOrder, count, std::move(value), std::move(input), required, std::move(func)});
     return index;
 }
 
@@ -789,7 +817,7 @@ void MockResultHolder<R(Args...)>::tearDownExpectedCall(bool checkUsage)
 template<typename R, typename... Args>
 R MockResultHolder<R(Args...)>::call(TA_Test& parent, Args&&... args)
 {
-    //std::cerr << "Calling: " << getName() << "\n";
+    //std::cerr << "Calling: --X" << getName() << "\n";
     while (next == expected.size()) {
         if (!parent.unexpected()) {
             // There are no more changes that can be made.
@@ -815,12 +843,20 @@ R MockResultHolder<R(Args...)>::call(TA_Test& parent, Args&&... args)
         }
 
         if constexpr (std::is_same_v<R, void>) {
+            Func action = std::move(std::get<5>(expectedInfo));
+            if (action) {
+                return action(args...);
+            }
             return;
         }
         else {
             std::optional<R>& resultOpt = std::get<2>(expectedInfo);
             if (resultOpt.has_value()) {
                 return resultOpt.value();
+            }
+            Func action = std::move(std::get<5>(expectedInfo));
+            if (action) {
+                return action(args...);
             }
             return {};
         }

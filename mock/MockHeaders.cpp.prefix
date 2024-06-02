@@ -176,7 +176,9 @@ bool TA_Test::unexpectedThrow(bool exceptionInProgress)
     if (!exceptionSpotted && exceptionInProgress) {
         //std::cerr << "  Exception in progress\n";
         if (state == Construct || state == Error) {
-            EXPECT_EQ(next, codeBlocks.size()) << "Exception happened before all test codeBlocks used";
+            bool good =    (next == codeBlocks.size())
+                        || ((next + 1 == codeBlocks.size()) && !codeBlocks[next].hasExtraCode());
+            EXPECT_TRUE(good) << "Exception happened before all test codeBlocks used";
         }
     }
 
@@ -256,7 +258,13 @@ void TA_Test::addInit()
 
 void TA_Test::addDest()
 {
-    codeBlocks[--next].addDest(callOrder);
+    do
+    {
+        --next;
+    }
+    while ((codeBlocks[next].block[BlockType::Dest].size() == 0) && next > 0);
+
+    codeBlocks[next].addDest(callOrder);
 }
 
 void TA_Test::addExtraCode()
