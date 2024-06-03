@@ -12,6 +12,7 @@ MKTEMP								= $(MKTEMP_$(PLATFORM))
 CXX									= $(CXX_$(PLATFORM))
 COV									= $(COV_$(PLATFORM))
 COVERAGE_LIB						= $(COVERAGE_LIB_$(PLATFORM))
+PLATFORM_LIB						= $(PLATFORM_LIB_$(PLATFORM))
 VERA								?= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
 
 #
@@ -38,6 +39,11 @@ COVERAGE_LIB_Linux					=
 COVERAGE_LIB_MSYS_NT				=
 COVERAGE_LIB_MINGW64_NT				=
 
+
+PLATFORM_LIB_Darwin					=
+PLATFORM_LIB_Linux					=
+PLATFORM_LIB_MSYS_NT				= -lmingw32
+PLATFORM_LIB_MINGW64_NT				= -lmingw32
 
 VERA_Darwin							= vera++
 VERA_Linux							= vera++
