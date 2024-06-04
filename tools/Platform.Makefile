@@ -42,8 +42,8 @@ COVERAGE_LIB_MINGW64_NT				=
 
 PLATFORM_LIB_Darwin					=
 PLATFORM_LIB_Linux					=
-PLATFORM_LIB_MSYS_NT				= -lmingw32
-PLATFORM_LIB_MINGW64_NT				= -lmingw32
+PLATFORM_LIB_MSYS_NT				=
+PLATFORM_LIB_MINGW64_NT				=
 
 VERA_Darwin							= vera++
 VERA_Linux							= vera++
