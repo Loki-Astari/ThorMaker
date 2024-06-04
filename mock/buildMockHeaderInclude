@@ -54,7 +54,7 @@ function copyPart {
 }
 
 function getFunctions {
-    perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "$2 $1\n"' * | sort | uniq
+    perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print "$2 $1\n"' *.cpp *.h *.tpp 2>/dev/null | sort | uniq
 }
 
 function buildFuncType {
