@@ -578,6 +578,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_SDL],
     #
     # Fix for Windows
     SDL_LIBS=${SDL_LIBS/-lmingw32/}
+	SDL_CFLAGS=${SDL_CFLAGS/SDL2\//}
 
     AX_THOR_CHECK_USE_SDL_TTF
     AX_THOR_CHECK_USE_SDL_Image
