@@ -14,25 +14,29 @@ UNITTEST_LINK_LIBS_BULD		= $(if $(HEADER_ONLY), ,$(LINK_LIBS) $(UNITTEST_LINK_LI
 
 ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
 test-%:
-	$(MAKE) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage	build_unit_test
 	@TESTNAME=$* THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} make TARGET_MODE=coverage run_unit_test
 
 testrun.%:
-	$(MAKE) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage	build_unit_test
 	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.prog --gtest_filter=$*
 
 debugrun.%:
-	$(MAKE) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage	build_unit_test
 	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} lldb -- test/coverage/unittest.prog --gtest_filter=$*
 
 report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
-	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		build_unit_test; fi
-	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		run_unit_test; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage		build_unit_test; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage		run_unit_test; fi
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  report/test; fi
 	@touch report/test.show
 
+TEST_FILTER_SCRIPT			= $(TEST_FILTER_SCRIPT_NV$(NEOVIM))
+TEST_FILTER_SCRIPT_NVTRUE	=/RUN/{next} /OK/ {next} /PASSED/ {next} /\[----------\]/ {next} /\[==========\]/ {next} /^$$/ {next}
+
 report/test.show: | report.Dir
-	@cat report/test
+	@echo "TFS: $(TEST_FILTER_SCRIPT)"
+	@cat report/test | awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(TEST_FILTER_SCRIPT) {print}'
 
 reportErrorCheck:
 	@rm -f report/test.show
@@ -45,14 +49,18 @@ build_unit_test:	test/coverage/unittest.prog
 test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/coverage.Dir
 	@touch test/unittest.cpp
 	# Make sure the test dependencies have been updated first.
-	$(MAKE) TARGET_OVERRIDE=unittest.prog					\
+	$(MAKE) FILEDIR=$(FILEDIR)test/							\
+			NEOVIM=$(NEOVIM) 								\
+			TARGET_OVERRIDE=unittest.prog					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
 			-C test											\
 			-f ../Makefile									\
 			makedependency
-	$(MAKE) TARGET_OVERRIDE=unittest.prog					\
+	$(MAKE) FILEDIR=$(FILEDIR)test/							\
+			NEOVIM=$(NEOVIM)								\
+			TARGET_OVERRIDE=unittest.prog					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
@@ -68,7 +76,7 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 	@rm test/unittest.cpp
 
 coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/MockHeaders.cpp test/MockHeaderInclude.h | coverage.Dir
-	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
 run_unit_test: $(PRETEST)
@@ -77,7 +85,7 @@ run_unit_test: $(PRETEST)
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" test/coverage/unittest.prog --gtest_filter=$(TESTNAME)"
 	@$(ECHO) "To easily debug use:"
 	@$(ECHO) "     $(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" lldb test/coverage/unittest.prog"
-	@$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.prog --gtest_color=yes --gtest_filter=$(TESTNAME) | tee report/test; exit $${PIPESTATUS[0]}
+	@$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.prog --gtest_color=$(GTEST_COLOUR) --gtest_filter=$(TESTNAME) | tee report/test | awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(TEST_FILTER_SCRIPT) {print}'; exit $${PIPESTATUS[0]}
 
 
 #

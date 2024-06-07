@@ -6,6 +6,8 @@
 
 MAKE	= make --silent
 SHELL	= /bin/bash
+NEOVIM  ?= FALSE
+FILEDIR ?=
 
 
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
@@ -46,7 +48,7 @@ header-only:
 	dst=$$(mktemp -d);														\
 	echo "host: $${host}  dst: $${dst}";									\
 	git clone --single-branch --branch header-only $${host} $${dst};		\
-	$(MAKE) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
 	echo "DONE";															\
 	echo "		$${dst}"
 
@@ -59,7 +61,7 @@ docbuild:
 %.dir:
 	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
 	@if test -d $*; then														\
-		$(MAKE) -j1 -C $* $(ACTION) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
+		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/ NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi

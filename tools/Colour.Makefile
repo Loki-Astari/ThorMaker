@@ -1,7 +1,16 @@
 
 #
 # Also check out echo in the Platform.Makefile
-COLOUR_STATE					?= ON
+
+DEFAULT_GTEST_COLOUR			= $(DEFAULT_GTEST_COLOUR_NV$(NEOVIM))
+DEFAULT_GTEST_COLOUR_NVTRUE		= no
+DEFAULT_GTEST_COLOUR_NVFALSE	= yes
+
+DEFAULT_COLOUR					= $(DEFAULT_COLOUR_NV$(NEOVIM))
+DEFAULT_COLOR_NVFALSE			= ON
+DEFAULT_COLOR_NVTRUE			= OFF
+
+COLOUR_STATE					?= $(DEFAULT_COLOUR)
 MODE_TEXT_COLOR=$(if $(DARK_MODE), YELLOW, GRAY)
 
 
@@ -30,8 +39,12 @@ color_text						= $(call COLOUR_TEXT_$(COLOUR_STATE),$(1),$(2))
 COLOUR_TEXT_ON					= $(COLOUR_TERMINAL_$(strip $(1)))$(strip $(2))$(COLOUR_TERMINAL_NONE)
 COLOUR_TEXT_OFF					= $(2)
 
-GREEN_OK						= $(call colour_text, GREEN, OK)
-RED_ERROR						= $(call colour_text, RED, ERROR)
+NEOVIM_COLOR_MARKER				= $(NEOVIM_COLOR_MARKER_NV$(NEOVIM))
+NEOVIM_COLOR_MARKER_NVTRUE		= ":   "
+NEOVIM_COLOR_MARKER_NVFALS		=
+
+GREEN_OK						= $(call colour_text, GREEN, OK)$(NEOVIM_COLOR_MARKER)
+RED_ERROR						= $(call colour_text, RED, ERROR)$(NEOVIM_COLOR_MARKER)
 section_title					= $(call colour_text, BLUE, $(1))
 subsection_title				= $(call colour_text, CYAN, "  $(1)")
 paragraph						= $(call colour_text, $(MODE_TEXT_COLOR), "      $(1)")

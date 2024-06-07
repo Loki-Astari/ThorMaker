@@ -16,7 +16,7 @@ vera-%:
 
 report/vera:  $(SRC) $(HEAD) | report.Dir
 	@$(ECHO) $(call section_title,Static Analysis) | tee report/vera
-	@if [[ "$(VERA)" != "off" ]]; then $(MAKE) TARGET_MODE=coverage $(VERA_OBJ); fi
+	@if [[ "$(VERA)" != "off" ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage $(VERA_OBJ); fi
 	@echo -n | cat - $$(ls coverage/*.vera 2> /dev/null) >> report/vera
 	@touch report/vera.show
 

@@ -1,7 +1,10 @@
 
+HARDWARE_DEFAULT					= $(HARDWARE_DEFAULT_NV$(NEOVIM))
+HARDWARE_DEFAULT_NVFALSE			= $(shell uname -m)
+HARDWARE_DEFAULT_NVTRUE				= arm64
 
 PLATFORM							= $(shell uname -s | sed 's/-.*//')
-HARDWARE							= $(shell uname -m)
+HARDWARE							= $(HARDWARE_DEFAULT)
 PLATHARD							= $(PLATFORM)_$(HARDWARE)
 PLATFORMVER							= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
 SO									= $(SHARD_LIB_EXTENSOION_$(PLATFORM))
@@ -11,6 +14,7 @@ ECHO								= $(ECHO_$(PLATFORM))
 MKTEMP								= $(MKTEMP_$(PLATFORM))
 CXX									= $(CXX_$(PLATFORM))
 COV									= $(COV_$(PLATFORM))
+ARCH_FLAG							= $(ARCH_FLAG_$(PLATFORM))
 COVERAGE_LIB						= $(COVERAGE_LIB_$(PLATFORM))
 PLATFORM_LIB						= $(PLATFORM_LIB_$(PLATFORM))
 VERA								?= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
@@ -33,6 +37,13 @@ COV_Darwin							= gcov
 COV_Linux							= gcov
 COV_MSYS_NT							= gcov
 COV_MINGW64_NT						= gcov
+
+ARCH_FLAG_NEOVIM_BUILD_TRUE			= -arch arm64
+ARCH_FLAG_NEOVIM_BUILD_FALSE		= 
+ARCH_FLAG_Darwin					= $(ARCH_FLAG_NEOVIM_BUILD_$(NEOVIM))
+ARCH_FLAG_Linux						=
+ARCH_FLAG_MSYS_NT					=
+ARCH_FLAG_MINGW64_NT				=
 
 COVERAGE_LIB_Darwin					=
 COVERAGE_LIB_Linux					=

@@ -167,6 +167,10 @@ COVERAGE_REQUIRED_TEST = $(if $(filter-out MSYS_NT, $(filter-out MINGW64_NT, $(P
 # Look in Platform.Makefile
 # These value may have platform specific values.
 # They are defined here as a last resort (i.e. default values)
+#
+NEOVIM			?= FALSE
+FILEDIR			?=
+
 YACC			?= bison
 LEX				 = flex
 GPERF			?= gperf --ignore-case
@@ -365,17 +369,17 @@ DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))
 
 all:					build
 install:				test debug release
-	@$(MAKE) INSTALL_ACTIVE=YES		ActionInstall
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES	ActionInstall
 uninstall:
-	@$(MAKE) INSTALL_ACTIVE=YES		ActionUInstall
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES	ActionUInstall
 build:					test debug release
-	@$(MAKE) INSTALL_ACTIVE=NO		ActionInstall
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionInstall
 veryclean:				clean
-	@$(MAKE) INSTALL_ACTIVE=NO		ActionUInstall
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionUInstall
 debug:					makedependency
-	@$(MAKE) TARGET_MODE=debug		item
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=debug		item
 release:				makedependency
-	@$(MAKE) TARGET_MODE=release	item
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=release	item
 lint:					doLint
 item:					PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ITEM)
 buildDir:	| $(TARGET_MODE).Dir coverage.Dir
@@ -389,10 +393,10 @@ test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
 build-honly:
 	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
-	@echo "CWD=$$(pwd);cd $(PREFIX);HEADER_ONLY=1 THORSANVIL_ROOT=$${CWD} CXXFLAGS=-I$(PREFIX) LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) test"
+	@echo "CWD=$$(pwd);cd $(PREFIX);HEADER_ONLY=1 THORSANVIL_ROOT=$${CWD} CXXFLAGS=-I$(PREFIX) LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
 	@CWD="$$(pwd)";	\
 	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
-	HEADER_ONLY=1 THORSANVIL_ROOT="$${CWD}" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) test
+	HEADER_ONLY=1 THORSANVIL_ROOT="$${CWD}" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test
 	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
 
@@ -462,7 +466,7 @@ $(TARGET_MODE)/%.prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).D
 	@if ( test "$(VERBOSE)" = "On" ); then \
 		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ;	fi
-	@$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
+	@$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
@@ -498,7 +502,7 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
-	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
+	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) "";										\
@@ -556,13 +560,13 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
-	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+	$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
-		cat $${tmpfile};								\
+		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next}';								\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
@@ -656,6 +660,9 @@ PrintDebug:	Print_$(VERBOSE)
 Print_Off:
 Print_NONE:
 Print_On:
+	@$(ECHO) "PLATFORM:				$(PLATFORM)"
+	@$(ECHO) "HARDWARE:				$(HARDWARE)"
+	@$(ECHO) "PLATHARD:				$(PLATHARD)"
 	@$(ECHO) "TARGET:               $(TARGET)"
 	@$(ECHO) "TARGET_ITEM:          $(TARGET_ITEM)"
 	@$(ECHO) "TARGET_ALL:           $(TARGET_ALL)"

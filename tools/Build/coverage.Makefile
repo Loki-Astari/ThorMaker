@@ -20,7 +20,7 @@ ActionRunCoverage:		report/coverage report/coverage.show
 
 coverage-%:
 	@if [[ ! -e $* ]]; then $(ECHO) $(RED_ERROR); $(ECHO) "No such file as >$*<"; exit 1; fi
-	@if [[ ! -e coverage/$*.out ]]; then	$(MAKE) TARGET_MODE=coverage coverage/$*.out; fi
+	@if [[ ! -e coverage/$*.out ]]; then	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage coverage/$*.out; fi
 	@cat coverage/$*.gcov
 	@cat coverage/$*.out
 
@@ -29,12 +29,12 @@ report/coverage.show:
 
 report/coverage: report/test Makefile | report.Dir
 	@$(ECHO) $(call section_title,Running Coverage) | tee report/coverage
-	@if [[ -d test ]]; then $(MAKE) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_obj_coverage; fi
-	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_obj_coverage; fi
-	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage check_hed_coverage; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_obj_coverage; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage check_obj_coverage; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage check_hed_coverage; fi
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  -a report/coverage; fi
 	@echo -n | cat - $$(ls coverage/*.out 2> /dev/null) >> report/coverage
-	@$(MAKE) TARGET_MODE=coverage reportCoverage
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage reportCoverage
 	@touch report/coverage.show
 
 reportCoverage:

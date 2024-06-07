@@ -82,17 +82,17 @@ ActionInstall:				ActionDoInstallHead  ActionDoInstallDebug  ActionDoInstallRele
 ActionUInstall:				ActionDoUInstallHead ActionDoUInstallDebug ActionDoUInstallRelease ActionDoUInstallMan ActionDoUInstallConfig ActionTryUInstallDRoot
 
 ActionDoInstallDebug:
-	$(MAKE) TARGET_MODE=debug	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=debug	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
 ActionDoInstallRelease:
-	$(MAKE) TARGET_MODE=release ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=release ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
 ActionDoInstallHead:		ActionTryInstallHead
 ActionDoInstallMan:			ActionTryInstallMan
 ActionDoInstallConfig:		ActionTryInstallConfig
 
 ActionDoUInstallDebug:
-	$(MAKE) TARGET_MODE=debug	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=debug	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
 ActionDoUInstallRelease:
-	$(MAKE) TARGET_MODE=release	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=release	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
 ActionDoUInstallHead:		ActionTryUInstallHead
 ActionDoUInstallMan:		ActionTryUInstallMan
 ActionDoUInstallConfig:		ActionTryUInstallConfig
