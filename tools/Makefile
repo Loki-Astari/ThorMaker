@@ -134,6 +134,7 @@ BASE			?= .
 include $(BUILD_ROOT)/tools/Colour.Makefile
 include $(BUILD_ROOT)/tools/Platform.Makefile
 include $(BUILD_ROOT)/tools/ThorsAnvilLibs.Makefile
+include $(BUILD_ROOT)/tools/NeoVim.Makefile
 
 LOCAL_ROOT		?= $(shell pwd)
 
@@ -658,10 +659,12 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	fi
 
 .PHONY:	PrintDebug Print_NONE Print_Off Print_On
+print:	Print_On
 PrintDebug:	Print_$(VERBOSE)
 Print_Off:
 Print_NONE:
 Print_On:
+	@$(ECHO) "NEOVIM:				$(NEOVIM)"
 	@$(ECHO) "PLATFORM:				$(PLATFORM)"
 	@$(ECHO) "HARDWARE:				$(HARDWARE)"
 	@$(ECHO) "PLATHARD:				$(PLATHARD)"

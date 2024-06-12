@@ -1,6 +1,7 @@
 
 -include $(THORSANVIL_ROOT)/Makefile.config
 -include $(THORSANVIL_ROOT)/build/tools/Colour.Makefile
+-include $(THORSANVIL_ROOT)/build/tools/NeoVim.Makefile
 
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
@@ -24,6 +25,7 @@ lint:		ACTION=lint
 vera:		ACTION=vera
 doc:		ACTION=doc
 build-honly:ACTION=build-honly
+print:		ACTION=print
 
 ACTION		?=all
 BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
@@ -42,6 +44,7 @@ lint:		check_lint $(SUB_PROJECTS)
 vera:		$(SUB_PROJECTS)
 doc:		$(SUB_PROJECTS) docbuild
 build-honly:$(SUB_PROJECTS)
+print:		$(SUB_PROJECTS)
 
 header-only:
 	@host=$$(git remote get-url origin);									\
