@@ -1,7 +1,6 @@
 
 -include $(THORSANVIL_ROOT)/Makefile.config
 -include $(THORSANVIL_ROOT)/build/tools/Colour.Makefile
--include $(THORSANVIL_ROOT)/build/tools/NeoVim.Makefile
 
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
@@ -54,6 +53,11 @@ header-only:
 	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
 	echo "DONE";															\
 	echo "		$${dst}";													\
+	email=$$(git log -1 --pretty=format:'%ae');								\
+	name=$$(git log -1 --pretty=format:'%an');								\
+	echo "Setting: N: >$${name}< E: >$${email}<";							\
+	git config user.email "$${email}";										\
+	git config user.name "$${name}";										\
 	cd $${dst};git commit -m "Update Header Only Version";git push
 
 docbuild:
@@ -73,4 +77,5 @@ docbuild:
 
 include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
 include $(THORSANVIL_ROOT)/build/tools/lint.Makefile
+include $(THORSANVIL_ROOT)/build/tools/NeoVim.Makefile
 	
