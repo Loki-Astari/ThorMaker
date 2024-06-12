@@ -51,7 +51,7 @@ header-only:
 	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
 	echo "DONE";															\
 	echo "		$${dst}"													\
-	cd $$(dst);git commit -m "Update Header Only Version";git push
+	cd $${dst};git commit -m "Update Header Only Version";git push
 
 docbuild:
 	@if [[ -d docSource ]]; then		\
