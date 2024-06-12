@@ -50,7 +50,7 @@ header-only:
 	git clone --single-branch --branch header-only $${host} $${dst};		\
 	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
 	echo "DONE";															\
-	echo "		$${dst}"													\
+	echo "		$${dst}";													\
 	cd $${dst};git commit -m "Update Header Only Version";git push
 
 docbuild:
