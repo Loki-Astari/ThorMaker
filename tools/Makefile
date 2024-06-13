@@ -134,7 +134,6 @@ BASE			?= .
 include $(BUILD_ROOT)/tools/Colour.Makefile
 include $(BUILD_ROOT)/tools/Platform.Makefile
 include $(BUILD_ROOT)/tools/ThorsAnvilLibs.Makefile
-include $(BUILD_ROOT)/tools/NeoVim.Makefile
 
 LOCAL_ROOT		?= $(shell pwd)
 
@@ -417,6 +416,7 @@ include $(BUILD_ROOT)/tools/Build/coverage.Makefile
 include $(BUILD_ROOT)/tools/Build/vera.Makefile
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
+include $(BUILD_ROOT)/tools/NeoVim.Makefile
 ifndef NODEP
 -include makedependency/*
 endif
