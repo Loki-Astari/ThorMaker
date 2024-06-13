@@ -33,10 +33,11 @@ report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 
 TEST_FILTER_SCRIPT			= $(TEST_FILTER_SCRIPT_NV$(NEOVIM))
 TEST_FILTER_SCRIPT_NVTRUE	=/RUN/{next} /OK/ {next} /PASSED/ {next} /\[----------\]/ {next} /\[==========\]/ {next} /^$$/ {next}
+LOG_FILE_FILTER_SCRIPT		=/ERR\| id:/ {match($$0, /^[^\]]*][ \t]*/); printf("%s%s%s\n", substr($$0, RSTART, RLENGTH), "$(FILEDIR)", substr($$0, RLENGTH+1));next;}
+
 
 report/test.show: | report.Dir
-	@echo "TFS: $(TEST_FILTER_SCRIPT)"
-	@cat report/test | awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(TEST_FILTER_SCRIPT) {print}'
+	@cat report/test | awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(LOG_FILE_FILTER_SCRIPT) $(TEST_FILTER_SCRIPT) {print}'
 
 reportErrorCheck:
 	@rm -f report/test.show
@@ -85,7 +86,10 @@ run_unit_test: $(PRETEST)
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" test/coverage/unittest.prog --gtest_filter=$(TESTNAME)"
 	@$(ECHO) "To easily debug use:"
 	@$(ECHO) "     $(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" lldb test/coverage/unittest.prog"
-	@$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.prog --gtest_color=$(GTEST_COLOUR) --gtest_filter=$(TESTNAME) | tee report/test | awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(TEST_FILTER_SCRIPT) {print}'; exit $${PIPESTATUS[0]}
+	@$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.prog --gtest_color=$(GTEST_COLOUR) --gtest_filter=$(TESTNAME) 2>&1 |	\
+			tee report/test |	\
+			awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(LOG_FILE_FILTER_SCRIPT) $(TEST_FILTER_SCRIPT) {print}';	\
+			exit $${PIPESTATUS[0]}
 
 
 #
