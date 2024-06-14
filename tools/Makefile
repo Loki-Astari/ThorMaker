@@ -524,13 +524,13 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 		$(ECHO) '$(CXX) -MM -MT"coverage/$(<:.cpp=.o)" "$<"';\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) '$(CXX) $(CXXFLAGS) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
+		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 		$(ECHO) "========================================";\
-		cat $${tmpfile};								\
+		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next}';								\
 		exit 1;											\
 	fi
 
@@ -548,7 +548,7 @@ $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
-		cat $${tmpfile};								\
+		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next}';								\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
@@ -664,6 +664,7 @@ PrintDebug:	Print_$(VERBOSE)
 Print_Off:
 Print_NONE:
 Print_On:
+	@$(ECHO) "DEP:					$(DEP)"
 	@$(ECHO) "NEOVIM:				$(NEOVIM)"
 	@$(ECHO) "PLATFORM:				$(PLATFORM)"
 	@$(ECHO) "HARDWARE:				$(HARDWARE)"
