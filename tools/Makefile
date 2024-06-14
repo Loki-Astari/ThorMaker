@@ -530,7 +530,7 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 		$(ECHO) "========================================";\
-		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next}';								\
+		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next} {print}';	\
 		exit 1;											\
 	fi
 
@@ -548,7 +548,7 @@ $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
-		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next}';								\
+		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next} {print}';	\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
@@ -569,7 +569,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
-		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next}';								\
+		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next} {print}';	\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
