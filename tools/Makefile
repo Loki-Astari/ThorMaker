@@ -126,9 +126,7 @@ SHELL=/bin/bash
 #	Run a specific unit test in the debugger
 #		make debugrun.<TestName>
 
--include $(THORSANVIL_ROOT)/Makefile.config
--include $(THORSANVIL_LOCAL_ROOT)/Makefile.config
--include $(THORSANVIL_LOCAL_ROOT)/../Makefile.config
+-include $(realpath $(THORSANVIL_ROOT)/Makefile.config)
 BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
 BASE			?= .
 include $(BUILD_ROOT)/tools/Colour.Makefile
