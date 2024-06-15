@@ -126,14 +126,9 @@ SHELL=/bin/bash
 #	Run a specific unit test in the debugger
 #		make debugrun.<TestName>
 
--include $(realpath $(THORSANVIL_ROOT)/Makefile.config)
-BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
-BASE			?= .
 include $(BUILD_ROOT)/tools/Colour.Makefile
 include $(BUILD_ROOT)/tools/Platform.Makefile
 include $(BUILD_ROOT)/tools/ThorsAnvilLibs.Makefile
-
-LOCAL_ROOT		?= $(shell pwd)
 
 export PATH := $(BUILD_ROOT)/bin:$(PATH)
 
