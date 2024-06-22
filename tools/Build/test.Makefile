@@ -32,7 +32,8 @@ report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 	@touch report/test.show
 
 TEST_FILTER_SCRIPT			= $(TEST_FILTER_SCRIPT_NV$(NEOVIM))
-TEST_FILTER_SCRIPT_NVTRUE	=/RUN/{next} /OK/ {next} /PASSED/ {next} /\[----------\]/ {next} /\[==========\]/ {next} /^$$/ {next}
+TEST_FILTER_SCRIPT_NVTRUE1	=/RUN/{next} /OK/ {next} /PASSED/ {next} /\[----------\]/ {next} /\[==========\]/ {next} /^$$/ {next}
+TEST_FILTER_SCRIPT_NVTRUE	=
 LOG_FILE_FILTER_SCRIPT		=/ERR\| id:/ {match($$0, /^[^\]]*][ \t]*/); printf("%s %s%s\n", substr($$0, RSTART, RLENGTH), "$(FILEDIR)", substr($$0, RLENGTH+1));next;}
 LOG_DST						=DEVNULL
 FILTER_LOG_DEVNULL			=2>/dev/null
