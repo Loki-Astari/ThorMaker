@@ -31,18 +31,24 @@ report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  report/test; fi
 	@touch report/test.show
 
+#
+# In NEOVIM remove a lot of redundant lines.
 TEST_FILTER_SCRIPT			= $(TEST_FILTER_SCRIPT_NV$(NEOVIM))
-TEST_FILTER_SCRIPT_NVTRUE1	=/RUN/{next} /OK/ {next} /PASSED/ {next} /\[----------\]/ {next} /\[==========\]/ {next} /^$$/ {next}
-TEST_FILTER_SCRIPT_NVTRUE	=
-LOG_FILE_FILTER_SCRIPT		=/ERR\| id:/ {match($$0, /^[^\]]*][ \t]*/); printf("%s %s%s\n", substr($$0, RSTART, RLENGTH), "$(FILEDIR)", substr($$0, RLENGTH+1));next;}
-LOG_DST						=DEVNULL
-FILTER_LOG_DEVNULL			=2>/dev/null
-FILTER_LOG_STDOUT			=2>&1
-FILTER_LOG					=$(FILTER_LOG_$(LOG_DST))
+TEST_FILTER_SCRIPT_NVTRUE	= /PASSED/ {next} /\[----------\]/ {next} /\[==========\]/ {next} /\[ RUN      \]/ {next} /^$$/ {next}
 
+LOG_FILE_FILTER_SCRIPT		= $(LOG_FILE_FILTER_SCRIPT_ERR) $(LOG_FILE_FILTER_SCRIPT_WARN) $(LOG_FILE_FILTER_SCRIPT_INFO)
+LOG_FILE_FILTER_SCRIPT_ERR	=/ERR\| id:/ {match($$0, /^[^\]]*][ \t]*/); printf("%s %s%s\n", substr($$0, RSTART, RLENGTH), "$(FILEDIR)", substr($$0, RLENGTH+1));next;}
+LOG_FILE_FILTER_SCRIPT_WARN	=/WARN\| id:/ {match($$0, /^[^\]]*][ \t]*/); printf("%s %s%s\n", substr($$0, RSTART, RLENGTH), "$(FILEDIR)", substr($$0, RLENGTH+1));next;}
+LOG_FILE_FILTER_SCRIPT_INFO	=/INFO\| id:/ {match($$0, /^[^\]]*][ \t]*/); printf("%s %s%s\n", substr($$0, RSTART, RLENGTH), "$(FILEDIR)", substr($$0, RLENGTH+1));next;}
+
+GTEST_ADD_FILE				= $(GTEST_ADD_FILE_TO_FAILURE) $(GTEST_ADD_FILE_TO_SKIP)
+GTEST_ADD_FILE_TO_FAILURE	= /Failure$$/ {printf("test/%s\n", $$0);next}
+GTEST_ADD_FILE_TO_SKIP		= /Skipped$$/ {printf("test/%s\n", $$0);next}
+
+FILTER_SCRIPT				= $(GTEST_ADD_FILE) $(LOG_FILE_FILTER_SCRIPT) $(TEST_FILTER_SCRIPT)
 
 report/test.show: | report.Dir
-	@cat report/test | awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(LOG_FILE_FILTER_SCRIPT) $(TEST_FILTER_SCRIPT) {print}'
+	@cat report/test | awk '$(FILTER_SCRIPT) {print}'
 
 reportErrorCheck:
 	@rm -f report/test.show
@@ -91,9 +97,9 @@ run_unit_test: $(PRETEST)
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" test/coverage/unittest.prog --gtest_filter=$(TESTNAME)"
 	@$(ECHO) "To easily debug use:"
 	@$(ECHO) "     $(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" lldb test/coverage/unittest.prog"
-	@$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.prog --gtest_color=$(GTEST_COLOUR) --gtest_filter=$(TESTNAME) $(FILTER_LOG) |	\
+	@$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.prog --gtest_color=$(GTEST_COLOUR) --gtest_filter=$(TESTNAME) 2>&1 |	\
 			tee report/test |	\
-			awk '/Failure$$/ {printf("test/%s\n", $$0);next} $(LOG_FILE_FILTER_SCRIPT) $(TEST_FILTER_SCRIPT) {print}';	\
+			awk '$(FILTER_SCRIPT) {print}';	\
 			exit $${PIPESTATUS[0]}
 
 
