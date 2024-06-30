@@ -567,7 +567,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
-		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next} {print}';	\
+		cat $${tmpfile} | awk '/error:/ {printf("%s\n$(FILEDIR)", $$0);next} {print}';	\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
