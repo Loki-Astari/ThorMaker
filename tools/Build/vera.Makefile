@@ -27,7 +27,7 @@ coverage/%.vera: %	$(VERA_EXCLUDE_FILE) | coverage.Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) "$(VERA) $(VERA_ROOT) --profile thor $(VERA_EXLUSION) --show-rule --error --std-report $@.report $*";\
 	else												\
-		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), $(VERA) $*)	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' | tee -a coverage/$*.vera;	\
+		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), $(VERA) $*)	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' | tee coverage/$*.vera;	\
 	fi
 	@$(VERA) $(VERA_ROOT) --profile thor $(VERA_EXLUSION) --show-rule --error --std-report $@.report $*;\
 	if [ $$? != 0 ]; then								\
