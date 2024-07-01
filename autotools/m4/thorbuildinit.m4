@@ -1066,15 +1066,18 @@ Eg.
 
 AC_DEFUN([AX_THOR_CHECK_APP_COV],
 [
+echo "STARTING COVERAGE CHECK"
     AS_IF(
         [test "x${COV}x" = "xx"],
         [
+            CXXTOOL=${CXX% *}
             AS_IF(
-                [test "${CXX}" = "g++"],
+                [test "${CXXTOOL}" = "g++"],
                 [AC_SUBST([COV],[gcov])],
                 [
+echo "STARTING COVERAGE CHECK: CHECKING CLANG"
                     AS_IF(
-                        [test "${CXX}" = "clang++"],
+                        [test "${CXXTOOL}" = "clang++"],
                         [AC_SUBST([COV],[llvm-cov])],
                         [
                             AC_MSG_ERROR([
