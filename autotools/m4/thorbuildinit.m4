@@ -817,13 +817,13 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
         [thorserialize],
         [thorserialize],
         [Thors Serializer],
-        [ThorSerialize17], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv],
+        [ThorSerialize${askedLangFeature}], [_ZN10ThorsAnvil9Serialize10JsonParser12getNextTokenEv],
         [${libs}],
         [THORSSERIALIZER],
         [ThorSerialize],
         [ThorsSerializer],
         [
-Error: Could not find libThorSerialize17
+Error: Could not find libThorSerialize${askedLangFeature}
 
 You can solve this by installing Thors Serializer
     brew install thors-serializer
@@ -841,13 +841,13 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_DB],
         [thorsdb],
         [thorsdb],
         [Thors DB],
-        [ThorsDB17], [_ZTVN10ThorsAnvil2DB5MySQL16PrepareStatementE],
+        [ThorsDB${askedLangFeature}], [_ZTVN10ThorsAnvil2DB5MySQL16PrepareStatementE],
         [ThorsDB],
         [THORSDB],
         [ThorsDB],
         [ThorsDB],
         [
-Error: Could not find libThorsDB17
+Error: Could not find libThorsDB${askedLangFeature}
 
 You can solve this by building ThorsDB
     > git clone git@github.com:Loki-Astari/ThorsDB.git
