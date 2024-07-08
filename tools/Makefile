@@ -7,11 +7,15 @@ REALATIVEPATH=$(shell $(THORSANVIL_ROOT)/build/tools/RelPath "$(realpath $(LOCAL
 
 -include $(THORSANVIL_ROOT)/Makefile.config
 
-BUILD_ROOT		?= $(abspath $(LOCAL_ROOT)/$(REALATIVEPATH))/build
+BUILD_ROOT		?= $(BUILD_ROOT_IS$(HEADER_ONLY))
+BUILD_ROOT_IS	= $(abspath $(LOCAL_ROOT)/$(REALATIVEPATH))/build
+BUILD_ROOT_IS1	= $(THORSANVIL_ROOT)/build
+
 include $(BUILD_ROOT)/tools/main.Makefile
 
 
 check:
+	@echo "HEADER_ONLY:              $(HEADER_ONLY)"
 	@echo "LOCAL_ROOT:               $(LOCAL_ROOT)"
 	@echo "realpath (LOCAL_ROOT):    $(realpath $(LOCAL_ROOT))"
 	@echo "THORSANVIL_ROOT:          $(THORSANVIL_ROOT)"

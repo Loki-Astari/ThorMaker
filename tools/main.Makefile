@@ -393,10 +393,20 @@ test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
 build-honly:
 	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
-	@echo "CWD=$$(pwd);cd $(PREFIX);HEADER_ONLY=1 THORSANVIL_ROOT=$${CWD} CXXFLAGS=-I$(PREFIX) LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
+	@echo
+	@echo "Manual Steps about to be performed"
+	@echo "CWD=$$(pwd)"
+	@echo "cd $(PREFIX)/$(HEADER_ONLY_PACKAGE)"
+	@echo "HEADER_ONLY=1"
+	@echo "THORSANVIL_ROOT=$(THORSANVIL_ROOT)"
+	@echo "CXXFLAGS=-I$(PREFIX)"
+	@echo "LDLIBS_FILTER=\"$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))\""
+	@echo "$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
+	@echo
+	@echo
 	@CWD="$$(pwd)";	\
 	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
-	HEADER_ONLY=1 THORSANVIL_ROOT="$${CWD}" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test
+	HEADER_ONLY=1 THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test
 	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
 
