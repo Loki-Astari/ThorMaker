@@ -205,7 +205,8 @@ APP_HEAD					= $(filter %.h,$(patsubst %.prog,%.h,$(TARGET_ALL)))
 CPP_SRC						= $(filter-out %.lex.cpp %.tab.cpp %.gperf.cpp $(APP_SRC),$(wildcard *.cpp))
 CPP_HDR						= $(filter-out %.lex.h   %.tab.h %.tab.hpp  %.gperf.h             ,$(wildcard *.h *.hpp))
 CPP_TDR						= $(wildcard *.tpp)
-CPP_FILES					= $(CPP_SRC) $(CPP_HDR) $(CPP_TDR)
+CPP_SOURCE					= $(wildcard *.source)
+CPP_FILES					= $(CPP_SRC) $(CPP_HDR) $(CPP_TDR) $(CPP_SOURCE)
 LEX_SRC						= $(wildcard *.l)
 GPERF_SRC					= $(wildcard *.gperf)
 YACC_SRC					= $(wildcard *.y)
@@ -392,6 +393,12 @@ test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
 build-honly:
+	@echo "Converting project"
+	@echo "PREFIX:              $(PREFIX)"
+	@echo "HEADER_ONLY_PACKAGE: $(HEADER_ONLY_PACKAGE)"
+	@echo "NAMESPACE:           $(NAMESPACE)"
+	@echo "$(BUILD_ROOT)/headeronly/convert_project (PREFIX) (HEADER_ONLY_PACKAGE) (NAMESPACE)"
+	@echo
 	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 	@echo
 	@echo "Manual Steps about to be performed"

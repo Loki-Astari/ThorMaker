@@ -72,15 +72,12 @@ function convertPackageToHeaderOnly {
         cp vera_exclusions ${packageDst}/vera_exclusions
     fi
 
-    hasMock=$(grep MOCK_FUNC *.cpp | wc -l | xargs)
-    if [[ ${hasMock} == 0 ]]; then
-        if [[ -e test ]]; then
-            echo "        Copying test files and data"
-            cp -R test ${prefix}/${package}
-            rm -rf ${prefix}/${package}/test/coverage
-            rm -rf ${prefix}/${package}/test/report
-            rm -rf ${prefix}/${package}/test/makedependency
-        fi
+    if [[ -e test ]]; then
+        echo "        Copying test files and data"
+        cp -R test ${prefix}/${package}
+        rm -rf ${prefix}/${package}/test/coverage
+        rm -rf ${prefix}/${package}/test/report
+        rm -rf ${prefix}/${package}/test/makedependency
     fi
 
     for loop in $(ls *.cpp 2> /dev/null); do
@@ -89,7 +86,6 @@ function convertPackageToHeaderOnly {
         echo "        Converting ${loop}  Into: ${packageDst}/${base}.source"
         script=$(get_awkScriptToConvertSourceToHeader ${base}.h ${namespace})
         awk "${script}" ${loop} >  ${packageDst}/${base}.source
-        sed -e 's/MOCK_.\{0,1\}FUNC(\([^)]*\))/\1/' -i '' ${packageDst}/${base}.source
     done
     echo
 }
