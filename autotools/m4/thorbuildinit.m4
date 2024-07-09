@@ -82,13 +82,13 @@ AC_DEFUN([AX_THOR_FUNC_LANG_FLAG],
 
     AC_ARG_WITH(
         [standard-version],
-        AS_HELP_STRING([--with-standard-version=<version>], [Use the specified version <version> of the C++ standard. Default 17])
+        AS_HELP_STRING([--with-standard-version=<version>], [Use the specified version <version> of the C++ standard. Default 20])
     )
 
 
     AS_IF(
         [test "x$1" == "x"],
-        [askedLangFeature=17],
+        [askedLangFeature=20],
         [askedLangFeature=$1]
     )
     AS_IF(

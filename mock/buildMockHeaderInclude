@@ -50,7 +50,9 @@ function copyPart {
     local fileName=$1
     local section=$2
 
-    awk 'BEGIN {InSection=0;} /'PART-${section}'-Start/ {InSection=1;next;} /PART-'${section}'-End/ {InSection=0} {if (InSection == 1){print}}' ${fileName}
+    if [[ -e ${fileName} ]]; then
+        awk 'BEGIN {InSection=0;} /'PART-${section}'-Start/ {InSection=1;next;} /PART-'${section}'-End/ {InSection=0} {if (InSection == 1){print}}' ${fileName}
+    fi
 }
 
 function getFunctions {

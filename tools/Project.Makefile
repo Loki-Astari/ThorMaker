@@ -53,12 +53,9 @@ header-only:
 	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
 	echo "DONE";															\
 	echo "		$${dst}";													\
-	email=$$(git log -1 --pretty=format:'%ae');								\
-	name=$$(git log -1 --pretty=format:'%an');								\
-	echo "Setting: N: >$${name}< E: >$${email}<";							\
-	git config user.email "$${email}";										\
-	git config user.name "$${name}";										\
-	cd $${dst};git commit -m "Update Header Only Version";git push
+	echo;																	\
+	echo "Please Check $${dst} and commit push if required";
+
 
 docbuild:
 	@if [[ -d docSource ]]; then		\
