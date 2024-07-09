@@ -51,6 +51,7 @@
 #       AX_THOR_DISABLE_TEST_REQUIREING_LOCK_FILES
 #       AX_THOR_DISABLE_TEST_REQUIREING_POSTGRES_AUTHENTICATION
 #       AX_THOR_DISABLE_TEST_REQUIREING_MONGO_QUERY
+#       AX_THOR_DISABLE_TEST_INTEGRATION
 #
 #       == Old Need to verify usability
 #       AX_THOR_CHECK_DISABLE_TIMEGM
@@ -901,6 +902,26 @@ AC_DEFUN([AX_THOR_DISABLE_TEST],
         [
             AC_DEFINE([$3], [0], [$4])
         ]
+    )
+])
+
+AC_DEFUN([AX_THOR_DISABLE_TEST_INTEGRATION],
+[
+    AX_THOR_DISABLE_TEST(
+        [with-integration],
+        [with_integration],
+        [THOR_DISABLE_TEST_WITH_INTEGRATION],
+        [Disable integration tests],
+        [
+You can not do integration tests in all environments.
+All integration tests to be disabled.
+
+To tests that you may want to disable add:
+
+    #if defined(THOR_DISABLE_TEST_WITH_INTEGRATION)
+    GTEST_SKIP();
+    #endif
+        ]       
     )
 ])
 
