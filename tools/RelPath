@@ -4,5 +4,5 @@ currentWorkingRealPath="$1"
 thorsAbsPath="$2"
 
 count=$(echo ${currentWorkingRealPath#"${thorsAbsPath}"}/ | awk -F/ '{print NF-2}')
-yes '../' | head -n ${count} | tr -d '\n'
+yes '../' 2>/dev/null | head -n ${count} | tr -d '\n'
 
