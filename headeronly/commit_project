@@ -27,6 +27,22 @@ function tidyProject {
     echo
 }
 
+function removeMock {
+    cwd=$(pwd)
+
+    prefix=$1
+    package=$2
+    directory=$(basename ${cwd})
+    packageDst=${prefix}/${package}
+
+    cd ${packageDst}
+
+    for file in $(grep -l -E 'MOCK_.?FUNC' *); do
+        sed -e 's/MOCK_FUNC(\([^)]*\))/::\1/g' -e 's/MOCK_TFUNC(\([^)]*\))/::\1/g' ${file} > tmp
+        mv tmp ${file}
+    done
+}
+
 function updateGitFiles {
     cwd=$(pwd)
 
@@ -48,12 +64,15 @@ function updateGitFiles {
 
     echo "        Del Old Files"
     git status . | awk '/deleted/ {print $2}' | xargs -I^ git rm ^
+
+    cd ${cwd}
 }
 
 proxy=$1
 package=$2
 namespace=$3
 tidyProject  "${proxy}" "${package}" "${namespace}"
+removeMock   "${proxy}" "${package}"
 updateGitFiles  "${proxy}" "${package}" "${namespace}"
 
 

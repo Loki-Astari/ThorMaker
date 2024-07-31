@@ -8,7 +8,8 @@ SHELL=/bin/bash
 # The TARGET variable may include multiple things to build
 #
 #
-# A name with a *.prog  extension is an executable			(the app will NOT be part of the final name)
+# A name with a *.prog  extension is an executable			(the prog will NOT be part of the final name)
+#															(Note: in older versions this was .app but this is not viable on a Mac)
 # A name with a *.dir  extension builds a subdirectory
 #
 # Build a library.
@@ -416,6 +417,29 @@ build-honly:
 	HEADER_ONLY=1 THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test
 	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
+build-hcont:
+	@echo "Converting project"
+	@echo "PREFIX:              $(PREFIX)"
+	@echo "HEADER_ONLY_PACKAGE: $(HEADER_ONLY_PACKAGE)"
+	@echo "NAMESPACE:           $(NAMESPACE)"
+	@echo "$(BUILD_ROOT)/headeronly/convert_project (PREFIX) (HEADER_ONLY_PACKAGE) (NAMESPACE)"
+	@echo
+	@echo
+	@echo "Manual Steps about to be performed"
+	@echo "CWD=$$(pwd)"
+	@echo "cd $(PREFIX)/$(HEADER_ONLY_PACKAGE)"
+	@echo "HEADER_ONLY=1"
+	@echo "THORSANVIL_ROOT=$(THORSANVIL_ROOT)"
+	@echo "CXXFLAGS=-I$(PREFIX)"
+	@echo "LDLIBS_FILTER=\"$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))\""
+	@echo "$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
+	@echo
+	@echo
+	@CWD="$$(pwd)";	\
+	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
+	HEADER_ONLY=1 THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test
+	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
+
 
 clean:
 	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh *.gcov test/*.gcov
@@ -545,7 +569,7 @@ makedependency/%.d:		%.cpp | makedependency.Dir
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 		$(ECHO) "========================================";\
-		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next} {print}';	\
+		cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}';	\
 		exit 1;											\
 	fi
 
@@ -563,7 +587,7 @@ $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
-		cat $${tmpfile} | awk '/error:/ {printf("$(FILEDIR)%s",$$0);next} {print}';	\
+		cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}';	\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
@@ -584,7 +608,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
-		cat $${tmpfile} | awk '/error:/ {printf("%s\n$(FILEDIR)", $$0);next} {print}';	\
+		cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}';	\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\

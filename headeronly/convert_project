@@ -78,6 +78,7 @@ function convertPackageToHeaderOnly {
         rm -rf ${prefix}/${package}/test/coverage
         rm -rf ${prefix}/${package}/test/report
         rm -rf ${prefix}/${package}/test/makedependency
+        rm -rf ${prefix}/${package}/test/Logging.cpp
     fi
 
     for loop in $(ls *.cpp 2> /dev/null); do

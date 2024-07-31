@@ -231,7 +231,7 @@ AC_DEFUN([AX_THOR_FUNC_TERM_BUILD],
 
 AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 [
-    AX_THOR_BUILDING($1)
+    AX_THOR_BUILDING([$1])
     AC_LANG(C++)
 
     AX_THOR_FUNC_BUILD_LOCAL_DIR
@@ -397,7 +397,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_THIRD_PARTY_LIBS],
             echo "================ DONE ================="
             echo
             popd
-            AX_THOR_BUILDING(${third})
+            ## AX_THOR_BUILDING(${third})
         done
         popd
     fi

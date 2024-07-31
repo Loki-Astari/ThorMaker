@@ -27,7 +27,7 @@ AX_THOR_FUNC_INIT_BUILD([${BaseName}], [src/${BaseName}/${BaseName}.cpp])
 
 LT_INIT
 
-AX_THOR_FUNC_TERM_BUILD([${BaseName}], [src/${BaseName}/${BaseName}Config.h])
+AX_THOR_FUNC_TERM_BUILD([${BaseName}], [${ConfFiles}])
 
 AC_OUTPUT
 CONFIGUREAC
@@ -210,6 +210,19 @@ SUBMODULE_UPDATE
 mv config.tmp configure
 chmod +x configure
 echo "" > Makefile.extra.in
+
+grep -A1 -B2 HEADER_ONLY config.h.in > config.HO
+
+grep -v HEADER_ONLY config.h.in | awk '/^#define  [A-Z_]*_CONFIG_H$/ {print $0;print "#ifndef  THORS_PACKAGE_INFO_CONFIG_H"; print "#define  THORS_PACKAGE_INFO_CONFIG_H";next;} /^#endif$/ {next;} {print $0}' > config.tmp
+echo "#endif" >> config.tmp
+echo "" >> config.tmp
+cat config.HO >> config.tmp
+echo "" >> config.tmp
+echo "#endif" >> config.tmp
+
+mv config.tmp config.h.in 
+rm config.HO
+
 rm -f configure~
 rm -f config.h.in~
 rm -f confdefs.h

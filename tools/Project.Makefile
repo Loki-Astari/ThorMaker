@@ -24,6 +24,7 @@ lint:		ACTION=lint
 vera:		ACTION=vera
 doc:		ACTION=doc
 build-honly:ACTION=build-honly
+build-hcont:ACTION=build-hcont
 print:		ACTION=print
 
 ACTION		?=all
@@ -43,6 +44,7 @@ lint:		check_lint $(SUB_PROJECTS)
 vera:		$(SUB_PROJECTS)
 doc:		$(SUB_PROJECTS) docbuild
 build-honly:$(SUB_PROJECTS)
+build-hcont:$(SUB_PROJECTS)
 print:		$(SUB_PROJECTS)
 
 header-only:
@@ -51,6 +53,15 @@ header-only:
 	echo "host: $${host}  dst: $${dst}";									\
 	git clone --single-branch --branch header-only $${host} $${dst};		\
 	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
+	echo "DONE";															\
+	echo "		$${dst}";													\
+	echo;																	\
+	echo "Please Check $${dst} and commit push if required";
+headercont-%:
+	@host=$$(git remote get-url origin);									\
+	dst="$*";																\
+	echo "host: $${host}  dst: $${dst}";									\
+	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-hcont;	\
 	echo "DONE";															\
 	echo "		$${dst}";													\
 	echo;																	\
