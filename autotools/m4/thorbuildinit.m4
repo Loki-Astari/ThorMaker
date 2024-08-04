@@ -1376,6 +1376,7 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
         [test "x$enable_$2_Service" == "xno"],
         [
             AC_MSG_WARN(["You have disabled the check for $2 Service"])
+            subconfigure="${subconfigure} --disable-$2-Service"
         ],
         [
 
