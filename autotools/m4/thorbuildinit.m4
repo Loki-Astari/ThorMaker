@@ -1334,6 +1334,12 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
     dnl 16: =>  Command line tool used to interact with $3
     dnl 16: =>  NOT USED. But needed so 14 is not the last argument.
 
+
+    AC_ARG_ENABLE(
+        [$2_Service],
+        AS_HELP_STRING([--disable-$2-Service], [Disable $2 Service Test])
+    )
+
     AC_ARG_WITH([Test$2Host], AS_HELP_STRING([--with-Test$2Host=<Host>], [Use an alternative $3 host for testing with Default(127.0.0.1)]))
     AC_ARG_WITH([Test$2User], AS_HELP_STRING([--with-Test$2User=<User>], [Use an alternative $3 user for testing with (test)]))
     AC_ARG_WITH([Test$2Pass], AS_HELP_STRING([--with-Test$2Pass=<Pass>], [Use an alternative $3 password for testing with (testPassword)]))
@@ -1366,6 +1372,13 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
         [cli_tool=${with_$3_tool}]
     )
 
+    AS_IF(
+        [test "x$enable_$2_Service" == "xno"],
+        [
+            AC_MSG_WARN(["You have disabled the check for $2 Service"])
+        ],
+        [
+
     echo "COMMAND: >$6<"
     echo "DB LINK: >${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db<" | sed -e 's/[Pp]ass/aasp/g'
     echo "$6" | $15 ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
@@ -1390,6 +1403,8 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
 
     version=`$15 ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $9 $$3_test_db | tail -$10 | awk '{print $$11}' | awk -F\. '{print $$12}'`
     AC_DEFINE_UNQUOTED([$1_MAJOR_VERSION], [${version}], ["Get $3 version into #define. That way we can turn off some tests"])
+        ]
+    )
 ])
 
 AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_POSTGRES],
