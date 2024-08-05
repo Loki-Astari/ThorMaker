@@ -35,6 +35,7 @@
 #
 #   Checks Provided:
 #       AX_THOR_CHECK_USE_SDL
+#       AX_THOR_CHECK_USE_ZLIB
 #       AX_THOR_CHECK_USE_CRYPTO
 #       AX_THOR_CHECK_USE_THORS_DB
 #       AX_THOR_CHECK_USE_THORS_SERIALIZE
@@ -53,12 +54,18 @@
 #       AX_THOR_DISABLE_TEST_REQUIREING_MONGO_QUERY
 #       AX_THOR_DISABLE_TEST_INTEGRATION
 #
+#   Set Makefile environment
+#       AX_THOR_ENABLE_CONAN
+#
 #       == Old Need to verify usability
 #       AX_THOR_CHECK_DISABLE_TIMEGM
 #       AX_THOR_CHECK_DISABLE_MODTEST
 #
 # Check if specific applications are available
 #       AX_THOR_CHECK_APP_LEX
+#
+# Check for functionality on specific platforms
+#       AX_THOR_OS_APP_CHECK
 #
 # Specific Functionality Tests:
 #       AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION
@@ -652,6 +659,30 @@ You can solve this by installing SDL2_Image
     AC_SUBST([SDL_LIBS], ["${SDL_LIBS} -lSDL2_image"])
 ])
 
+AC_DEFUN([AX_THOR_CHECK_USE_ZLIB],
+[
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [zlib],
+        [zlib],
+        [ZLIB],
+        [z], [uncompress],
+        [z],
+        [ZLIB],
+        [ZLIB],
+        [NotThor],
+        [
+
+Error: Could not find libz
+
+            brew install libz
+            ./configure --with-zlib-root=/usr/local/Cellar/libz/1.0.2j/
+
+
+        ]
+
+    )
+])
+
 AC_DEFUN([AX_THOR_CHECK_USE_CRYPTO],
 [
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
@@ -887,21 +918,46 @@ Error: Could not find libsnappy
 ])
 
 AC_DEFUN([AX_THOR_DISABLE_TEST],
+    AX_THOR_SET_TEST([$1], [$2], [$3], [$4], [disable], [no], [DISABLE], [$5], [$6])
+)
+
+AC_DEFUN([AX_THOR_ENABLE_TEST],
+    AX_THOR_SET_TEST([$1], [$2], [$3], [$4], [enable], [yes], [ENABLE], [$5], [$6])
+)
+
+AC_DEFUN([AX_THOR_SET_TEST],
 [
     AC_ARG_ENABLE(
         [test-$1],
-        AS_HELP_STRING([--disable-test-$1], [$5])
+        AS_HELP_STRING([--$5-test-$1], [$9])
     )
 
     AS_IF(
-        [test "x${enable_test_$2}" == "xno"],
+        [test "x${enable_test_$2}" == "x$6"],
         [
-            AC_DEFINE([$3], [1], [$4])
-            subconfigure="${subconfigure} --disable-test-$1";
+            AC_DEFINE([$3], [1], [$8])
+            AC_SUBST([$3_$7], [$4])
+            subconfigure="${subconfigure} --$5-test-$1";
         ],
         [
-            AC_DEFINE([$3], [0], [$4])
+            AC_DEFINE([$3], [0], [$8])
+            AC_SUBST([$3_$7], [])
         ]
+    )
+])
+
+AC_DEFUN([AX_THOR_ENABLE_CONAN],
+[
+    AX_THOR_ENABLE_TEST(
+        [with-conan],
+        [with_conan],
+        [THOR_CONAN],
+        [CONAN],
+        [Set up to build on Conan],
+        [
+Set the Makefile variable "THOR_ENABLE_CONAN".
+This is used by the standard Makefiles to add.
+        ]       
     )
 ])
 
@@ -911,6 +967,7 @@ AC_DEFUN([AX_THOR_DISABLE_TEST_INTEGRATION],
         [with-integration],
         [with_integration],
         [THOR_DISABLE_TEST_WITH_INTEGRATION],
+        [INTEGRATION],
         [Disable integration tests],
         [
 You can not do integration tests in all environments.
@@ -931,6 +988,7 @@ AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_LOCK_FILES],
         [with-locked-file],
         [with_locked_file],
         [THOR_DISABLE_TEST_WITH_LOCKED_FILES],
+        [LOCKED_FILES],
         [Disable test that require files to be locked],
         [
 Windows does not provide the same locking capabilities as Linux.
@@ -947,6 +1005,7 @@ AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_POSTGRES_AUTHENTICATION],
         [with-postgres-auth],
         [with_postgres_auth],
         [THOR_DISABLE_TEST_WITH_POSTGRES_AUTH],
+        [POSTGRES],
         [Disable test that require Authentication with Postgres server],
         [
 The postgres functionality is still nacent (not much work completed here).
@@ -964,6 +1023,7 @@ AC_DEFUN([AX_THOR_DISABLE_TEST_REQUIREING_MONGO_QUERY],
         [with-mongo-query],
         [with_mongo_query],
         [THOR_DISABLE_TEST_WITH_MONGO_QUERY],
+        [MONGO],
         [Disable test that require the Mongo server to support the OP_QUERY command],
         [
 There are three versions of the mongo wire protocol.
@@ -1064,6 +1124,36 @@ AC_DEFUN([AX_THOR_CHECK_USE_STATIC_LOAD],
 ])
 
 ###################################################################################################
+
+AC_DEFUN([AX_THOR_OS_APP_CHECK],
+[
+    os="$1"
+    tool="$2"
+
+    AC_CHECK_PROGS([TOOLCHECK], [${tool}], [:])
+
+    AC_CANONICAL_HOST
+    case "${host_os}" in
+        darwin*)
+            host="MAC"
+            ;;
+        cygwin*|mingw*)
+            host="WIN"
+            ;;
+        linux*)
+            host="LINUX"
+            ;;
+    esac
+
+    echo "OS:   ${os}"
+    echo "HOST: ${host}"
+
+    if test "$os" = "$host" ; then
+        if test "$TOOLCHECK" = :; then
+            AC_MSG_ERROR([$3])
+        fi
+    fi
+])
 
 AC_DEFUN([AX_THOR_CHECK_APP_LEX],
 [
