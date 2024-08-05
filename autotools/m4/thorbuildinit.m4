@@ -60,6 +60,9 @@
 # Check if specific applications are available
 #       AX_THOR_CHECK_APP_LEX
 #
+# Check for functionality on specific platforms
+#       AX_THOR_OS_APP_CHECK
+#
 # Specific Functionality Tests:
 #       AX_THOR_FUNC_TEST_BOOST_COROUTINE_VERSION
 #       AX_THOR_FUNC_TEST_COMP
@@ -1064,6 +1067,36 @@ AC_DEFUN([AX_THOR_CHECK_USE_STATIC_LOAD],
 ])
 
 ###################################################################################################
+
+AC_DEFUN([AX_THOR_OS_APP_CHECK],
+[
+    os="$1"
+    tool="$2"
+
+    AC_CHECK_PROGS([TOOLCHECK], [${tool}], [:])
+
+    AC_CANONICAL_HOST
+    case "${host_os}" in
+        darwin*)
+            host="MAC"
+            ;;
+        cygwin*|mingw*)
+            host="WIN"
+            ;;
+        linux*)
+            host="LINUX"
+            ;;
+    esac
+
+    echo "OS:   ${os}"
+    echo "HOST: ${host}"
+
+    if test "$os" = "$host" ; then
+        if test "$TOOLCHECK" = :; then
+            AC_MSG_ERROR([$3])
+        fi
+    fi
+])
 
 AC_DEFUN([AX_THOR_CHECK_APP_LEX],
 [
