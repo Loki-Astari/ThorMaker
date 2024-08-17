@@ -862,7 +862,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
 Error: Could not find libThorSerialize${askedLangFeature}
 
 You can solve this by installing Thors Serializer
-    brew install thors-serializer
+    brew install thors-mongo
 
 Alternately specify install location with:
     --with-thorserialize-root=<location of ThorsDB installation>
