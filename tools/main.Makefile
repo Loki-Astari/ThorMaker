@@ -511,14 +511,14 @@ Note_%:
 
 $(TARGET_MODE)/%.prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then \
-		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
-	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ;	fi
+		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
+	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ;	fi
 	@$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) "$(LDLIBS_EXTERN_RPATH)";				\
-		$(ECHO) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)); \
+		$(ECHO) "EX_RPATH: $(LDLIBS_EXTERN_RPATH)";		\
+		$(ECHO) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)); \
 		$(ECHO) "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
@@ -547,14 +547,15 @@ $(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 
 $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
+		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
 	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) "";										\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) "$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS)  $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)"; \
+		$(ECHO) "EX_RPATH: $(LDLIBS_EXTERN_RPATH)";		\
+		$(ECHO) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL); \
 		$(ECHO) "==================================================="; \
 		cat makefile_tmp;								\
 		exit 1;											\
@@ -565,14 +566,14 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 
 makedependency/%.d:		%.cpp | makedependency.Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) -MM -MT"coverage/$(<:.cpp=.o)" "$<"';\
+		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
+		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 		$(ECHO) "========================================";\
 		cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}';	\
 		exit 1;											\
@@ -582,7 +583,7 @@ $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
+		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
@@ -603,7 +604,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(call expandFlag,$($*_CXXFLAGS))' ;		\
+		$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))' ;		\
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") $< | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
@@ -611,7 +612,7 @@ $(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(call expandFlag,$($*_CXXFLAGS));\
+		$(ECHO) $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS));\
 		$(ECHO) "========================================";\
 		cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}';	\
 		exit 1;											\
