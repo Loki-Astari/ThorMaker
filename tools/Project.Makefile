@@ -13,6 +13,7 @@ FILEDIR ?=
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
 
 all:		ACTION=build
+release-only:	ACTION=release-only
 test:		ACTION=test
 clean:		ACTION=clean
 veryclean:	ACTION=veryclean NODEP=1
@@ -33,6 +34,7 @@ PREFIX		?=$(BUILD_ROOT)
 
 
 all:		$(SUB_PROJECTS)
+release-only:	$(SUB_PROJECTS)
 test:		$(SUB_PROJECTS)
 clean:		$(SUB_PROJECTS)
 veryclean:	$(SUB_PROJECTS)

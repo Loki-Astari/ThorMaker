@@ -381,6 +381,8 @@ uninstall:
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES	ActionUInstall
 build:					test debug release
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionInstall
+release-only:			release
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionDoInstallRelease
 veryclean:				clean
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionUInstall
 debug:					makedependency
