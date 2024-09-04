@@ -1188,6 +1188,7 @@ AC_DEFUN([AX_THOR_CHECK_APP_COV],
     AS_IF(
         [test "x$enable_coverage" != "xno"],
         [
+        subconfigure="${subconfigure} --disable-coverage"
 echo "STARTING COVERAGE CHECK"
         AS_IF(
             [test "x${COV}x" = "xx"],
