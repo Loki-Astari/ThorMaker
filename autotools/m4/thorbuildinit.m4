@@ -1181,21 +1181,28 @@ Eg.
 
 AC_DEFUN([AX_THOR_CHECK_APP_COV],
 [
-echo "STARTING COVERAGE CHECK"
+    AC_ARG_ENABLE(
+        [coverage],
+        AS_HELP_STRING([--disable-coverage], [Disable coverage tool checks])
+    )
     AS_IF(
-        [test "x${COV}x" = "xx"],
+        [test "x$enable_coverage" != "xno"],
         [
-            CXXTOOL=${CXX% *}
-            AS_IF(
-                [test "${CXXTOOL}" = "g++"],
-                [AC_SUBST([COV],[gcov])],
-                [
+echo "STARTING COVERAGE CHECK"
+        AS_IF(
+            [test "x${COV}x" = "xx"],
+            [
+                CXXTOOL=${CXX% *}
+                AS_IF(
+                    [test "${CXXTOOL}" = "g++"],
+                    [AC_SUBST([COV],[gcov])],
+                    [
 echo "STARTING COVERAGE CHECK: CHECKING CLANG"
-                    AS_IF(
-                        [test "${CXXTOOL}" = "clang++"],
-                        [AC_SUBST([COV],[llvm-cov])],
-                        [
-                            AC_MSG_ERROR([
+                        AS_IF(
+                            [test "${CXXTOOL}" = "clang++"],
+                            [AC_SUBST([COV],[llvm-cov])],
+                            [
+                                AC_MSG_ERROR([
 
 Could not determine the coverage tool.
 
@@ -1212,22 +1219,24 @@ Another alternative is to explicitly specify the coverage tool to use.
 
     COV=gcov ./confgiure
 
-                            ])
-                        ]
-                    )
-                ]
-            )
-        ]
-    )
-    ${COV} --version 2>&1 | grep -Eo '([[[:digit:]]]+\.)+[[[:digit:]]]+' || ${COV} --version 2>&1 | grep -Po '(\d+\.)+\d+' > /dev/null
-    AS_IF(
-        [test $? != 0],
-        [
-            AC_MSG_ERROR([
+                                ])
+                            ]
+                        )
+                    ]
+                )
+            ]
+        )
+        ${COV} --version 2>&1 | grep -Eo '([[[:digit:]]]+\.)+[[[:digit:]]]+' || ${COV} --version 2>&1 | grep -Po '(\d+\.)+\d+' > /dev/null
+        AS_IF(
+            [test $? != 0],
+            [
+                AC_MSG_ERROR([
 
-The coverage tool "${COV}" does not seem to be working.
+    The coverage tool "${COV}" does not seem to be working.
 
-            ])
+                ])
+            ]
+        )
         ]
     )
 ])
