@@ -786,3 +786,24 @@ tools:
 	@$(ECHO) "CXX:              $(CXX)   :  Name: $(COMPILER_NAME) Version:$(COMPILER_VERSION) Language:$(CXXSTDVER)"
 	@$(ECHO) "COV:              $(COV)"
 
+dumpversion:
+	echo "PLATFORM:			$(PLATFORM)"
+	echo "HARDWARE			$(HARDWARE)"
+	echo "PLATHARD			$(PLATHARD)"
+	echo "PLATFORMVER		$(PLATFORMVER)"
+	echo "SO				$(SO)"
+	echo "SONAME			$(SONAME)"
+	echo "SHARED_LIB_FLAG	$(SHARED_LIB_FLAG)"
+	echo "ECHO				$(ECHO)"
+	echo "MKTEMP			$(MKTEMP)"
+	echo "CXX				$(CXX)"
+	echo "COV				$(COV)"
+	echo "ARCH_FLAG			$(ARCH_FLAG)"
+	echo "COVERAGE_LIB		$(COVERAGE_LIB)"
+	echo "PLATFORM_LIB		$(PLATFORM_LIB)"
+	echo "VERA				$(VERA)"
+	echo "$(CXX) Version"
+	$(CXX) --version
+	echo "$(CXX) Macros"
+	echo '' | g++ -dM -E -x c++ $(CXXFLAGS) -
+

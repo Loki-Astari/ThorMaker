@@ -27,6 +27,8 @@ doc:		ACTION=doc
 build-honly:ACTION=build-honly
 build-hcont:ACTION=build-hcont
 print:		ACTION=print
+tools:		ACTION=tools
+dumpversion:ACTION=dumpversion
 
 ACTION		?=all
 BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
@@ -48,6 +50,8 @@ doc:		$(SUB_PROJECTS) docbuild
 build-honly:$(SUB_PROJECTS)
 build-hcont:$(SUB_PROJECTS)
 print:		$(SUB_PROJECTS)
+tools:		$(SUB_PROJECTS)
+dumpversion:$(SUB_PROJECTS)
 
 header-only:
 	@host=$$(git remote get-url origin);									\
