@@ -59,9 +59,9 @@ header-only:
 	echo "		$${dst}";													\
 	echo;																	\
 	echo "Please Check $${dst} and commit push if required";
-headercont-%:
+headercont:
 	@host=$$(git remote get-url origin);									\
-	dst="$*";																\
+	dst="${DST}";															\
 	echo "host: $${host}  dst: $${dst}";									\
 	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-hcont;	\
 	echo "DONE";															\

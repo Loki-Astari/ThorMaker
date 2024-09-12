@@ -106,3 +106,24 @@ DEFAULT_LIB_DIR_MSYS_NT				= /usr/local/lib
 DEFAULT_LIB_DIR_MINGW64_NT			= /usr/local/lib
 RUNTIME_PATHS_USED_TO_LOAD			= $(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH):$(DEFAULT_LIB_DIR)
 
+
+dumpversion:
+	echo "PLATFORM:			$(PLATFORM)"
+	echo "HARDWARE			$(HARDWARE)"
+	echo "PLATHARD			$(PLATHARD)"
+	echo "PLATFORMVER		$(PLATFORMVER)"
+	echo "SO				$(SO)"
+	echo "SONAME			$(SONAME)"
+	echo "SHARED_LIB_FLAG	$(SHARED_LIB_FLAG)"
+	echo "ECHO				$(ECHO)"
+	echo "MKTEMP			$(MKTEMP)"
+	echo "CXX				$(CXX)"
+	echo "COV				$(COV)"
+	echo "ARCH_FLAG			$(ARCH_FLAG)"
+	echo "COVERAGE_LIB		$(COVERAGE_LIB)"
+	echo "PLATFORM_LIB		$(PLATFORM_LIB)"
+	echo "VERA				$(VERA)"
+	echo "$(CXX) Version"
+	$(CXX) --version
+	echo "$(CXX) Macros"
+	echo '' | g++ -dM -E -x c++ -
