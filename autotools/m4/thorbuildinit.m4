@@ -1291,7 +1291,7 @@ Error: Can not tell the type of the boost coroutine library.
 ])
 
 
-AC_DEFUN([AX_THOR_FUNC_TEST_COMP],
+AC_DEFUN([AX_THOR_FUNC_TEST_COMP_ACTION],
 [
     AS_IF(
         [test "$1" != ""],
@@ -1302,19 +1302,31 @@ AC_DEFUN([AX_THOR_FUNC_TEST_COMP],
             AC_SUBST([CXXFLAGS], [${CXX_STD_FLAG}])
             AC_COMPILE_IFELSE([AC_LANG_SOURCE([$1])],
                 [
-                    AC_MSG_RESULT([good])
+                    $2
                 ],
                 [
-                    AC_MSG_ERROR([
+                    $3
+                ]
+            )
+            AC_SUBST([CXXFLAGS], [${CXXFLAGS_SAVE}])
+        ]
+    )
+])
+AC_DEFUN([AX_THOR_FUNC_TEST_COMP],
+[
+    AX_THOR_FUNC_TEST_COMP_ACTION(
+        [$1],
+        [
+            AC_MSG_RESULT([good])
+        ],
+        [
+            AC_MSG_ERROR([
 
 Error: Your compiler does not seem to support the language features required.
        Try updating your compiler to use a more recent version.
 
        Compiler used: ${CXX} ${CXX_STD_FLAG}
-                    ])
-                ]
-            )
-            AC_SUBST([CXXFLAGS], [${CXXFLAGS_SAVE}])
+            ])
         ]
     )
 ])
