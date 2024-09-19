@@ -65,7 +65,9 @@ function convertPackageToHeaderOnly {
     awk "$(get_awkScriptToConvertMakeFileToHeader ${package})" Makefile > ${packageDst}/Makefile
 
     echo "        Converting Config"
-    awk "${awkScriptToConvertConfigFileToHeader}" ${directory}Config.h > ${packageDst}/${directory}Config.h
+    if [[ -e ${directory}Config.h ]]; then
+        awk "${awkScriptToConvertConfigFileToHeader}" ${directory}Config.h > ${packageDst}/${directory}Config.h
+    fi
 
     echo "        Vera Exclusions"
     if [[ -e vera_exclusions ]]; then
