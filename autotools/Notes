@@ -3,6 +3,7 @@
 addConfigureAC () {
 
 BaseName=$1
+BaseNameUpper=$( echo ${BaseName} | tr '[:lower:]' '[:upper:]' )
 
 ConfFiles1=""
 for a in $*; do
@@ -27,7 +28,7 @@ AX_THOR_FUNC_INIT_BUILD([${BaseName}], [src/${BaseName}/${BaseName}.cpp])
 
 LT_INIT
 
-AX_THOR_FUNC_TERM_BUILD([${BaseName}], [${ConfFiles}])
+AX_THOR_FUNC_TERM_BUILD([${BaseNameUpper}], [${ConfFiles}])
 
 AC_OUTPUT
 CONFIGUREAC
@@ -146,6 +147,21 @@ checkForBuildTools () {
     fi
 }
 
+fixConfigHIn() {
+
+    grep -A1 -B2 HEADER_ONLY config.h.in > config.HO
+
+    grep -v HEADER_ONLY config.h.in | awk '/^#define  [A-Z_]*_CONFIG_H$/ {print $0;print "#ifndef  THORS_PACKAGE_INFO_CONFIG_H"; print "#define  THORS_PACKAGE_INFO_CONFIG_H";next;} /^#endif$/ {next;} {print $0}' > config.tmp
+    echo "#endif" >> config.tmp
+    echo "" >> config.tmp
+    cat config.HO >> config.tmp
+    echo "" >> config.tmp
+    echo "#endif" >> config.tmp
+
+    mv config.tmp config.h.in 
+    rm config.HO
+}
+
 echo "Starting Configuration"
 if [[ ! -e configure.ac ]]; then
 
@@ -181,6 +197,8 @@ if [[ ! -e configure.ac ]]; then
         addMakeFile src/${a} ../../ ${a}.slib Makefile
     done
 
+    fixConfigHIn
+
     echo "Adding base files to git"
     git add Notes
     git add configure configure.ac
@@ -211,17 +229,7 @@ mv config.tmp configure
 chmod +x configure
 echo "" > Makefile.extra.in
 
-grep -A1 -B2 HEADER_ONLY config.h.in > config.HO
-
-grep -v HEADER_ONLY config.h.in | awk '/^#define  [A-Z_]*_CONFIG_H$/ {print $0;print "#ifndef  THORS_PACKAGE_INFO_CONFIG_H"; print "#define  THORS_PACKAGE_INFO_CONFIG_H";next;} /^#endif$/ {next;} {print $0}' > config.tmp
-echo "#endif" >> config.tmp
-echo "" >> config.tmp
-cat config.HO >> config.tmp
-echo "" >> config.tmp
-echo "#endif" >> config.tmp
-
-mv config.tmp config.h.in 
-rm config.HO
+fixConfigHIn
 
 rm -f configure~
 rm -f config.h.in~
