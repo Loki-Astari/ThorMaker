@@ -18,6 +18,7 @@
             public:
                 template<typename Lambda>
                 TA_TestThrow(Lambda&& lambda);
+				~TA_TestThrow();
             private:
                 virtual void runLambda();
         };
@@ -37,13 +38,21 @@ TA_TestNoThrow::TA_TestNoThrow(Lambda&& lambda)
 // TA_TestThrow
 // -------------------------
 
+#include <iostream>
 template<typename Throws>
 template<typename Lambda>
 TA_TestThrow<Throws>::TA_TestThrow(Lambda&& lambda)
     : TA_Test()
     , lambda(std::forward<Lambda>(lambda))
     , defaultMockObjects(*this)
-{}
+{
+	std::cerr << "TA_TestThrow::TA_TestThrow\n";
+}
+template<typename Throws>
+TA_TestThrow<Throws>::~TA_TestThrow()
+{
+	std::cerr << "TA_TestThrow::~TA_TestThrow\n";
+}
 
 template<typename Throws>
 void TA_TestThrow<Throws>::runLambda()
