@@ -726,6 +726,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
         [
             AC_SUBST(HAVE_MagicEnumHeaderOnly, 1, [We have found MagicEnumHeaderOnly package])
             AC_SUBST(MAGIC_ENUM_FILE, magic_enum.hpp)
+            AC_DEFINE([HAVE_MagicEnumHeaderOnlyV1], 1)
         ],
         [
             AX_THOR_CHECK_USE_MAGIC_ENUM_V2()
@@ -734,6 +735,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
                 [
                     AC_SUBST(HAVE_MagicEnumHeaderOnly, 1, [We have found MagicEnumHeaderOnly package])
                     AC_SUBST(MAGIC_ENUM_FILE, magic_enum/magic_enum.hpp)
+                    AC_DEFINE([HAVE_MagicEnumHeaderOnlyV2], 1)
                 ],
                 []
             )
