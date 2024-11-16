@@ -746,7 +746,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM_V1],
     AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST(
         [magicenum-header-only],
         [magicenum_header_only],
-        [MagicEnumHeaderOnlyV1],
+        [MagicEnumHeaderOnly],
         [magic_enum.hpp],
         [0],
         []
@@ -757,7 +757,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM_V2],
     AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST(
         [magicenum-header-only],
         [magicenum_header_only],
-        [MagicEnumHeaderOnlyV2],
+        [MagicEnumHeaderOnly],
         [magic_enum/magic_enum.hpp],
         [1],
         [
