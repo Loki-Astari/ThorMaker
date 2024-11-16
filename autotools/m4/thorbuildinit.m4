@@ -468,6 +468,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST],
         [$4],
         [
             AC_DEFINE([HAVE_$3], 1, [We have found $3 package])
+            $2_found=1
             AS_IF(
                 [test "x${with_$2_root}" != "x"],
                 [
@@ -721,7 +722,7 @@ Error: Could not find libcrypto
 AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
     AX_THOR_CHECK_USE_MAGIC_ENUM_V1()
     AS_IF(
-        [test "x${MagicEnumHeaderOnlyV1}" != "x"],
+        [test "x${magicenum_header_only_found}" != "x"],
         [
             AC_SUBST(HAVE_MagicEnumHeaderOnly, 1, [We have found MagicEnumHeaderOnly package])
             AC_SUBST(MAGIC_ENUM_FILE, magic_enum.hpp)
@@ -729,7 +730,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
         [
             AX_THOR_CHECK_USE_MAGIC_ENUM_V2()
             AS_IF(
-                [test "x${MagicEnumHeaderOnlyV1}" != "x"],
+                [test "x${magicenum_header_only_found}" != "x"],
                 [
                     AC_SUBST(HAVE_MagicEnumHeaderOnly, 1, [We have found MagicEnumHeaderOnly package])
                     AC_SUBST(MAGIC_ENUM_FILE, magic_enum/magic_enum.hpp)
