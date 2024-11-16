@@ -467,10 +467,10 @@ AC_DEFUN([AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST],
     AC_CHECK_HEADER(
         [$4],
         [
+            AC_DEFINE([HAVE_$3], 1, [We have found $3 package])
             AS_IF(
                 [test "x${with_$2_root}" != "x"],
                 [
-                    AC_DEFINE([HAVE_$3], 1, [We have found $3 package])
                     $2_defined=1
                     AC_SUBST([$3_ROOT_DIR], [${with_$2_root}])
                     subconfigure="${subconfigure} --with-$1-root=${with_$2_root}"
@@ -719,12 +719,45 @@ Error: Could not find libcrypto
 ])
 
 AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
+    AX_THOR_CHECK_USE_MAGIC_ENUM_V1()
+    AS_IF(
+        [test "x${MagicEnumHeaderOnlyV1}" != "x"],
+        [
+            AC_SUBST(HAVE_MagicEnumHeaderOnly, 1, [We have found MagicEnumHeaderOnly package])
+            AC_SUBST(MAGIC_ENUM_FILE, magic_enum.hpp)
+        ],
+        [
+            AX_THOR_CHECK_USE_MAGIC_ENUM_V2()
+            AS_IF(
+                [test "x${MagicEnumHeaderOnlyV1}" != "x"],
+                [
+                    AC_SUBST(HAVE_MagicEnumHeaderOnly, 1, [We have found MagicEnumHeaderOnly package])
+                    AC_SUBST(MAGIC_ENUM_FILE, magic_enum/magic_enum.hpp)
+                ],
+                []
+            )
+        ]
+    )
+)
+
+AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM_V1],
 [
     AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST(
         [magicenum-header-only],
         [magicenum_header_only],
-        [MagicEnumHeaderOnly],
+        [MagicEnumHeaderOnlyV1],
         [magic_enum.hpp],
+        [0],
+        []
+    )
+])
+AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM_V2],
+[
+    AX_THOR_CHECK_USE_TEMPLATE_HEADER_TEST(
+        [magicenum-header-only],
+        [magicenum_header_only],
+        [MagicEnumHeaderOnlyV2],
+        [magic_enum/magic_enum.hpp],
         [1],
         [
 Could not find the header file <magic-enum.hpp>.
