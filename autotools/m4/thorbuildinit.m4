@@ -503,6 +503,40 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND],
     AC_SUBST([$8_ROOT_LIB], ["$6"])
 ])
 
+AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
+[
+    dnl 1: => MAgic variable
+    dnl Only called if the value is set.
+    dnl This indicates that this library can be used with the LDLIBS_EXTERN_BUILD flag in a makefile.
+    dnl To set this up you also need to include the following variables in the Makefile.config.in
+    dnl     $1_ROOT_DIR
+    dnl     $1_ROOT_LIB
+    dnl     This function checks if you have added these varables.
+
+    if grep -q ["$1_ROOT_DIR=@$1_ROOT_DIR@"] Makefile.config.in; then
+        AC_MSG_RESULT([$1_ROOT_DIR OK])
+    else
+        AC_MSG_ERROR([
+            Expecting $1_ROOT_DIR to be defined in Makefile.config.in
+            You should probably add this line to Makefile.config.in
+
+                $1_ROOT_DIR=@$1_ROOT_DIR@
+        ])
+    fi
+
+    if grep -q ["$1_ROOT_LIB=@$1_ROOT_LIB@"] Makefile.config.in; then
+        AC_MSG_RESULT([$1_ROOT_LIB OK])
+    else
+        AC_MSG_ERROR([
+            Expecting $1_ROOT_LIB to be defined in Makefile.config.in
+            You should probably add this line to Makefile.config.in
+
+                $1_ROOT_LIB=@$1_ROOT_LIB@
+        ])
+    fi
+
+])
+
 AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
 [
     dnl 1: =>  configure command line argument:  --with-$1-root=
@@ -517,7 +551,8 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
     dnl 8: =>  Make Macro: $8_ROOT_DIR and $8_ROOT_LIB
     dnl         Should be the same as one of the values in $6
     dnl 9:     Name of standard checkout directory (Used for Thor Tools)
-    dnl 10: => Extra Error Message.
+    dnl 10:    Names used by LDLIBS_EXTERN_BUILD to generate build flags.
+    dnl 11: => Extra Error Message.
     dnl
     dnl Note:
     dnl           eg:
@@ -526,6 +561,11 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
     AC_ARG_WITH(
         [$1-root],
         AS_HELP_STRING([--with-$1-root=<location>], [Define the root directory of package $3])
+    )
+
+    AS_IF(
+        [test "x$10" != "x"],
+        [AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([$10])]
     )
 
     LIBRARY_DIR="-L ${with_$2_root}/lib"
@@ -546,18 +586,18 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
             AS_IF(
                 [test "x$BUILDING_$9" == "x1" ],
                 [
-                    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9], [$10])
+                    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9], [$11])
                 ],
                 [
                     AC_CHECK_LIB(
                         [$4],
                         [$5],
                         [
-                            AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9], [$10])
+                            AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND([$1], [$2], [$3], [$4], [$5], [$6], [$7], [$8], [$9], [$11])
                         ],
                         [
                             echo "FAIL: Using: >${with_$2_root}<"
-                            AC_MSG_ERROR([$10])
+                            AC_MSG_ERROR([$11])
                             echo "FAIL DONE"
                         ]
                     )
@@ -675,6 +715,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_ZLIB],
         [ZLIB],
         [ZLIB],
         [NotThor],
+        [ZLIB],
         [
 
 Error: Could not find libz
@@ -699,6 +740,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_CRYPTO],
         [CRYPTO],
         [crypto],
         [NotThor],
+        [crypto],
         [
 
 Error: Could not find libcrypto
@@ -741,6 +783,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
             )
         ]
     )
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC(MagicEnum)
 )
 
 AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM_V1],
@@ -787,6 +830,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_EVENT],
         [EVENT],
         [event],
         [NotThor],
+        [],
         [
 
 Error: Could not find libevent
@@ -821,6 +865,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_YAML],
         [YAML],
         [yaml],
         [NotThor],
+        [yaml],
         [
 Error: Could not find libyaml
 
@@ -845,6 +890,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_SNAPPY],
         [SNAPPY],
         [snappy],
         [NotThor],
+        [snappy],
         [
 Error: Could not find libsnappy
 
@@ -894,6 +940,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
         [THORSSERIALIZER],
         [ThorSerialize],
         [ThorsSerializer],
+        [],
         [
 Error: Could not find libThorSerialize${askedLangFeature}
 
@@ -918,6 +965,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_DB],
         [THORSDB],
         [ThorsDB],
         [ThorsDB],
+        [],
         [
 Error: Could not find libThorsDB${askedLangFeature}
 

@@ -28,6 +28,7 @@ AX_THOR_FUNC_INIT_BUILD([${BaseName}], [src/${BaseName}/${BaseName}.cpp])
 
 LT_INIT
 
+AX_THOR_FEATURE_HEADER_ONLY_VARIANT([${BaseNameUpper}])
 AX_THOR_FUNC_TERM_BUILD([${BaseNameUpper}], [${ConfFiles}])
 
 AC_OUTPUT
