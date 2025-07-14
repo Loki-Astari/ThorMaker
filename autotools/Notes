@@ -85,6 +85,7 @@ addGitIgnore () {
 *.lex.cpp
 .*.swp
 *.gcov
+confdefs.h
 
 unittest
 
