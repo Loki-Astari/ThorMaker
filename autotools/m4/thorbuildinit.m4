@@ -505,7 +505,9 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND],
 
 AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
 [
-    dnl 1: => MAgic variable
+    dnl 1: => Magic variable
+    dnl 2: => 0 Directory and Lib
+    dnl       1 HeaderOnly
     dnl Only called if the value is set.
     dnl This indicates that this library can be used with the LDLIBS_EXTERN_BUILD flag in a makefile.
     dnl To set this up you also need to include the following variables in the Makefile.config.in
@@ -513,67 +515,49 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
     dnl     $1_ROOT_LIB
     dnl     This function checks if you have added these varables.
 
-    grep -q ['$1_ROOT_DIR=@$1_ROOT_DIR@'] Makefile.config.in
-    result=$?
-    AS_IF(
-        [test "x${result}" != "x0"],
-        [
-            AC_MSG_ERROR([
-                Expecting $1_ROOT_DIR to be defined in Makefile.config.in
-                You should probably add this line to Makefile.config.in
+    if [[ "x$2" == "x0" ]]; then
+        grep -q ['$1_ROOT_DIR=@$1_ROOT_DIR@'] Makefile.config.in
+        result=$?
+        AS_IF(
+            [test "x${result}" != "x0"],
+            [
+                AC_MSG_ERROR([
+                    Expecting $1_ROOT_DIR to be defined in Makefile.config.in
+                    You should probably add this line to Makefile.config.in
 
-                    $1_ROOT_DIR=@$1_ROOT_DIR@
-            ])
-        ]
-    )
+                        $1_ROOT_DIR=@$1_ROOT_DIR@
+                ])
+            ]
+        )
 
-    grep -q ['$1_ROOT_LIB=@$1_ROOT_LIB@'] Makefile.config.in
-    result=$?
-    AS_IF(
-        [test "x${result}" != "x0"],
-        [
-            AC_MSG_ERROR([
-                Expecting $1_ROOT_LIB to be defined in Makefile.config.in
-                You should probably add this line to Makefile.config.in
+        grep -q ['$1_ROOT_LIB=@$1_ROOT_LIB@'] Makefile.config.in
+        result=$?
+        AS_IF(
+            [test "x${result}" != "x0"],
+            [
+                AC_MSG_ERROR([
+                    Expecting $1_ROOT_LIB to be defined in Makefile.config.in
+                    You should probably add this line to Makefile.config.in
 
-                    $1_ROOT_LIB=@$1_ROOT_LIB@
-            ])
-        ]
-    )
-])
-
-AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC1],
-[
-    dnl 1: => MAgic variable
-    dnl Only called if the value is set.
-    dnl This indicates that this library can be used with the LDLIBS_EXTERN_BUILD flag in a makefile.
-    dnl To set this up you also need to include the following variables in the Makefile.config.in
-    dnl     $1_ROOT_DIR
-    dnl     $1_ROOT_LIB
-    dnl     This function checks if you have added these varables.
-
-    if grep -q ["$1_ROOT_DIR=@$1_ROOT_DIR@"] Makefile.config.in; then
-        XAC_MSG_RESULT([$1_ROOT_DIR OK])
+                        $1_ROOT_LIB=@$1_ROOT_LIB@
+                ])
+            ]
+        )
     else
-        AC_MSG_ERROR([
-            Expecting $1_ROOT_DIR to be defined in Makefile.config.in
-            You should probably add this line to Makefile.config.in
+        grep -q ['$1HeaderOnly_ROOT_DIR=@$1HeaderOnly_ROOT_DIR@'] Makefile.config.in
+        result=$?
+        AS_IF(
+            [test "x${result}" != "x0"],
+            [
+                AC_MSG_ERROR([
+                    Expecting $1HeaderOnly_ROOT_DIR to be defined in Makefile.config.in
+                    You should probably add this line to Makefile.config.in
 
-                $1_ROOT_DIR=@$1_ROOT_DIR@
-        ])
+                        $1HeaderOnly_ROOT_DIR=@$1HeaderOnly_ROOT_DIR@
+                ])
+            ]
+        )
     fi
-
-    if grep -q ["$1_ROOT_LIB=@$1_ROOT_LIB@"] Makefile.config.in; then
-        XAC_MSG_RESULT([$1_ROOT_LIB OK])
-    else
-        AC_MSG_ERROR([
-            Expecting $1_ROOT_LIB to be defined in Makefile.config.in
-            You should probably add this line to Makefile.config.in
-
-                $1_ROOT_LIB=@$1_ROOT_LIB@
-        ])
-    fi
-
 ])
 
 AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
@@ -604,7 +588,7 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
 
     AS_IF(
         [test "x$10" != "x"],
-        [AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([$10])]
+        [AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([$10], [0])]
     )
 
     LIBRARY_DIR="-L ${with_$2_root}/lib"
@@ -822,7 +806,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
             )
         ]
     )
-    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC(MagicEnum)
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([MagicEnum,] [1])
 )
 
 AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM_V1],
