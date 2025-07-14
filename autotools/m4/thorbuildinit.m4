@@ -513,8 +513,47 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
     dnl     $1_ROOT_LIB
     dnl     This function checks if you have added these varables.
 
+    grep -q ['$1_ROOT_DIR=@$1_ROOT_DIR@'] Makefile.config.in
+    result=$?
+    AS_IF(
+        [test "x${result}" != "x0"],
+        [
+            AC_MSG_ERROR([
+                Expecting $1_ROOT_DIR to be defined in Makefile.config.in
+                You should probably add this line to Makefile.config.in
+
+                    $1_ROOT_DIR=@$1_ROOT_DIR@
+            ])
+        ]
+    )
+
+    grep -q ['$1_ROOT_LIB=@$1_ROOT_LIB@'] Makefile.config.in
+    result=$?
+    AS_IF(
+        [test "x${result}" != "x0"],
+        [
+            AC_MSG_ERROR([
+                Expecting $1_ROOT_LIB to be defined in Makefile.config.in
+                You should probably add this line to Makefile.config.in
+
+                    $1_ROOT_LIB=@$1_ROOT_LIB@
+            ])
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC1],
+[
+    dnl 1: => MAgic variable
+    dnl Only called if the value is set.
+    dnl This indicates that this library can be used with the LDLIBS_EXTERN_BUILD flag in a makefile.
+    dnl To set this up you also need to include the following variables in the Makefile.config.in
+    dnl     $1_ROOT_DIR
+    dnl     $1_ROOT_LIB
+    dnl     This function checks if you have added these varables.
+
     if grep -q ["$1_ROOT_DIR=@$1_ROOT_DIR@"] Makefile.config.in; then
-        AC_MSG_RESULT([$1_ROOT_DIR OK])
+        XAC_MSG_RESULT([$1_ROOT_DIR OK])
     else
         AC_MSG_ERROR([
             Expecting $1_ROOT_DIR to be defined in Makefile.config.in
@@ -525,7 +564,7 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
     fi
 
     if grep -q ["$1_ROOT_LIB=@$1_ROOT_LIB@"] Makefile.config.in; then
-        AC_MSG_RESULT([$1_ROOT_LIB OK])
+        XAC_MSG_RESULT([$1_ROOT_LIB OK])
     else
         AC_MSG_ERROR([
             Expecting $1_ROOT_LIB to be defined in Makefile.config.in
