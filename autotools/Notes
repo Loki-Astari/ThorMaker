@@ -163,6 +163,7 @@ fixConfigHIn() {
 }
 
 startConfigure() {
+
     echo "Starting Configuration"
     if [[ ! -e configure.ac ]]; then
 
@@ -219,13 +220,13 @@ startConfigure() {
     rm configure
     autoreconf --install
     cat - configure << SUBMODULE_UPDATE > config.tmp
-    #!/bin/sh
+#!/bin/sh
 
-    if git submodule status | grep build | grep --quiet '^-'; then
-        git submodule update --init --recursive build
-    fi
+if git submodule status | grep build | grep --quiet '^-'; then
+    git submodule update --init --recursive build
+fi
 
-    SUBMODULE_UPDATE
+SUBMODULE_UPDATE
     mv config.tmp configure
     chmod +x configure
     echo "" > Makefile.extra.in
@@ -238,14 +239,14 @@ startConfigure() {
 }
 
 checkAutoTools() {
-    autoreconf --version > /dev/null
-    if [[ $? != 0 ]]; then
-        echo "Can not find autotools"
-        echo "Please install"
-        echo
-        echo "On a mac use: brew install autoconf automake libtool"
-        exit 1
-    fi
+   autoreconf --version > /dev/null
+   if [[ $? != 0 ]]; then
+       echo "Can not find autotools"
+       echo "Please install"
+       echo
+       echo "On a mac use: brew install autoconf automake libtool"
+       exit 1
+   fi
 }
 
 
