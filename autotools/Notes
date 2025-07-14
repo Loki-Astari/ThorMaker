@@ -162,76 +162,93 @@ fixConfigHIn() {
     rm config.HO
 }
 
-echo "Starting Configuration"
-if [[ ! -e configure.ac ]]; then
+startConfigure() {
+    echo "Starting Configuration"
+    if [[ ! -e configure.ac ]]; then
 
-    if [[ ! -e .git ]]; then
-        usage1
+        if [[ ! -e .git ]]; then
+            usage1
+        fi
+        if [[ "$#" == "0" ]]; then
+            usage2
+        fi
+        echo "Building Example Configuration"
+        BaseName=$*
+
+        checkForBuildTools
+
+        echo "Creating Base Autotools Files"
+        addConfigureAC ${BaseName}
+        addMakeFile . ./ src Project.Makefile
+        addMakeFile src ../ "$*" Project.Makefile
+        addMakeFileExtra
+        addMakeFileConfig
+        addConfigHIN
+        addGitIgnore
+
+        echo "Initial run of Autotools"
+        autoreconf --install
+        echo "" > Makefile.extra.in
+
+        echo "Install First Source Files"
+        for a in $*; do
+            mkdir -p src/${a}
+            echo "#include \"${a}.h\""       > src/${a}/${a}.cpp
+            echo "#include \"${a}Config.h\"" > src/${a}/${a}.h 
+            addMakeFile src/${a} ../../ ${a}.slib Makefile
+        done
+
+        fixConfigHIn
+
+        echo "Adding base files to git"
+        git add Notes
+        git add configure configure.ac
+        git add Makefile.config.in
+        git add Makefile.extra.am Makefile.extra.in
+        git add Makefile src/Makefile
+        git add config.h.in
+        git add .gitignore
+
+        for a in $*; do
+            git add src/${a}/${a}.cpp src/${a}/${a}.h src/${a}/Makefile
+        done
+        exit
     fi
-    if [[ "$#" == "0" ]]; then
-        usage2
-    fi
-    echo "Building Example Configuration"
-    BaseName=$*
 
-    checkForBuildTools
-
-    echo "Creating Base Autotools Files"
-    addConfigureAC ${BaseName}
-    addMakeFile . ./ src Project.Makefile
-    addMakeFile src ../ "$*" Project.Makefile
-    addMakeFileExtra
-    addMakeFileConfig
-    addConfigHIN
-    addGitIgnore
-
-    echo "Initial run of Autotools"
+    echo "Configuring"
+    rm configure
     autoreconf --install
-    echo "" > Makefile.extra.in
+    cat - configure << SUBMODULE_UPDATE > config.tmp
+    #!/bin/sh
 
-    echo "Install First Source Files"
-    for a in $*; do
-        mkdir -p src/${a}
-        echo "#include \"${a}.h\""       > src/${a}/${a}.cpp
-        echo "#include \"${a}Config.h\"" > src/${a}/${a}.h 
-        addMakeFile src/${a} ../../ ${a}.slib Makefile
-    done
+    if git submodule status | grep build | grep --quiet '^-'; then
+        git submodule update --init --recursive build
+    fi
+
+    SUBMODULE_UPDATE
+    mv config.tmp configure
+    chmod +x configure
+    echo "" > Makefile.extra.in
 
     fixConfigHIn
 
-    echo "Adding base files to git"
-    git add Notes
-    git add configure configure.ac
-    git add Makefile.config.in
-    git add Makefile.extra.am Makefile.extra.in
-    git add Makefile src/Makefile
-    git add config.h.in
-    git add .gitignore
+    rm -f configure~
+    rm -f config.h.in~
+    rm -f confdefs.h
+}
 
-    for a in $*; do
-        git add src/${a}/${a}.cpp src/${a}/${a}.h src/${a}/Makefile
-    done
-    exit
-fi
+checkAutoTools() {
+    autoreconf --version > /dev/null
+    if [[ $? != 0 ]]; then
+        echo "Can not find autotools"
+        echo "Please install"
+        echo
+        echo "On a mac use: brew install autoconf automake libtool"
+        exit 1
+    fi
+}
 
-echo "Configuring"
-rm configure
-autoreconf --install
-cat - configure << SUBMODULE_UPDATE > config.tmp
-#!/bin/sh
 
-if git submodule status | grep build | grep --quiet '^-'; then
-    git submodule update --init --recursive build
-fi
-
-SUBMODULE_UPDATE
-mv config.tmp configure
-chmod +x configure
-echo "" > Makefile.extra.in
-
-fixConfigHIn
-
-rm -f configure~
-rm -f config.h.in~
-rm -f confdefs.h
+checkAutoTools
+startConfigure
 
