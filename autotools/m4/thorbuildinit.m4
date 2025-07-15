@@ -544,16 +544,16 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
             ]
         )
     else
-        grep -q ['$1HeaderOnly_ROOT_DIR=@$1HeaderOnly_ROOT_DIR@'] Makefile.config.in
+        grep -q ['${1}HeaderOnly_ROOT_DIR=@${1}HeaderOnly_ROOT_DIR@'] Makefile.config.in
         result=$?
         AS_IF(
             [test "x${result}" != "x0"],
             [
                 AC_MSG_ERROR([
-                    Expecting $1HeaderOnly_ROOT_DIR to be defined in Makefile.config.in
+                    Expecting ${1}HeaderOnly_ROOT_DIR to be defined in Makefile.config.in
                     You should probably add this line to Makefile.config.in
 
-                        $1HeaderOnly_ROOT_DIR=@$1HeaderOnly_ROOT_DIR@
+                        ${1}HeaderOnly_ROOT_DIR=@${1}HeaderOnly_ROOT_DIR@
                 ])
             ]
         )
