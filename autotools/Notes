@@ -238,6 +238,8 @@ SUBMODULE_UPDATE
     rm -f configure~
     rm -f config.h.in~
     rm -f confdefs.h
+
+    git submodule update --recursive
 }
 
 checkAutoTools() {
