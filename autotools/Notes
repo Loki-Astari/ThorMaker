@@ -253,5 +253,5 @@ checkAutoTools() {
 
 
 checkAutoTools
-startConfigure
+startConfigure $1
 
