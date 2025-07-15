@@ -785,6 +785,7 @@ Error: Could not find libcrypto
 ])
 
 AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
+[
     AX_THOR_CHECK_USE_MAGIC_ENUM_V1()
     AS_IF(
         [test "x${magicenum_header_only_found}" != "x"],
@@ -807,7 +808,8 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
         ]
     )
     AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([MagicEnum,] [1])
-)
+])
+
 
 AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM_V1],
 [
