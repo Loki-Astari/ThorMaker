@@ -1,4 +1,4 @@
-#
+#T
 # Standard ThorsAnvil Libraries.
 #   This is a list of standard ThorLibraries.
 #   We handle these differently in build files when they are included with
@@ -34,3 +34,4 @@ ThorsExpress_ISTHOR         = yes
 ThorsLogging_ISTHOR         = yes
 ThorsSocket_ISTHOR          = yes
 ThorsStorage_ISTHOR         = yes
+Nisse_ISTHOR				= yes

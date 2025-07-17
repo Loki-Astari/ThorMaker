@@ -584,7 +584,7 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
     dnl 8: =>  Make Macro: $8_ROOT_DIR and $8_ROOT_LIB
     dnl         Should be the same as one of the values in $6
     dnl 9:     Name of standard checkout directory (Used for Thor Tools)
-    dnl 10:    Names used by LDLIBS_EXTERN_BUILD to generate build flags.
+    dnl 10:    Names used by LDLIBS_EXTERN_BUILD to generate build flags. (Empty or the same as 8)
     dnl 11: => Extra Error Message.
     dnl
     dnl Note:
@@ -865,7 +865,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_EVENT],
         [EVENT],
         [event],
         [NotThor],
-        [],
+        [event],
         [
 
 Error: Could not find libevent
@@ -976,7 +976,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
         [THORSSERIALIZER],
         [ThorSerialize],
         [ThorsSerializer],
-        [],
+        [ThorSerialize],
         [
 Error: Could not find libThorSerialize${askedLangFeature}
 
@@ -988,7 +988,6 @@ Alternately specify install location with:
         ]
 
     )
-    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([ThorSerialize], [10])
 ])
 
 AC_DEFUN([AX_THOR_CHECK_USE_THORS_NISSE],
@@ -1004,7 +1003,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_NISSE],
         [Nisse${askedLangFeature}], [_ZN10ThorsAnvil5Nisse6Server11AsyncStreamD2Ev],
         [${libs}],
         [NISSE],
-        [NISSE],
+        [Nisse],
         [Nisse],
         [Nisse],
         [
