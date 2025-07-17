@@ -38,6 +38,7 @@
 #       AX_THOR_CHECK_USE_ZLIB
 #       AX_THOR_CHECK_USE_CRYPTO
 #       AX_THOR_CHECK_USE_THORS_DB
+#       AX_THOR_CHECK_USE_THORS_NISSE
 #       AX_THOR_CHECK_USE_THORS_SERIALIZE
 #       AX_THOR_CHECK_USE_THORS_SERIALIZE_HEADER_ONLY
 #       AX_THOR_CHECK_USE_MAGIC_ENUM
@@ -506,8 +507,11 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST_FOUND],
 AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
 [
     dnl 1: => Magic variable
-    dnl 2: => 0 Directory and Lib
-    dnl       1 HeaderOnly
+    dnl 2: =>
+    dnl       10: Director
+    dnl       11: Lib
+    dnl       12: Directory & Lib
+    dnl       13: Header Only
     dnl Only called if the value is set.
     dnl This indicates that this library can be used with the LDLIBS_EXTERN_BUILD flag in a makefile.
     dnl To set this up you also need to include the following variables in the Makefile.config.in
@@ -515,7 +519,8 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
     dnl     $1_ROOT_LIB
     dnl     This function checks if you have added these varables.
 
-    if [[ "x$2" == "x0" ]]; then
+    if [[ "x$2" == "x12" ]] || [[ "x$2" == "x10" ]]; then
+
         grep -q ['$1_ROOT_DIR=@$1_ROOT_DIR@'] Makefile.config.in
         result=$?
         AS_IF(
@@ -529,6 +534,9 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
                 ])
             ]
         )
+    fi
+
+    if [[ "x$2" == "x12" ]] || [[ "x$2" == "x11" ]]; then
 
         grep -q ['$1_ROOT_LIB=@$1_ROOT_LIB@'] Makefile.config.in
         result=$?
@@ -543,7 +551,9 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC],
                 ])
             ]
         )
-    else
+    fi
+
+    if [[ "x$2" == "x13" ]]; then
         grep -q ['$1HeaderOnly_ROOT_DIR=@$1HeaderOnly_ROOT_DIR@'] Makefile.config.in
         result=$?
         AS_IF(
@@ -588,7 +598,7 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
 
     AS_IF(
         [test "x$10" != "x"],
-        [AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([$10], [0])]
+        [AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([$10], [12])]
     )
 
     LIBRARY_DIR="-L ${with_$2_root}/lib"
@@ -807,7 +817,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_MAGIC_ENUM],
             )
         ]
     )
-    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([MagicEnum], [1])
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([MagicEnum], [13])
 ])
 
 
@@ -948,6 +958,7 @@ Could not find the header file <ThorSerialize/ThorsSerializerUtil.h>
 
         ]
     )
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([ThorSerialize], [13])
 ])
 
 AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
@@ -973,7 +984,39 @@ You can solve this by installing Thors Serializer
     brew install thors-mongo
 
 Alternately specify install location with:
-    --with-thorserialize-root=<location of ThorsDB installation>
+    --with-thorserialize-root=<location of ThorsSerializer installation>
+        ]
+
+    )
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([ThorSerialize], [10])
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_NISSE],
+[
+    remove="$1"
+    libs="Nisse"
+    libs=${libs//"${remove}"/}
+    echo "Libs: ${libs}"
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [nisse],
+        [nisse],
+        [Nisse],
+        [Nisse${askedLangFeature}], [_ZN10ThorsAnvil5Nisse6Server11AsyncStreamD2Ev],
+        [${libs}],
+        [NISSE],
+        [NISSE],
+        [Nisse],
+        [Nisse],
+        [
+Error: Could not find libNisse${askedLangFeature}
+
+#
+## TODO
+##You can solve this by installing Nisse
+##    brew install thors-mongo
+
+Alternately specify install location with:
+    --with-nisse-root=<location of Nisse installation>
         ]
 
     )
