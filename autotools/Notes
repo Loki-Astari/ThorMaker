@@ -112,7 +112,8 @@ libtool
 stamp-*
 
 config.h
-*Config.h
+${1}Config.h
+MockHeaderInclude.h
 GitIgnore
 
 }
@@ -187,7 +188,7 @@ startConfigure() {
         addMakeFileExtra
         addMakeFileConfig
         addConfigHIN
-        addGitIgnore
+        addGitIgnore ${BaseName}
 
         echo "Initial run of Autotools"
         autoreconf --install
