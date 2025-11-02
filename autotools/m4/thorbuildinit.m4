@@ -963,9 +963,12 @@ Could not find the header file <ThorSerialize/ThorsSerializerUtil.h>
 
 AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
 [
-    remove="$1"
-    libs="ThorSerialize ThorsSocket ThorsStorage ThorsLogging ThorsMongo"
-    libs=${libs//"${remove}"/}
+    if [[ "$1" == "" ]]; then
+        libs="ThorSerialize ThorsSocket ThorsStorage ThorsLogging ThorsMongo"
+    else
+        libs="$1"
+    fi
+
     echo "Libs: ${libs}"
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
         [thorserialize],
