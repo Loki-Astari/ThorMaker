@@ -31,6 +31,7 @@
 .PHONY:	install_config_local_NO_% install_config_local_YES_% install_config_root_NO_% install_config_root_YES_%
 .PHONY:	root_clean_defer_YES_% root_clean_defer_NO_%
 .PHONY:	install_defer_lib install_defer_obj
+.PHONY:	noinstall_app_% noinstall_shared_lib_% noinstall_static_lib_% noinstall_head_$(LIBBASENAME) noinstall_man_NO noinstall_man_YES
 .PRECIOUS: $(PREFIX_BIN)/%$(BUILD_EXTENSION)
 .PRECIOUS: $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).$(SO)
 .PRECIOUS: $(PREFIX_LIB)$(PREFIX_LIB_SUB)/lib%$(BUILD_EXTENSION).a
@@ -50,6 +51,11 @@ LIBBASENAME_NO_NO			= $(LIBBASENAME_ACTUAL)
 LIBBASENAME_YES_NO			= $(LIBBASENAME_ACTUAL)
 LIBBASENAME_YES_YES			= $(LIBBASENAME_ACTUAL)
 
+
+INSTALL_TEST_NO				= install
+INSTALL_TEST_YES			= noinstall
+INSTALL_ACTION				= $(INSTALL_TEST_$(TEST_ONLY))
+
 #
 # If we don't want headers and this is a full install
 # Then don't do any work with the headers (ie. don't install into /usr/local/include)
@@ -63,11 +69,11 @@ INSTALL_CONFIG_LOCAL		= $(if $(CONFIG) $(INSTALL_APP_NAME), $(patsubst %, instal
 INSTALL_CONFIG_ROOT			= $(if $(CONFIG) $(INSTALL_APP_NAME), $(patsubst %, install_config_root_$(INSTALL_ACTIVE)_%, $(wildcard *.$(CONFIG))))
 
 INSTALL_APP_NAME			= $(strip $(patsubst %.prog,   %,					$(filter %.prog,  $(TARGET_ALL))))
-INSTALL_APP					= $(patsubst %.prog,   install_app_%,		$(filter %.prog,  $(TARGET_ALL)))
-INSTALL_SHARED_LIB			= $(patsubst %.slib,  install_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
-INSTALL_STATIC_LIB			= $(patsubst %.a,     install_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
-INSTALL_HEADER				= $(patsubst %,		  install_head_%,		$(LIBBASENAME))
-INSTALL_MAN					= $(if $(strip $(INSTALL_MAN_PAGE)), install_man_$(INSTALL_ACTIVE))
+INSTALL_APP					= $(patsubst %.prog,   $(INSTALL_ACTION)_app_%,		$(filter %.prog,  $(TARGET_ALL)))
+INSTALL_SHARED_LIB			= $(patsubst %.slib,  $(INSTALL_ACTION)_shared_lib_%, $(filter %.slib, $(TARGET_ALL)))
+INSTALL_STATIC_LIB			= $(patsubst %.a,     $(INSTALL_ACTION)_static_lib_%, $(filter %.a,    $(TARGET_ALL)))
+INSTALL_HEADER				= $(patsubst %,		  $(INSTALL_ACTION)_head_%,		$(LIBBASENAME))
+INSTALL_MAN					= $(if $(strip $(INSTALL_MAN_PAGE)), $(INSTALL_ACTION)_man_$(INSTALL_ACTIVE))
 INSTALL_CONFIG				= $(INSTALL_CONFIG_LOCAL) $(INSTALL_CONFIG_ROOT)
 INSTALL_DEFER				= $(patsubst %, install_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 INSTALL_DEFER_DIR			= $(patsubst %, install_defer_dir_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
@@ -129,6 +135,21 @@ ActionUInstallMan:			Note_Start_Clean_Man               $(patsubst install_%, un
 ActionUInstallConfig:		Note_Start_Clean_Config            $(patsubst install_%, uninstall_%, $(INSTALL_CONFIG))            Note_End_Clean_Config
 ActionUInstallDefer:		Note_Start_Clean_Defer             $(patsubst install_%, uninstall_%, $(INSTALL_DEFER))             Note_End_Clean_Defer
 ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, uninstall_%, $(INSTALL_DEFER_DIR))         Note_End_Clean_Defer_Root
+
+#
+# For No install (When TEST_ONLY = YES) no action taken.
+noinstall_app_%:
+	
+noinstall_shared_lib_%:
+	
+noinstall_static_lib_%:
+	
+noinstall_head_$(LIBBASENAME):
+	
+noinstall_man_NO:
+	
+noinstall_man_YES:
+	
 
 install_app_%:				$(PREFIX_BIN)/%$(BUILD_EXTENSION)
 	@# Don't know why I need this!

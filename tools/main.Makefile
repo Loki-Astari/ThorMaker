@@ -190,6 +190,10 @@ COV_LONG_FLAG					= $(COV_LONG_FLAG_$(PLATFORM))
 COV_LONG_FLAG_Linux				= --long-file-names
 COV_LONG_FLAG_Darwin			= -l
 
+#
+# Define in project file to "YES" to prevent any installation work
+# These projects will be built locally only and not pushed $(BUILD_ROOT)
+TEST_ONLY		?= NO
 
 #
 # Add Files(without extension) that you do not want coverage metrics for
@@ -376,9 +380,9 @@ DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))
 
 all:					build
 install:				test debug release
-	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES	ActionInstall
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES		ActionInstall
 uninstall:
-	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES	ActionUInstall
+	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES		ActionUInstall
 build:					test debug release
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionInstall
 release-only:			release
