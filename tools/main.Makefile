@@ -385,6 +385,7 @@ uninstall:
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=YES		ActionUInstall
 build:					test debug release
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionInstall
+	@$(MAKE) done
 release-only:			release
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionDoInstallHead ActionDoInstallRelease
 veryclean:				clean
@@ -402,6 +403,7 @@ testonly:				ActionRunUnitTest
 covonly:				ActionRunCoverage
 veraonly:				ActionRunVera
 test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
+done:
 
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
 build-honly:
