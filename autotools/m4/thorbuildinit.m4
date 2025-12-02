@@ -34,6 +34,7 @@
 #       AX_THOR_FEATURE_HEADER_ONLY_VARIANT
 #
 #   Checks Provided:
+#       AX_THOR_CHECK_FOR_DOUBLE_SCAN_SUPPORT
 #       AX_THOR_CHECK_USE_SDL
 #       AX_THOR_CHECK_USE_ZLIB
 #       AX_THOR_CHECK_USE_CRYPTO
@@ -287,7 +288,18 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS],
         ])
     fi
     pushd build/third
-    ./setup "${CXX}  ${CXX_STD_FLAG}" || AC_MSG_ERROR([Failed to set up the test utilities])
+    buildTool="make"
+    buildConfig=""
+    sedStrip='s/-.*//'
+    UNAME=`uname -s | sed "${sedStrip}"`
+    AS_IF(
+        [ test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
+        [
+            buildTool="ninja"
+            buildConfig="-G Ninja"
+        ]
+    )
+    ./setup "${CXX}  ${CXX_STD_FLAG}" "${buildTool}" "${buildConfig}" || AC_MSG_ERROR([Failed to set up the test utilities])
     popd
 ])
 
@@ -655,7 +667,72 @@ AC_DEFUN([AX_THOR_FEATURE_HEADER_ONLY_VARIANT],
 
 ###################################################################################################
 
+AC_DEFUN([AX_THOR_CHECK_FOR_DOUBLE_SCAN_SUPPORT],
+[
 
+AX_THOR_FUNC_TEST_COMP_ACTION([[
+#include <charconv>
+int main() {
+    char    buffer[100];
+    long double  value = 12.345;
+    auto result = std::to_chars(buffer, buffer+100, value, std::chars_format::fixed, 6);
+}]],
+    [
+        AC_MSG_NOTICE([[Supports std::to_chars(begin, end, double)]])
+    ],
+    [
+        AC_MSG_NOTICE([Setting NO_STD_SUPPORT_TO_CHAR_LONG_DOUBLE])
+        AC_DEFINE([NO_STD_SUPPORT_TO_CHAR_DOUBLE], [1], [Check for older build tools and use simpler code with old tools])
+    ]
+)
+AX_THOR_FUNC_TEST_COMP_ACTION([[
+#include <charconv>
+int main() {
+    char    buffer[] = "12.345";
+    long double  value;
+    auto result = std::from_chars(buffer, buffer+100, value);
+}]],
+    [
+        AC_MSG_NOTICE([[Supports std::from_chars(begin, end, double)]])
+    ],
+    [
+        AC_MSG_NOTICE([Setting NO_STD_SUPPORT_FROM_CHAR_LONG_DOUBLE])
+        AC_DEFINE([NO_STD_SUPPORT_FROM_CHAR_DOUBLE], [1], [Check for older build tools and use simpler code with old tools])
+    ]
+)
+AX_THOR_FUNC_TEST_COMP_ACTION([[
+#include <charconv>
+int main() {
+    char    buffer[100];
+    double  value = 12.345;
+    auto result = std::to_chars(buffer, buffer+100, value, std::chars_format::fixed, 6);
+}]],
+    [
+        AC_MSG_NOTICE([[Supports std::to_chars(begin, end, double)]])
+    ],
+    [
+        AC_MSG_NOTICE([Setting NO_STD_SUPPORT_TO_CHAR_DOUBLE])
+        AC_DEFINE([NO_STD_SUPPORT_TO_CHAR_DOUBLE], [1], [Check for older build tools and use simpler code with old tools])
+    ]
+)
+AX_THOR_FUNC_TEST_COMP_ACTION([[
+#include <charconv>
+int main() {
+    char    buffer[] = "12.345";
+    double  value;
+    auto result = std::from_chars(buffer, buffer+100, value);
+}]],
+    [
+        AC_MSG_NOTICE([[Supports std::from_chars(begin, end, double)]])
+    ],
+    [
+        AC_MSG_NOTICE([Setting NO_STD_SUPPORT_FROM_CHAR_DOUBLE])
+        AC_DEFINE([NO_STD_SUPPORT_FROM_CHAR_DOUBLE], [1], [Check for older build tools and use simpler code with old tools])
+    ]
+)
+
+
+])
 
 AC_DEFUN([AX_THOR_CHECK_USE_SDL],
 [

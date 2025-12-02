@@ -2,6 +2,8 @@
 set -e
 
 CXX=$1
+build=${2:-make}
+cmakeType=${3}
 
 #
 # Change this as required to point at the root of ThorsAnvil code
@@ -36,11 +38,12 @@ GTEST_DIR=$(cd "${GTEST_DIR_PATH}";pwd)
 pushd ${GTEST_DIR}
 
 if [[ ! -e build ]]; then
+    echo "Building with >${build}< Configure with: >${cmakeType}<"
     mkdir build
     cd build
-    cmake -DCMAKE_INSTALL_PREFIX=${THORSANVIL_ROOT}   ..
-    make
-    make install
+    cmake -DCMAKE_INSTALL_PREFIX=${THORSANVIL_ROOT}   ..  ${cmakeType}
+    ${build}
+    ${build} install
     mv ${THORSANVIL_ROOT}/include/gtest ${THORSANVIL_ROOT}/include3rd/gtest
 fi
 
