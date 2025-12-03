@@ -34,6 +34,7 @@
 #       AX_THOR_FEATURE_HEADER_ONLY_VARIANT
 #
 #   Checks Provided:
+#       AX_THOR_CHECK_IS_SLACK_TESTABLE
 #       AX_THOR_CHECK_FOR_DOUBLE_SCAN_SUPPORT
 #       AX_THOR_CHECK_USE_SDL
 #       AX_THOR_CHECK_USE_ZLIB
@@ -666,6 +667,100 @@ AC_DEFUN([AX_THOR_FEATURE_HEADER_ONLY_VARIANT],
 
 
 ###################################################################################################
+
+AC_DEFUN([AX_THOR_CHECK_IS_SLACK_TESTABLE],
+[
+
+AC_ARG_ENABLE(
+    [slacktest],
+    AS_HELP_STRING([--disable-slacktest], [Disable Slack Testing. Slack testing requires you set up slack tokens.])
+)
+AC_ARG_WITH(
+    [botToken],
+    AS_HELP_STRING([--with-botToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
+)
+AC_ARG_WITH(
+    [userToken],
+    AS_HELP_STRING([--with-userToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
+)
+AC_ARG_WITH(
+    [slackSecret],
+    AS_HELP_STRING([--with-slackSecret=<secret>], [Slack secret. Used to hash requests and thus validate incomming requests from slack])
+)
+AC_ARG_WITH(
+    [slackChannel],
+    AS_HELP_STRING([--with-slackChannel=<channel>], [Slack channel to use for testing.])
+)
+
+AC_SUBST([DISABLE_SLACKTEST], [0])
+AS_IF(
+    [test "x$enable_slacktest" == "xno"],
+[
+    subconfigure="${subconfigure} --disable-slacktest";
+    AC_SUBST([DISABLE_SLACKTEST], [1])
+],
+[
+AS_IF(
+    [test "x${with_botToken}" == "x"],
+    [AC_MSG_ERROR([No Bot token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Token.])]
+)
+AS_IF(
+    [test "x${with_userToken}" == "x"],
+    [AC_MSG_ERROR([No User token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack User Token.])]
+)
+AS_IF(
+    [test "x${with_slackSecret}" == "x"],
+    [AC_MSG_ERROR([No slack secret defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
+)
+AS_IF(
+    [test "x${with_slackChannel}" == "x"],
+    [AC_MSG_ERROR([No slack channel defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
+)
+])
+AS_IF([test "x${with_botToken}" != "x"],    [subconfigure="${subconfigure} --with-botToken=${with_botToken}"])
+AS_IF([test "x${with_userToken}" != "x"],   [subconfigure="${subconfigure} --with-userToken=${with_userToken}"])
+AS_IF([test "x${with_slackSecret}" != "x"], [subconfigure="${subconfigure} --with-slackSecret=${with_slackSecret}"])
+AS_IF([test "x${with_slackChannel}" != "x"],[subconfigure="${subconfigure} --with-slackChannel=${with_slackChannel}"])
+
+AS_IF(
+    [test "x$enable_slacktest" != "xno"],
+[
+data=$(curl \
+   --header "authorization: Bearer ${with_botToken}" \
+✗  --header "content-type: application/json; charset=utf-8" \
+│  --request GET \
+│  https://slack.com/api/auth.test 2> /dev/null)
+
+dataok=$(echo ${data} | jq -r .ok)
+AS_IF(
+    [test "x${dataok}" != "xtrue"],
+    [
+        AC_MSG_ERROR([
+Failed to authenticate with slack please check your token
+
+Command used:
+    curl --header "authorization: Bearer ${with_botToken}" --header "content-type: application/json; charset=utf-8" --request GET https://slack.com/api/auth.test
+
+Response:
+    ${data}
+        ])
+    ]
+)
+
+
+mkdir -p src/ThorsSlack/test/data
+cat - <<ENVIRONMENT > src/ThorsSlack/test/data/environment.json
+{
+    "botToken": "${with_botToken}",
+    "userToken": "${with_userToken}",
+    "slackSecret": "${with_slackSecret}",
+    "slackChannel": "${with_slackChannel}"
+}
+ENVIRONMENT
+
+])
+
+])
 
 AC_DEFUN([AX_THOR_CHECK_FOR_DOUBLE_SCAN_SUPPORT],
 [
