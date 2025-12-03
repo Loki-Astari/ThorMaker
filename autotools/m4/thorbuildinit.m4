@@ -406,6 +406,9 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_THIRD_PARTY_LIBS],
     pushd third
     if [[ $? == 0 ]]; then
         for third in $(ls); do
+            AX_THOR_BUILDING(${third})
+        done
+        for third in $(ls); do
             echo
             echo
             echo "Building Third Party: ${third}"
@@ -611,7 +614,7 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
 
     AS_IF(
         [test "x$10" != "x"],
-        [AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([$10], [12])]
+        [AX_THOR_CHECK_TEMPLATE_LIBRARY_VALIDATE_MAGIC([$10], [$12])]
     )
 
     LIBRARY_DIR="-L ${with_$2_root}/lib"
