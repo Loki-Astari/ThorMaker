@@ -128,6 +128,7 @@ SHELL=/bin/bash
 #		make debugrun.<TestName>
 
 -include $(realpath $(THORSANVIL_ROOT)/Makefile.config)
+-include $(realpath $(THORSANVIL_ROOT)/third/$(CONFIG_NAME)/Makefile.config)
 BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
 BASE			?= .
 include $(BUILD_ROOT)/tools/Colour.Makefile
