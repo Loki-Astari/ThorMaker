@@ -20,7 +20,7 @@ PLATFORM_LIB						?= $(PLATFORM_LIB_$(PLATFORM))
 VERA								?= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
 
 COMPILER_EXT						= $(lastword $(subst -,  , $(firstword $(CXX))))
-TOOL_EXT							= $(if $(patsubst $(COMPILER_EXT),,$(CXX)),-$(COMPILER_EXT))
+TOOL_EXT							= $(if $(patsubst $(COMPILER_EXT),,$(firstword $(CXX))),-$(COMPILER_EXT))
 COV_TOOL							= $(COV)$(TOOL_EXT)
 
 #
