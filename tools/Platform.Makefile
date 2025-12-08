@@ -19,7 +19,7 @@ COVERAGE_LIB						?= $(COVERAGE_LIB_$(PLATFORM))
 PLATFORM_LIB						?= $(PLATFORM_LIB_$(PLATFORM))
 VERA								?= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
 
-COMPILER_EXT						= $(lastword $(subst -,  , $(CXX)))
+COMPILER_EXT						= $(lastword $(subst -,  , $(firstword $(CXX))))
 TOOL_EXT							= $(if $(patsubst $(COMPILER_EXT),,$(CXX)),-$(COMPILER_EXT))
 COV_TOOL							= $(COV)$(TOOL_EXT)
 
