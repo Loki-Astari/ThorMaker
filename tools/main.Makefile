@@ -1,4 +1,3 @@
-
 # Generic Makefile for all building.
 #
 SHELL=/bin/bash
@@ -794,6 +793,7 @@ tools:
 	@$(ECHO) "CP:               $(CP)"
 	@$(ECHO) "CXX:              $(CXX)   :  Name: $(COMPILER_NAME) Version:$(COMPILER_VERSION) Language:$(CXXSTDVER)"
 	@$(ECHO) "COV:              $(COV)"
+	@$(ECHO) "COV_TOOL:         $(COV_TOOL)"
 
 dumpversion:
 	echo "PLATFORM:			$(PLATFORM)"

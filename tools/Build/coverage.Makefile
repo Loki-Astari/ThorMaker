@@ -61,7 +61,6 @@ coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	fi
 	
 coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
-	@echo "COVERAGE TOOL: >$(COV_TOOL)<"
 	@$(COV_TOOL) $(COV_LONG_FLAG) --object-directory coverage $*.cpp > /dev/null 2>&1
 	@for file in $$(ls $*.cpp.gcov 2> /dev/null); do mv $${file} coverage/;done
 	@checkSubFile=$$(ls $*.cpp##*.gcov 2> /dev/null);				\
