@@ -755,6 +755,8 @@ Print_On:
 	@$(ECHO) "INSTALL_SHARED_LIB:   $(INSTALL_SHARED_LIB)"
 	@$(ECHO) "INSTALL_STATIC_LIB:   $(INSTALL_STATIC_LIB)"
 	@$(ECHO) "INSTALL_HEADER:       $(INSTALL_HEADER)"
+	@$(ECHO) "LIBBASENAME:			$(LIBBASENAME)"
+	@$(ECHO) "USE_HEADER:			$(USE_HEADER)"
 	@$(ECHO) "DEFER_NAME:           $(DEFER_NAME)"
 	@$(ECHO) "INSTALL_DEFER:        $(INSTALL_DEFER)"
 	@$(ECHO) "DEFER_NAME:           $(DEFER_NAME)"
@@ -815,4 +817,18 @@ dumpversion:
 	$(CXX) --version
 	echo "$(CXX) Macros"
 	echo '' | g++ -dM -E -x c++ $(CXXFLAGS) -
+
+headerinfo:
+	@echo "INSTALL_HEADER:		$(INSTALL_HEADER)"
+	@echo "INSTALL_HEADER		= D(patsubst %,		  D(INSTALL_ACTION)_head_%,		D(LIBBASENAME))"
+	@echo "INSTALL_ACTION:		$(INSTALL_ACTION)"
+	@echo "INSTALL_ACTION		= D(INSTALL_TEST_D(TEST_ONLY))"
+	@echo "TEST_ONLY:			$(TEST_ONLY)"
+	@echo "LIBBASENAME:			$(LIBBASENAME)"
+	@echo "LIBBASENAME			= D(LIBBASENAME_D(USE_HEADER)_D(INSTALL_ACTIVE))"
+	@echo "USE_HEADER:			$(USE_HEADER)"
+	@echo "INSTALL_ACTIVE:		$(INSTALL_ACTIVE)"
+	@echo "USE_HEADER			= D(if D(NO_HEADER),NO,YES)"
+	@echo "NO_HEADER:			$(NO_HEADER)"
+
 

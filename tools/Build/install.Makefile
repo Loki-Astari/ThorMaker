@@ -47,7 +47,7 @@ LIBBASENAME_ONE_OF			= $(patsubst %.a,    %, $(filter %.a,    $(TARGET_ALL)))	\
 							  $(patsubst %.defer,%, $(filter %.defer,$(TARGET_ALL)))
 LIBBASENAME_ACTUAL			= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
 USE_HEADER					= $(if $(NO_HEADER),NO,YES)
-LIBBASENAME_NO_NO			= $(LIBBASENAME_ACTUAL)
+XXLIBBASENAME_NO_NO			= $(LIBBASENAME_ACTUAL)
 LIBBASENAME_YES_NO			= $(LIBBASENAME_ACTUAL)
 LIBBASENAME_YES_YES			= $(LIBBASENAME_ACTUAL)
 
