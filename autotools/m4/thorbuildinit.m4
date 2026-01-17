@@ -1159,7 +1159,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_THORS_SERIALIZE],
 Error: Could not find libThorSerialize${askedLangFeature}
 
 You can solve this by installing Thors Serializer
-    brew install thors-mongo
+    brew install thors-anvil
 
 Alternately specify install location with:
     --with-thorserialize-root=<location of ThorsSerializer installation>
@@ -1190,7 +1190,7 @@ Error: Could not find libNisse${askedLangFeature}
 #
 ## TODO
 ##You can solve this by installing Nisse
-##    brew install thors-mongo
+##    brew install thors-anvil
 
 Alternately specify install location with:
     --with-nisse-root=<location of Nisse installation>
