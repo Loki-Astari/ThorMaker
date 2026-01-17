@@ -97,8 +97,9 @@ SHELL=/bin/bash
 #		Each item in Libs will be expanded with -l<item><build-extension>
 #		This this is used for libraries build with this project
 #
-#	UNITTEST_LDLIBS			= <Libs>
-#	UNITTEST_LINK_LIBS		= <Libs>
+#	UNITTEST_LDLIBS				= <Libs>
+#	UNITTEST_LINK_LIBS			= <Libs>
+#	UNITTEST_LDLIBS_HEADERONLY	= <Libs>
 #		Like the above two but specifically for unit tests
 #
 #	<SOURCE>_CXXFLAGS		= <Flags>
@@ -238,13 +239,15 @@ EXTRA_LDLIBS				= $($(THOR_CONAN_ENABLE)_LDLIBS)
 NOTHING						:=
 SPACE						:=$(NOTHING) $(NOTHING)
 LDLIBS_EXTERN_BUILD_USE		= $(filter-out $(LDLIBS_FILTER), $(LDLIBS_EXTERN_BUILD))
+HEADERONLY_LIBS_1			= $(UNITTEST_LDLIBS_HEADERONLY)
+HEADERONLY_LIBS				= $(HEADERONLY_LIBS_$(HEADER_ONLY))
 CXX_EXTERN_HEADER_ONLY		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)HeaderOnly_ROOT_DIR), -I$($(lib)HeaderOnly_ROOT_DIR)))
 LDLIBS_EXTERN_LIB_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR), -L$($(lib)_ROOT_DIR)/lib))
 LDLIBS_EXTERN_INC_LOC		= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR), -I$($(lib)_ROOT_DIR)/include))
 LDLIBS_EXTERN_SHARE			= $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(foreach alib, $($(lib)_ROOT_LIB), -l$(alib)$(if $($(lib)_ISTHOR),$(BUILD_EXTENSION))))
 LDLIBS_EXTERN_PATH			= $(subst $(SPACE),:,$(strip $(foreach lib, $(LDLIBS_EXTERN_BUILD_USE), $(if $($(lib)_ROOT_DIR),$($(lib)_ROOT_DIR)/lib))))
 LDLIBS_EXTERN_RPATH			+=$(if $(LDLIBS_EXTERN_PATH),export RPATH=$(LDLIBS_EXTERN_PATH);)
-LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE) $(EXLDLIBS) $(EXTRA_LDLIBS)
+LDLIBS						+= $(LDLIBS_EXTERN_LIB_LOC) $(LDLIBS_EXTERN_SHARE) $(EXLDLIBS) $(EXTRA_LDLIBS) $(HEADERONLY_LIBS)
 CXXFLAGS					+= $(LDLIBS_EXTERN_INC_LOC) $(CXX_EXTERN_HEADER_ONLY) $(BOOST_CPPFLAGS) $(TEST_PATH) $(UNITTEST_CXXFLAGS)
 CPPFLAGS					+= $(BOOST_CPPFLAGS)
 LDFLAGS						+= $(BOOST_LDFLAGS)
@@ -360,6 +363,8 @@ BUILD_EXTENSION_TYPE_profile	=	P
 RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIME_SHARED_PATH_SET))| sed '-e s/ /:/')
 
 DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))))
+P=12
+
 
 #
 # For reference the default rules are
@@ -411,18 +416,13 @@ build-honly:
 	@echo "PREFIX:              $(PREFIX)"
 	@echo "HEADER_ONLY_PACKAGE: $(HEADER_ONLY_PACKAGE)"
 	@echo "NAMESPACE:           $(NAMESPACE)"
-	@echo "$(BUILD_ROOT)/headeronly/convert_project (PREFIX) (HEADER_ONLY_PACKAGE) (NAMESPACE)"
 	@echo
 	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 	@echo
+	@echo
 	@echo "Manual Steps about to be performed"
-	@echo "CWD=$$(pwd)"
 	@echo "cd $(PREFIX)/$(HEADER_ONLY_PACKAGE)"
-	@echo "HEADER_ONLY=1"
-	@echo "THORSANVIL_ROOT=$(THORSANVIL_ROOT)"
-	@echo "CXXFLAGS=-I$(PREFIX)"
-	@echo "LDLIBS_FILTER=\"$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))\""
-	@echo "$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
+	@echo "HEADER_ONLY=1 THORSANVIL_ROOT=\"$(THORSANVIL_ROOT)\" CXXFLAGS=\"-I$(PREFIX)\" LDLIBS_FILTER=\"$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))\" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
 	@echo
 	@echo
 	@CWD="$$(pwd)";	\
@@ -435,17 +435,11 @@ build-hcont:
 	@echo "PREFIX:              $(PREFIX)"
 	@echo "HEADER_ONLY_PACKAGE: $(HEADER_ONLY_PACKAGE)"
 	@echo "NAMESPACE:           $(NAMESPACE)"
-	@echo "$(BUILD_ROOT)/headeronly/convert_project (PREFIX) (HEADER_ONLY_PACKAGE) (NAMESPACE)"
 	@echo
 	@echo
 	@echo "Manual Steps about to be performed"
-	@echo "CWD=$$(pwd)"
 	@echo "cd $(PREFIX)/$(HEADER_ONLY_PACKAGE)"
-	@echo "HEADER_ONLY=1"
-	@echo "THORSANVIL_ROOT=$(THORSANVIL_ROOT)"
-	@echo "CXXFLAGS=-I$(PREFIX)"
-	@echo "LDLIBS_FILTER=\"$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))\""
-	@echo "$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
+	@echo "HEADER_ONLY=1 THORSANVIL_ROOT=\"$(THORSANVIL_ROOT)\" CXXFLAGS=\"-I$(PREFIX)\" LDLIBS_FILTER=\"$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))\" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
 	@echo
 	@echo
 	@CWD="$$(pwd)";	\
