@@ -1031,12 +1031,18 @@ Alternately if you have manually installed magic_enum you can specify its locati
 
 AC_DEFUN([AX_THOR_CHECK_USE_EVENT],
 [
+    AS_IF(
+        [test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
+        [threadEvent=ws2_32],
+        [threadEvent=event_pthreads]
+    )
+
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
         [event],
         [event],
         [Event],
         [event], [event_dispatch],
-        [event],
+        [event ${threadEvent}],
         [EVENT],
         [event],
         [NotThor],
