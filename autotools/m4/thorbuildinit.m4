@@ -48,6 +48,7 @@
 #       AX_THOR_CHECK_USE_BOOST
 #       AX_THOR_CHECK_USE_YAML
 #       AX_THOR_CHECK_USE_SNAPPY
+#       AX_THOR_CHECK_USE_THORS_BOOSTCOROUTINE
 #       AX_THOR_CHECK_USE_SMARTY
 #       AX_THOR_CHECK_USE_STATIC_LOAD
 #
@@ -598,7 +599,7 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
     dnl         eg. Fro Crypto:  "crypto ssl"  => will link against -lcrypto -lssl
     dnl 7: =>  HAVE_$7 macro defined for source.
     dnl 8: =>  Make Macro: $8_ROOT_DIR and $8_ROOT_LIB
-    dnl         Should be the same as one of the values in $6
+    dnl         Should be the same as one of the values in $7
     dnl 9:     Name of standard checkout directory (Used for Thor Tools)
     dnl 10:    Names used by LDLIBS_EXTERN_BUILD to generate build flags. (Empty or the same as 8)
     dnl 11: => Extra Error Message.
@@ -1230,6 +1231,50 @@ If you don't install in the default location (/use/local  (or /opt/homebrew on M
 Then you can specify the install location with:
 
     --with-thorsdb-root=<location of snappy installation>
+        ]
+
+    )
+])
+
+AC_DEFUN([AX_THOR_CHECK_USE_THORS_BOOSTCOROUTINE],
+[
+    AC_MSG_NOTICE([UNAME: ${UNAME}])
+    AS_IF(
+        [test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
+        [boostExt=-mt],
+        [boostExt=]
+    )
+    AC_MSG_NOTICE([boostExt: ${boostExt}])
+
+    dnl 1: =>  configure command line argument:  --with-$1-root=
+    dnl 2: =>  underscore version of $1 to be used in variables
+    dnl 3: =>  Human Readable Name. Used in strings to describe package.
+    dnl 4: =>  Library we are checking for existance
+    dnl 5: =>  Symbol we are checking for in library
+    dnl 6: =>  The library (or list of libraries we will link against)
+    dnl         Note (not the lib or -l or extension).
+    dnl         eg. Fro Crypto:  "crypto ssl"  => will link against -lcrypto -lssl
+    dnl 7: =>  HAVE_$7 macro defined for source.
+    dnl 8: =>  Make Macro: $8_ROOT_DIR and $8_ROOT_LIB
+    dnl         Should be the same as one of the values in $6
+    dnl 9:     Name of standard checkout directory (Used for Thor Tools)
+    dnl 10:    Names used by LDLIBS_EXTERN_BUILD to generate build flags. (Empty or the same as 8)
+    dnl 11: => Extra Error Message.
+    AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
+        [boost-coroutine],
+        [boost_coroutine],
+        [Boost CoRoutines],
+        [boost_coroutine${boostExt}], [_ZN5boost10coroutines18coroutine_categoryEv],
+        [boost_coroutine${boostExt} boost_context${boostExt}],
+        [BoostCoRoutine],
+        [BoostCoRoutine],
+        [NotThor],
+        [BoostCoRoutine],
+        [
+Error: Could not find boost_coroutine
+
+You can solve this by installing the boost libraries
+
         ]
 
     )
