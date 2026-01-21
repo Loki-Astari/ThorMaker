@@ -705,32 +705,32 @@ AS_IF(
 ],
 [
 AS_IF(
-    [test "x${with_botToken}" == "x"],
+    [test "x${with_slack_botToken}" == "x"],
     [AC_MSG_ERROR([No Bot token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Token.])]
 )
 AS_IF(
-    [test "x${with_userToken}" == "x"],
+    [test "x${with_slack_userToken}" == "x"],
     [AC_MSG_ERROR([No User token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack User Token.])]
 )
 AS_IF(
-    [test "x${with_slackSecret}" == "x"],
+    [test "x${with_slack_secret}" == "x"],
     [AC_MSG_ERROR([No slack secret defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
 )
 AS_IF(
-    [test "x${with_slackChannel}" == "x"],
+    [test "x${with_slack_channel}" == "x"],
     [AC_MSG_ERROR([No slack channel defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
 )
 ])
-AS_IF([test "x${with_botToken}" != "x"],    [subconfigure="${subconfigure} --with-botToken=${with_botToken}"])
-AS_IF([test "x${with_userToken}" != "x"],   [subconfigure="${subconfigure} --with-userToken=${with_userToken}"])
-AS_IF([test "x${with_slackSecret}" != "x"], [subconfigure="${subconfigure} --with-slackSecret=${with_slackSecret}"])
-AS_IF([test "x${with_slackChannel}" != "x"],[subconfigure="${subconfigure} --with-slackChannel=${with_slackChannel}"])
+AS_IF([test "x${with_botToken}" != "x"],    [subconfigure="${subconfigure} --with-slack-botToken=${with_botToken}"])
+AS_IF([test "x${with_userToken}" != "x"],   [subconfigure="${subconfigure} --with-slack-userToken=${with_userToken}"])
+AS_IF([test "x${with_slackSecret}" != "x"], [subconfigure="${subconfigure} --with-slack-secret=${with_slackSecret}"])
+AS_IF([test "x${with_slackChannel}" != "x"],[subconfigure="${subconfigure} --with-slack-channel=${with_slackChannel}"])
 
 AS_IF(
     [test "x$enable_slacktest" != "xno"],
 [
 data=$(curl \
-   --header "authorization: Bearer ${with_botToken}" \
+   --header "authorization: Bearer ${with_slack_botToken}" \
 ✗  --header "content-type: application/json; charset=utf-8" \
 │  --request GET \
 │  https://slack.com/api/auth.test 2> /dev/null)
@@ -743,7 +743,7 @@ AS_IF(
 Failed to authenticate with slack please check your token
 
 Command used:
-    curl --header "authorization: Bearer ${with_botToken}" --header "content-type: application/json; charset=utf-8" --request GET https://slack.com/api/auth.test
+    curl --header "authorization: Bearer ${with_slack_botToken}" --header "content-type: application/json; charset=utf-8" --request GET https://slack.com/api/auth.test
 
 Response:
     ${data}
@@ -755,10 +755,10 @@ Response:
 mkdir -p src/ThorsSlack/test/data
 cat - <<ENVIRONMENT > src/ThorsSlack/test/data/environment.json
 {
-    "botToken": "${with_botToken}",
-    "userToken": "${with_userToken}",
-    "slackSecret": "${with_slackSecret}",
-    "slackChannel": "${with_slackChannel}"
+    "botToken": "${with_slack_botToken}",
+    "userToken": "${with_slack_userToken}",
+    "slackSecret": "${with_slack_secret}",
+    "slackChannel": "${with_slack_channel}"
 }
 ENVIRONMENT
 
