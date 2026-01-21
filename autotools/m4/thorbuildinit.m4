@@ -681,19 +681,19 @@ AC_ARG_ENABLE(
 )
 AC_ARG_WITH(
     [botToken],
-    AS_HELP_STRING([--with-botToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
+    AS_HELP_STRING([--with-slack-botToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
 )
 AC_ARG_WITH(
     [userToken],
-    AS_HELP_STRING([--with-userToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
+    AS_HELP_STRING([--with-slack-userToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
 )
 AC_ARG_WITH(
     [slackSecret],
-    AS_HELP_STRING([--with-slackSecret=<secret>], [Slack secret. Used to hash requests and thus validate incomming requests from slack])
+    AS_HELP_STRING([--with-slack-secret=<secret>], [Slack secret. Used to hash requests and thus validate incoming requests from slack])
 )
 AC_ARG_WITH(
     [slackChannel],
-    AS_HELP_STRING([--with-slackChannel=<channel>], [Slack channel to use for testing.])
+    AS_HELP_STRING([--with-slack-channel=<channel>], [Slack channel to use for testing.])
 )
 
 AC_SUBST([DISABLE_SLACKTEST], [0])
