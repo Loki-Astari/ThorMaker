@@ -708,7 +708,7 @@ AS_IF(
     AS_IF(
         [test "x$enable_slacktest" == "xno"],
     [
-        subconfigure="${subconfigure} --disable-slacktest";
+        subconfigure="${subconfigure} --disable-slacktest"
         AC_SUBST([DISABLE_SLACKTEST], [1])
         AC_MSG_NOTICE([SLACK Test Disable])
     ],
@@ -741,9 +741,9 @@ AS_IF(
 
     data=$(curl \
        --header "authorization: Bearer ${with_slack_botToken}" \
-    ✗  --header "content-type: application/json; charset=utf-8" \
-    │  --request GET \
-    │  https://slack.com/api/auth.test 2> /dev/null)
+       --header "content-type: application/json; charset=utf-8" \
+       --request GET \
+       https://slack.com/api/auth.test 2> /dev/null)
 
     dataok=$(echo ${data} | jq -r .ok)
     AS_IF(
