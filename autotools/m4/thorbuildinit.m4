@@ -701,6 +701,7 @@ AC_SUBST([DISABLE_SLACKTEST], [0])
 AS_IF(
     [test "x$enable_slacktest" == "xyes"],
 [
+    AC_MSG_NOTICE([SLACK Test Already Enabled])
     subconfigure="${subconfigure} --enable-slacktest"
 ],
 [
@@ -709,6 +710,7 @@ AS_IF(
     [
         subconfigure="${subconfigure} --disable-slacktest";
         AC_SUBST([DISABLE_SLACKTEST], [1])
+        AC_MSG_NOTICE([SLACK Test Disable])
     ],
     [
     AS_IF(
@@ -728,6 +730,10 @@ AS_IF(
         [AC_MSG_ERROR([No slack channel defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
     )
     ])
+
+    # Note:
+    # Don't do this as it passes secrets around.
+    # These will end up in log files that will be pulled by a bad person
     # XAS_IF([test "x${with_slack_botToken}" != "x"],    [subconfigure="${subconfigure} --with-slack-botToken=${with_slack_botToken}"])
     # XAS_IF([test "x${with_slack_userToken}" != "x"],   [subconfigure="${subconfigure} --with-slack-userToken=${with_slack_userToken}"])
     # XAS_IF([test "x${with_slack_secret}" != "x"],      [subconfigure="${subconfigure} --with-slack-secret=${with_slack_secret}"])
@@ -756,15 +762,16 @@ AS_IF(
     )
 
 
+    AC_MSG_NOTICE([SLACK Build configuration])
     mkdir -p src/ThorsSlack/test/data
-    cat - <<ENVIRONMENT > src/ThorsSlack/test/data/environment.json
-    {
-        "botToken": "${with_slack_botToken}",
-        "userToken": "${with_slack_userToken}",
-        "slackSecret": "${with_slack_secret}",
-        "slackChannel": "${with_slack_channel}"
-    }
-    ENVIRONMENT
+cat - <<ENVIRONMENT > src/ThorsSlack/test/data/environment.json
+{
+    "botToken": "${with_slack_botToken}",
+    "userToken": "${with_slack_userToken}",
+    "slackSecret": "${with_slack_secret}",
+    "slackChannel": "${with_slack_channel}"
+}
+ENVIRONMENT
 
     subconfigure="${subconfigure} --enable-slacktest"
 
