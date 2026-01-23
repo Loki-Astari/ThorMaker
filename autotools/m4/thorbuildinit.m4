@@ -675,95 +675,97 @@ AC_DEFUN([AX_THOR_FEATURE_HEADER_ONLY_VARIANT],
 AC_DEFUN([AX_THOR_CHECK_IS_SLACK_TESTABLE],
 [
 
-AC_ARG_ENABLE(
-    [slacktest],
-    AS_HELP_STRING([--disable-slacktest], [Disable Slack Testing. Slack testing requires you set up slack tokens.])
-)
-AC_ARG_WITH(
-    [botToken],
-    AS_HELP_STRING([--with-slack-botToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
-)
-AC_ARG_WITH(
-    [userToken],
-    AS_HELP_STRING([--with-slack-userToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
-)
-AC_ARG_WITH(
-    [slackSecret],
-    AS_HELP_STRING([--with-slack-secret=<secret>], [Slack secret. Used to hash requests and thus validate incoming requests from slack])
-)
-AC_ARG_WITH(
-    [slackChannel],
-    AS_HELP_STRING([--with-slack-channel=<channel>], [Slack channel to use for testing.])
-)
+    AC_ARG_ENABLE(
+        [slacktest],
+        AS_HELP_STRING([--disable-slacktest], [Disable Slack Testing. Slack testing requires you set up slack tokens.])
+    )
+    AC_ARG_WITH(
+        [botToken],
+        AS_HELP_STRING([--with-slack-botToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
+    )
+    AC_ARG_WITH(
+        [userToken],
+        AS_HELP_STRING([--with-slack-userToken=<token>], [Slack authentication token. Used to authenticate with Slack when running tests])
+    )
+    AC_ARG_WITH(
+        [slackSecret],
+        AS_HELP_STRING([--with-slack-secret=<secret>], [Slack secret. Used to hash requests and thus validate incoming requests from slack])
+    )
+    AC_ARG_WITH(
+        [slackChannel],
+        AS_HELP_STRING([--with-slack-channel=<channel>], [Slack channel to use for testing.])
+    )
 
-AC_SUBST([DISABLE_SLACKTEST], [0])
+    AC_SUBST([DISABLE_SLACKTEST], [0])
 
-AS_IF(
-    [test "x$enable_slacktest" == "xyes"],
-[
-    AC_MSG_NOTICE([SLACK Test Already Enabled])
-    subconfigure="${subconfigure} --enable-slacktest"
-],
-[
     AS_IF(
-        [test "x$enable_slacktest" == "xno"],
+        [test "x$enable_slacktest" == "xyes"],
     [
-        subconfigure="${subconfigure} --disable-slacktest"
-        AC_SUBST([DISABLE_SLACKTEST], [1])
-        AC_MSG_NOTICE([SLACK Test Disable])
+        AC_MSG_NOTICE([SLACK Test Already Enabled])
+        subconfigure="${subconfigure} --enable-slacktest"
     ],
     [
-    AS_IF(
-        [test "x${with_slack_botToken}" == "x"],
-        [AC_MSG_ERROR([No Bot token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Token.])]
-    )
-    AS_IF(
-        [test "x${with_slack_userToken}" == "x"],
-        [AC_MSG_ERROR([No User token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack User Token.])]
-    )
-    AS_IF(
-        [test "x${with_slack_secret}" == "x"],
-        [AC_MSG_ERROR([No slack secret defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
-    )
-    AS_IF(
-        [test "x${with_slack_channel}" == "x"],
-        [AC_MSG_ERROR([No slack channel defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
-    )
-    ])
-
-    # Note:
-    # Don't do this as it passes secrets around.
-    # These will end up in log files that will be pulled by a bad person
-    # XAS_IF([test "x${with_slack_botToken}" != "x"],    [subconfigure="${subconfigure} --with-slack-botToken=${with_slack_botToken}"])
-    # XAS_IF([test "x${with_slack_userToken}" != "x"],   [subconfigure="${subconfigure} --with-slack-userToken=${with_slack_userToken}"])
-    # XAS_IF([test "x${with_slack_secret}" != "x"],      [subconfigure="${subconfigure} --with-slack-secret=${with_slack_secret}"])
-    # XAS_IF([test "x${with_slack_channel}" != "x"],     [subconfigure="${subconfigure} --with-slack-channel=${with_slack_channel}"])
-
-    data=$(curl \
-       --header "authorization: Bearer ${with_slack_botToken}" \
-       --header "content-type: application/json; charset=utf-8" \
-       --request GET \
-       https://slack.com/api/auth.test 2> /dev/null)
-
-    dataok=$(echo ${data} | jq -r .ok)
-    AS_IF(
-        [test "x${dataok}" != "xtrue"],
+        AS_IF(
+            [test "x$enable_slacktest" == "xno"],
         [
-            AC_MSG_ERROR([
-    Failed to authenticate with slack please check your token
+            subconfigure="${subconfigure} --disable-slacktest"
+            AC_SUBST([DISABLE_SLACKTEST], [1])
+            AC_MSG_NOTICE([SLACK Test Disable])
+        ],
+        [
+            AS_IF(
+                [test "x${with_slack_botToken}" == "x"],
+                [AC_MSG_ERROR([No Bot token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Token.])]
+            )
+            AS_IF(
+                [test "x${with_slack_userToken}" == "x"],
+                [AC_MSG_ERROR([No User token defined. Can not run the slack tests. Please look at tutorials on how to generate a slack User Token.])]
+            )
+            AS_IF(
+                [test "x${with_slack_secret}" == "x"],
+                [AC_MSG_ERROR([No slack secret defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
+            )
+            AS_IF(
+                [test "x${with_slack_channel}" == "x"],
+                [AC_MSG_ERROR([No slack channel defined. Can not run the slack tests. Please look at tutorials on how to generate a slack Bot Secret.])]
+            )
 
-    Command used:
-        curl --header "authorization: Bearer ${with_slack_botToken}" --header "content-type: application/json; charset=utf-8" --request GET https://slack.com/api/auth.test
+            # Note:
+            # Don't do this as it passes secrets around.
+            # These will end up in log files that will be pulled by a bad person
+            # XAS_IF([test "x${with_slack_botToken}" != "x"],    [subconfigure="${subconfigure} --with-slack-botToken=${with_slack_botToken}"])
+            # XAS_IF([test "x${with_slack_userToken}" != "x"],   [subconfigure="${subconfigure} --with-slack-userToken=${with_slack_userToken}"])
+            # XAS_IF([test "x${with_slack_secret}" != "x"],      [subconfigure="${subconfigure} --with-slack-secret=${with_slack_secret}"])
+            # XAS_IF([test "x${with_slack_channel}" != "x"],     [subconfigure="${subconfigure} --with-slack-channel=${with_slack_channel}"])
 
-    Response:
-        ${data}
-            ])
-        ]
-    )
+            data=$(curl \
+               --header "authorization: Bearer ${with_slack_botToken}" \
+               --header "content-type: application/json; charset=utf-8" \
+               --request GET \
+               https://slack.com/api/auth.test 2> /dev/null)
+
+            dataok=$(echo ${data} | jq -r .ok)
+            AS_IF(
+                [test "x${dataok}" != "xtrue"],
+                [
+                    AC_MSG_ERROR([
+            Failed to authenticate with slack please check your token
+
+            Command used:
+                curl --header "authorization: Bearer ${with_slack_botToken}" --header "content-type: application/json; charset=utf-8" --request GET https://slack.com/api/auth.test
+
+            Response:
+                ${data}
+                    ])
+                ]
+            )
 
 
-    AC_MSG_NOTICE([SLACK Build configuration])
-    mkdir -p src/ThorsSlack/test/data
+            AC_MSG_NOTICE([SLACK Build configuration])
+            mkdir -p src/ThorsSlack/test/data
+
+# Note
+# Bad indentation because of here document
 cat - <<ENVIRONMENT > src/ThorsSlack/test/data/environment.json
 {
     "botToken": "${with_slack_botToken}",
@@ -773,9 +775,10 @@ cat - <<ENVIRONMENT > src/ThorsSlack/test/data/environment.json
 }
 ENVIRONMENT
 
-    subconfigure="${subconfigure} --enable-slacktest"
+            subconfigure="${subconfigure} --enable-slacktest"
 
-])
+        ])
+    ])
 
 ])
 
