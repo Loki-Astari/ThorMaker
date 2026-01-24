@@ -18,6 +18,8 @@ ARCH_FLAG							?= $(ARCH_FLAG_$(PLATFORM))
 COVERAGE_LIB						?= $(COVERAGE_LIB_$(PLATFORM))
 PLATFORM_LIB						?= $(PLATFORM_LIB_$(PLATFORM))
 VERA								?= $(if $(VERATOOL),$(VERATOOL), $(VERA_$(PLATFORM)))
+PLATFORM_SPECIFIC_FLAGS				=	$(PLATFORM_$(PLATFORM)_FLAGS)
+
 
 COMPILER_EXT						= $(lastword $(subst -,  , $(firstword $(CXX))))
 TOOL_EXT							= $(if $(patsubst $(COMPILER_EXT),,$(firstword $(CXX))),-$(COMPILER_EXT))
@@ -57,8 +59,13 @@ COVERAGE_LIB_MINGW64_NT				=
 
 PLATFORM_LIB_Darwin					=
 PLATFORM_LIB_Linux					=
-PLATFORM_LIB_MSYS_NT				=
-PLATFORM_LIB_MINGW64_NT				=
+PLATFORM_LIB_MSYS_NT				= -mcmodel=large
+PLATFORM_LIB_MINGW64_NT				= -mcmodel=large
+
+PLATFORM_Darwin_FLAGS				=
+PLATFORM_Linux_FLAGS				=
+PLATFORM_MSYS_NT_FLAGS				= -mcmodel=large
+PLATFORM_MINGW64_NT_FLAGS			= -mcmodel=large
 
 VERA_Darwin							= vera++
 VERA_Linux							= vera++

@@ -278,10 +278,6 @@ PARALLEL_NONE				=
 
 ENVIRONMENT_FLAGS			=	$(PLATFORM_SPECIFIC_FLAGS) $(COMPILER_SPECIFIC_FLAGS)  $(LANGUAGE_SPECIFIC_FLAGS)
 
-PLATFORM_SPECIFIC_FLAGS		=	$(PLATFORM_$(PLATFORM)_FLAGS)
-PLATFORM_Darwin_FLAGS		=
-PLATFORM_Linux_FLAGS		=
-
 
 #
 # Having problems with unreachable code being reported in the system header files
