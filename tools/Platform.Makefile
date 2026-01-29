@@ -59,13 +59,13 @@ COVERAGE_LIB_MINGW64_NT				=
 
 PLATFORM_LIB_Darwin					=
 PLATFORM_LIB_Linux					=
-PLATFORM_LIB_MSYS_NT				= -mcmodel=large -O1
-PLATFORM_LIB_MINGW64_NT				= -mcmodel=large -O1
+PLATFORM_LIB_MSYS_NT				=
+PLATFORM_LIB_MINGW64_NT				=
 
 PLATFORM_Darwin_FLAGS				=
 PLATFORM_Linux_FLAGS				=
-PLATFORM_MSYS_NT_FLAGS				= -mcmodel=large -O1
-PLATFORM_MINGW64_NT_FLAGS			= -mcmodel=large -O1
+PLATFORM_MSYS_NT_FLAGS				=
+PLATFORM_MINGW64_NT_FLAGS			=
 
 VERA_Darwin							= vera++
 VERA_Linux							= vera++
