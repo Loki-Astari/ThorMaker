@@ -180,7 +180,7 @@ MKDIR			?= mkdir
 RMDIR			?= rmdir
 
 VERA_ROOT		= --root=$(THORSANVIL_ROOT)/build/vera-plusplus
-MAKE			= make --silent
+MAKEFLAGS 		+= --silent
 
 TESTNAME		?= *
 	

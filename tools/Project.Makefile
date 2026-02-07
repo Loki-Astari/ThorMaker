@@ -4,10 +4,10 @@
 
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
-MAKE	= make --silent
-SHELL	= /bin/bash
-NEOVIM  ?= FALSE
-FILEDIR ?=
+MAKEFLAGS 		+= --silent
+SHELL			= /bin/bash
+NEOVIM			?= FALSE
+FILEDIR			?=
 
 
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
