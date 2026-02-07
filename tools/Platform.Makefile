@@ -1,12 +1,12 @@
 
 HARDWARE_DEFAULT					= $(HARDWARE_DEFAULT_NV$(NEOVIM))
-HARDWARE_DEFAULT_NVFALSE			= $(shell uname -m)
+HARDWARE_DEFAULT_NVFALSE			:= $(shell uname -m)
 HARDWARE_DEFAULT_NVTRUE				= arm64
 
-PLATFORM							= $(shell uname -s | sed 's/-.*//')
+PLATFORM							:= $(shell uname -s | sed 's/-.*//')
 HARDWARE							= $(HARDWARE_DEFAULT)
 PLATHARD							= $(PLATFORM)_$(HARDWARE)
-PLATFORMVER							= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
+PLATFORMVER							:= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
 SO									= $(SHARED_LIB_EXTENSOION_$(PLATFORM))
 SONAME								= $(SHARED_LIB_NAME_FLAG_$(PLATFORM))
 SHARED_LIB_FLAG						= $(SHARED_LIB_FLAG_$(PLATFORM))
@@ -31,7 +31,7 @@ COMPILER_VERSION					= $(COMPILER_CXX_$(COMPILER_NAME)_VERSION)
 
 # If we add different compilers we can expand this with how they fetch their version
 # Currently we only use gcc so we have the technique for getting the gcc version
-COMPILER_CXX_gpp_VERSION			= $(subst .,_,$(basename $(shell $(CXX) -dumpversion)))
+COMPILER_CXX_gpp_VERSION			:= $(subst .,_,$(basename $(shell $(CXX) -dumpversion)))
 
 
 CXX_Darwin							= g++

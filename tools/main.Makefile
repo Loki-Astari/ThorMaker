@@ -172,7 +172,7 @@ NEOVIM			?= FALSE
 FILEDIR			?=
 
 YACC			?= bison
-LEX				 = flex
+LEX				?= flex
 GPERF			?= gperf --ignore-case
 CP				?= cp
 LNSOFT			?= ln -f -s
@@ -328,6 +328,8 @@ OPTIMIZER_FLAGS_HIDE_test		=	-g -fprofile-arcs -ftest-coverage -DCOVERAGE_TEST $
 OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 
 
+#
+# Deliberately use C++ compiler for all compilation.
 CC							=	$(CXX)
 CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC3RD) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
 
@@ -359,7 +361,6 @@ BUILD_EXTENSION_TYPE_profile	=	P
 RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIME_SHARED_PATH_SET))| sed '-e s/ /:/')
 
 DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))))
-P=12
 
 
 #
@@ -407,13 +408,20 @@ test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
 done:
 
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
-build-honly:
+build-honly: 	build-honly-head	build-honly-convert		build-honly-tail
+build-hcont: 	build-honly-head							build-honly-tail
+
+build-honly-head:
 	@echo "Converting project"
 	@echo "PREFIX:              $(PREFIX)"
 	@echo "HEADER_ONLY_PACKAGE: $(HEADER_ONLY_PACKAGE)"
 	@echo "NAMESPACE:           $(NAMESPACE)"
 	@echo
+
+build-honly-convert:
 	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
+
+build-honly-tail:
 	@echo
 	@echo
 	@echo "Manual Steps about to be performed"
@@ -425,27 +433,9 @@ build-honly:
 	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
 	HEADER_ONLY=1 THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test
 	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
-
-build-hcont:
-	@echo "Converting project"
-	@echo "PREFIX:              $(PREFIX)"
-	@echo "HEADER_ONLY_PACKAGE: $(HEADER_ONLY_PACKAGE)"
-	@echo "NAMESPACE:           $(NAMESPACE)"
-	@echo
-	@echo
-	@echo "Manual Steps about to be performed"
-	@echo "cd $(PREFIX)/$(HEADER_ONLY_PACKAGE)"
-	@echo "HEADER_ONLY=1 THORSANVIL_ROOT=\"$(THORSANVIL_ROOT)\" CXXFLAGS=\"-I$(PREFIX)\" LDLIBS_FILTER=\"$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))\" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test"
-	@echo
-	@echo
-	@CWD="$$(pwd)";	\
-	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
-	HEADER_ONLY=1 THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) test
-	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
-
 
 clean:
-	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  makefile_tmp position.hh  stack.hh *.gcov test/*.gcov stamp-h2
+	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  position.hh  stack.hh *.gcov test/*.gcov stamp-h2
 
 makedependency:				$(DEP)
 
@@ -511,43 +501,46 @@ $(TARGET_MODE)/%.prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).D
 	@if ( test "$(VERBOSE)" = "On" ); then \
 		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ;	fi
-	@$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2>makefile_tmp; \
+	@export tmpfile=$(shell $(MKTEMP));					\
+	$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) "EX_RPATH: $(LDLIBS_EXTERN_RPATH)";		\
 		$(ECHO) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)); \
 		$(ECHO) "==================================================="; \
-		cat makefile_tmp;								\
+		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
-		$(RM) makefile_tmp;								\
+		$(RM) $${tmpfile};								\
 	fi
 
 $(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ)';\
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
-	@$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ) > makefile_tmp 2>&1;	\
+	@export tmpfile=$(shell $(MKTEMP));					\
+	$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ) > $${tmpfile} 2>&1;	\
 	ranlib $@ 2> /dev/null;								\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) $(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ);\
 		$(ECHO) "==================================================="; \
-		cat makefile_tmp;								\
+		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
-		$(RM) makefile_tmp;								\
+		$(RM) $${tmpfile};								\
 	fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
 	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
-	@$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2>makefile_tmp; \
+	@export tmpfile=$(shell $(MKTEMP));					\
+	$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) "";										\
@@ -555,11 +548,11 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 		$(ECHO) "EX_RPATH: $(LDLIBS_EXTERN_RPATH)";		\
 		$(ECHO) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL); \
 		$(ECHO) "==================================================="; \
-		cat makefile_tmp;								\
+		cat $${tmpfile};								\
 		exit 1;											\
 	else 												\
 		$(ECHO) $(GREEN_OK);							\
-		$(RM) makefile_tmp;								\
+		$(RM) $${tmpfile};								\
 	fi
 
 makedependency/%.d:		%.cpp | makedependency.Dir
