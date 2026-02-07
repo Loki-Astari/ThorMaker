@@ -7,8 +7,8 @@ PLATFORM							= $(shell uname -s | sed 's/-.*//')
 HARDWARE							= $(HARDWARE_DEFAULT)
 PLATHARD							= $(PLATFORM)_$(HARDWARE)
 PLATFORMVER							= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
-SO									= $(SHARD_LIB_EXTENSOION_$(PLATFORM))
-SONAME								= $(SHARD_LIB_NAME_FLAG_$(PLATFORM))
+SO									= $(SHARED_LIB_EXTENSOION_$(PLATFORM))
+SONAME								= $(SHARED_LIB_NAME_FLAG_$(PLATFORM))
 SHARED_LIB_FLAG						= $(SHARED_LIB_FLAG_$(PLATFORM))
 ECHO								= $(ECHO_$(PLATFORM))
 MKTEMP								= $(MKTEMP_$(PLATFORM))
@@ -84,20 +84,20 @@ MKTEMP_Linux						= mktemp -u
 MKTEMP_MSYS_NT						= mktemp -u
 MKTEMP_MINGW64_NT					= mktemp -u
 
-SHARD_LIB_EXTENSOION_Darwin			= dylib
-SHARD_LIB_EXTENSOION_Linux			= so
-SHARD_LIB_EXTENSOION_MSYS_NT		= dll
-SHARD_LIB_EXTENSOION_MINGW64_NT		= dll
+SHARED_LIB_EXTENSOION_Darwin		= dylib
+SHARED_LIB_EXTENSOION_Linux			= so
+SHARED_LIB_EXTENSOION_MSYS_NT		= dll
+SHARED_LIB_EXTENSOION_MINGW64_NT	= dll
 
 SHARED_LIB_FLAG_Darwin				= -dynamiclib -install_name lib$*$(BUILD_EXTENSION).$(SO)
 SHARED_LIB_FLAG_Linux				= -shared
 SHARED_LIB_FLAG_MSYS_NT				= -shared
 SHARED_LIB_FLAG_MINGW64_NT			= -shared
 
-SHARD_LIB_NAME_FLAG_Darwin			= -install_name
-SHARD_LIB_NAME_FLAG_Linux			= -soname
-SHARD_LIB_NAME_FLAG_MSYS_NT			= -soname
-SHARD_LIB_NAME_FLAG_MINGW64_NT		= -soname
+SHARED_LIB_NAME_FLAG_Darwin			= -install_name
+SHARED_LIB_NAME_FLAG_Linux			= -soname
+SHARED_LIB_NAME_FLAG_MSYS_NT		= -soname
+SHARED_LIB_NAME_FLAG_MINGW64_NT		= -soname
 
 RUNTIME_SHARED_PATH_SET				= $(RUNTIME_SHARED_PATH_SET_$(PLATFORM))
 RUNTIME_SHARED_PATH_SET_Darwin		= DYLD_LIBRARY_PATH

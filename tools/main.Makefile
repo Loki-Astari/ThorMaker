@@ -66,7 +66,7 @@ SHELL=/bin/bash
 #						See the XXX
 #
 # Flags Help:
-#	CXXSTDVER=03/11/14/17			Should be set to the appropriate value:		Default: CXXSTDVER		=03
+#	CXXSTDVER=03/11/14/17			Should be set to the appropriate value:		Default: CXXSTDVER		=11
 #	CXX_STD_FLAG					Should be set to the appropriate value		Default: CXX_STD_FLAG	=-std=c++11
 #	VERBOSE=On						Turn on verbose mode
 #										This will print the full compile command rather than a summary
