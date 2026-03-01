@@ -449,9 +449,6 @@ include $(BUILD_ROOT)/tools/Build/vera.Makefile
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
 include $(BUILD_ROOT)/tools/NeoVim.Makefile
-ifndef NODEP
--include makedependency/*
-endif
 
 
 Note_%:
@@ -555,20 +552,24 @@ $(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 		$(RM) $${tmpfile};								\
 	fi
 
-makedependency/%.d:		%.cpp | makedependency.Dir
+$(DEP): makedependency/%.d: %.cpp | makedependency.Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
+		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"$@" -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
+		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 		$(ECHO) "========================================";\
 		cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}';	\
 		exit 1;											\
 	fi
+
+ifndef NODEP
+-include makedependency/*
+endif
 
 $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
