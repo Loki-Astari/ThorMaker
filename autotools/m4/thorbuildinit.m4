@@ -251,6 +251,7 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 
     subconfigure=""
     AX_THOR_FUNC_BUILD_VERA_INIT
+    AX_THOR_FUNC_BUILD_CMAKE_INIT
     AX_THOR_FUNC_BUILD_LIB_SELECT
     AX_THOR_FUNC_BUILD_COLOUR_MODE
     AX_THOR_FUNC_BUILD_GIT_SUBMODULE_RETRIEVE
@@ -303,6 +304,28 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS],
     )
     ./setup "${CXX}  ${CXX_STD_FLAG}" "${buildTool}" "${buildConfig}" || AC_MSG_ERROR([Failed to set up the test utilities])
     popd
+])
+
+AC_DEFUN([AX_THOR_FUNC_BUILD_CMAKE_INIT],
+[
+    AC_CHECK_PROGS([TestCMake], [cmake], [:])
+    AS_IF(
+        [test "$TestCMake" == ":"],
+        [
+            AC_MSG_ERROR([
+
+By default the build tools use cmake to build the google test harness. There is no way to disable the test builds.
+There is a TODO to allow the build tools to use currently installed gtest libs. If you would like to do this please
+let me know.
+
+The easy way to install cmake is using brew:
+
+    > brew install cmake
+
+            ])
+        ],
+        []
+    )
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD_VERA_INIT],
@@ -631,8 +654,7 @@ AC_DEFUN([AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST],
             LDFLAGS="$LDFLAGS ${LIBRARY_DIR}"
 
             echo "Building: $9"
-            echo "Mark:     $BUILDING_$9"
-            echo "Checking"
+            echo "Checking for lib$4"
             AS_IF(
                 [test "x$BUILDING_$9" == "x1" ],
                 [
@@ -674,7 +696,7 @@ AC_DEFUN([AX_THOR_FEATURE_HEADER_ONLY_VARIANT],
 
 AC_DEFUN([AX_THOR_CHECK_IS_SLACK_TESTABLE],
 [
-
+    echo "Checking for Slack Accesses"
     AC_ARG_ENABLE(
         [slacktest],
         AS_HELP_STRING([--disable-slacktest], [Disable Slack Testing. Slack testing requires you set up slack tokens.])
@@ -1847,6 +1869,7 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
     dnl 16: =>  NOT USED. But needed so 14 is not the last argument.
 
 
+    echo "checking for Service $2"
     AC_ARG_ENABLE(
         [$2_Service],
         AS_HELP_STRING([--disable-$2-Service], [Disable $2 Service Test])
@@ -1892,7 +1915,7 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
         ],
         [
 
-    echo "COMMAND: >$6<"
+    echo "Using the following check: >$6<"
     echo "DB LINK: >${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db<" | sed -e 's/[Pp]ass/aasp/g'
     echo "$6" | $15 ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
     test_connect=`echo "$6" | $15 ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db 2> /dev/null | tail -$8 | head -1 | sed -e 's/test>//' | xargs`
@@ -1908,8 +1931,8 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_CHECK],
             1: Install $2 server
             2: Make sure $2 is running
             3: Install the test data and users.
-                    cat ./src/$2/test/data/init.$4 | ${cli_tool} $5 $$3_test_host $13root $14
-                    cat ./src/$2/test/data/data.$4 | ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
+                    cat ./src/Thors$2/test/data/init.$4 | ${cli_tool} $5 $$3_test_host $13root $14
+                    cat ./src/Thors$2/test/data/data.$4 | ${cli_tool} $5 $$3_test_host $13$$3_test_user $14$$3_test_pw $$3_test_db
 
             ])
     ])
