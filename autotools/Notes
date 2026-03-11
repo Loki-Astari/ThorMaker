@@ -88,6 +88,8 @@ addGitIgnore () {
 *.gcov
 confdefs.h
 
+.claude
+
 unittest
 
 coverage/
