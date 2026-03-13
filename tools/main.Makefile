@@ -435,7 +435,7 @@ build-honly-tail:
 	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
 clean:
-	$(RM) -rf debug release coverage report makedependency test/coverage test/dependency $(TMP_SRC) $(TMP_HDR) location.hh  position.hh  stack.hh *.gcov test/*.gcov stamp-h2
+	$(RM) -rf debug release coverage report makedependency $(META) test/coverage test/dependency test/$(META) $(TMP_SRC) $(TMP_HDR) location.hh  position.hh  stack.hh *.gcov test/*.gcov stamp-h2
 
 makedependency:				$(DEP)
 
@@ -493,18 +493,60 @@ Note_%:
 %.defer:	buildDir  $(TARGET_MODE)/lib%$(BUILD_EXTENSION).a
 	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/defer)
 
+META							:= buildmeta
+MONITOR							:= $(BUILD_ROOT)/scripts/build-monitor.sh
+JOBS							:= 8
 
-$(TARGET_MODE)/%.prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).Dir
+.PHONY:		_start
+.PHONY:		_build_prog         _stop_prog
+.PHONY:		_build_static_lib   _stop_static_lib
+.PHONY:		_build_dynamic_lib  _stop_dynamic_lib
+
+_start:
+	@echo "START"
+	@mkdir -p $(META)
+	@rm -f $(META)/pipe
+	@mkfifo $(META)/pipe
+	@bash $(MONITOR) $(META)/pipe $(JOBS) &
+	@printf '%d\n' $$! > $(META)/pid
+
+
+$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o: | _start
+
+$(TARGET_MODE)/%.prog:	| $(TARGET_MODE).Dir
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_prog
+
+$(TARGET_MODE)/lib%.a:	| $(TARGET_MODE).Dir
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_static_lib
+
+$(TARGET_MODE)/lib%.$(SO):	| $(TARGET_MODE).Dir
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_dynamic_lib
+
+_build_prog:			_stop_prog
+_build_static_lib:		_stop_static_lib
+_build_dynamic_lib:		_stop_dynamic_lib
+
+_stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
+	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
+	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@failed=0; \
+	 for f in $(META)/err.*; do \
+	   [ -f "$$f" ] || continue; \
+	   cat "$$f" >&2; \
+	   failed=1; \
+	 done; \
+	 rm -rf $(META); \
+	 if ( test $$failed != 0 ); then exit 1; fi
 	@if ( test "$(VERBOSE)" = "On" ); then \
-		$(ECHO) '$(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS))' ; \
-	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ;	fi
+		$(ECHO) '$(CXX) -o $(TARGET_DST) $(LDFLAGS) $(PLATFORM_LIB) $^ $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($(NAME)_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($(NAME)_LDLIBS) $(call expand,$($(NAME)_LINK_LIBS))' ; \
+	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -o $(TARGET_DST) $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($(NAME)_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ;	fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(LDLIBS_EXTERN_RPATH) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)) 2> $${tmpfile}; \
+	$(LDLIBS_EXTERN_RPATH) $(CXX) -o $(TARGET_DST) $(LDFLAGS) $(PLATFORM_LIB) $^ $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($(NAME)_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($(NAME)_LDLIBS) $(call expand,$($(NAME)_LINK_LIBS)) 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) "EX_RPATH: $(LDLIBS_EXTERN_RPATH)";		\
-		$(ECHO) $(CXX) -o $@ $(LDFLAGS) $(OBJ) $(PLATFORM_LIB) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(TARGET_MODE)/$*.o $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($*_LDLIBS) $(call expand,$($*_LINK_LIBS)); \
+		$(ECHO) $(CXX) -o $(TARGET_DST) $(LDFLAGS) $(PLATFORM_LIB) $^ $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($(NAME)_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $($(NAME)_LDLIBS) $(call expand,$($(NAME)_LINK_LIBS)); \
 		$(ECHO) "==================================================="; \
 		cat $${tmpfile};								\
 		exit 1;											\
@@ -513,17 +555,27 @@ $(TARGET_MODE)/%.prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/%.o | $(TARGET_MODE).D
 		$(RM) $${tmpfile};								\
 	fi
 
-$(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
+_stop_static_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
+	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
+	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@failed=0; \
+	 for f in $(META)/err.*; do \
+	   [ -f "$$f" ] || continue; \
+	   cat "$$f" >&2; \
+	   failed=1; \
+	 done; \
+	 rm -rf $(META); \
+	 if ( test $$failed != 0 ); then exit 1; fi
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ)';\
-	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(AR) $(ARFLAGS) $@")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
+		$(ECHO) '$(AR) $(ARFLAGS) $(TARGET_DST) $^';\
+	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(AR) $(ARFLAGS) $(TARGET_DST)")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ) > $${tmpfile} 2>&1;	\
-	ranlib $@ 2> /dev/null;								\
+	$(AR) $(ARFLAGS) $(TARGET_DST) $^ > $${tmpfile} 2>&1;	\
+	ranlib $(TARGET_DST) 2> /dev/null;					\
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) $(RED_ERROR);							\
-		$(ECHO) $(AR) $(ARFLAGS) $@ $(GCOV_OBJ) $(DEFER_OBJ);\
+		$(ECHO) $(AR) $(ARFLAGS) $(TARGET_DST) $^;		\
 		$(ECHO) "==================================================="; \
 		cat $${tmpfile};								\
 		exit 1;											\
@@ -532,18 +584,28 @@ $(TARGET_MODE)/lib%.a:	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
 		$(RM) $${tmpfile};								\
 	fi
 
-$(TARGET_MODE)/lib%.$(SO):	$(GCOV_OBJ) $(DEFER_OBJ) | $(TARGET_MODE).Dir
+_stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
+	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
+	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@failed=0; \
+	 for f in $(META)/err.*; do \
+	   [ -f "$$f" ] || continue; \
+	   cat "$$f" >&2; \
+	   failed=1; \
+	 done; \
+	 rm -rf $(META); \
+	 if ( test $$failed != 0 ); then exit 1; fi
 	@if ( test "$(VERBOSE)" = "On" ); then				\
-		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
-	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
+		$(ECHO) '$(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $(TARGET_DST) $(LDFLAGS) $^ $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL)' ; \
+	else $(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CC) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $(TARGET_DST) $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))")	| awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; fi
 	@export tmpfile=$(shell $(MKTEMP));					\
-	$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2> $${tmpfile}; \
+	$(LDLIBS_EXTERN_RPATH) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $(TARGET_DST) $(LDFLAGS) $^ $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL) 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
 	then												\
 		$(ECHO) "";										\
 		$(ECHO) $(RED_ERROR);							\
 		$(ECHO) "EX_RPATH: $(LDLIBS_EXTERN_RPATH)";		\
-		$(ECHO) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $@ $(LDFLAGS) $(GCOV_OBJ) $(DEFER_OBJ) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL); \
+		$(ECHO) $(CXX) $(SHARED_LIB_FLAG_$(PLATFORM)) -o $(TARGET_DST) $(LDFLAGS) $^ $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) $(LOADLIBES) $(ALL_LDLIBS) $(LDLIBS) $(THORSANVIL_STATICLOADALL); \
 		$(ECHO) "==================================================="; \
 		cat $${tmpfile};								\
 		exit 1;											\
@@ -592,7 +654,19 @@ $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 		$(RM) $${tmpfile};								\
 	fi
 
-$(TARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
+$(TARGET_MODE)/%.o: %.cpp
+	@{ \
+	  printf 'START:%s\n' '$*' > $(META)/pipe; \
+	  if $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) 2>$(META)/err.$*; then \
+	    printf 'OK:%s\n'   '$*' > $(META)/pipe; \
+	    rm -f $(META)/err.$*; \
+	  else \
+	    printf 'FAIL:%s\n' '$*' > $(META)/pipe; \
+	    rm -f $@; \
+	  fi; \
+	}
+
+$(XTARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
 	@if ( test "$(VERBOSE)" = "Off" ); then				\
 		$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR), "$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))") | awk '{printf "%-$(LINE_WIDTH)s", $$0}' ; \
 	elif ( test "$(VERBOSE)" = "On" ); then				\
