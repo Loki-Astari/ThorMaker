@@ -219,7 +219,7 @@ YACC_SRC					:= $(wildcard *.y)
 TMP_SRC						= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC))
 TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.hpp,$(LEX_SRC))
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
-DEP							= $(patsubst %.cpp, makedependency/%.d, $(SRC))
+DEP							= $(patsubst %.cpp, makedependency/%.d, $(filter-out unittest.cpp,$(SRC)))
 HEAD						:= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp *.hpp)) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					:= $(filter-out $(TEST_IGNORE) $(TMP_SRC), $(CPP_SRC) $(APP_SRC)) $(filter-out %Config.h $(TEST_IGNORE) $(TMP_HDR), $(CPP_HDR)) $(wildcard *.tpp)
@@ -437,8 +437,6 @@ build-honly-tail:
 clean:
 	$(RM) -rf debug release coverage report makedependency $(META) test/coverage test/dependency test/$(META) $(TMP_SRC) $(TMP_HDR) location.hh  position.hh  stack.hh *.gcov test/*.gcov stamp-h2
 
-makedependency:				$(DEP)
-
 .SECONDARY: makedependency/%.d
 
 
@@ -496,11 +494,13 @@ Note_%:
 META							:= buildmeta
 MONITOR							:= $(BUILD_ROOT)/scripts/build-monitor.sh
 JOBS							:= 8
+BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then printf '$1\n' $2 > $(META)/pipe; else printf '$1\n' $2; fi
 
 .PHONY:		_start
 .PHONY:		_build_prog         _stop_prog
 .PHONY:		_build_static_lib   _stop_static_lib
 .PHONY:		_build_dynamic_lib  _stop_dynamic_lib
+.PHONY:		_build_dependency   _stop_dependency
 
 _start:
 	@echo "START"
@@ -511,23 +511,36 @@ _start:
 	@printf '%d\n' $$! > $(META)/pid
 
 
+# Only set up _start (pipe/monitor) dependency in sub-makes that do
+# actual parallel builds. Sub-makes pass PARALLEL_BUILD=OBJ or
+# PARALLEL_BUILD=DEP to activate the appropriate dependencies.
+ifeq ($(PARALLEL_BUILD),OBJ)
 $(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o: | _start
+endif
+ifneq ($(filter _build_dependency,$(MAKECMDGOALS)),)
+$(DEP): | _start
+endif
 
 $(TARGET_MODE)/%.prog:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@$(ECHO) "Building: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)"
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_prog
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_prog
 
 $(TARGET_MODE)/lib%.a:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.a  Dependencies:  Parallelism: $(JOBS)"
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_static_lib
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_static_lib
 
 $(TARGET_MODE)/lib%.$(SO):	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.$(SO)  Dependencies:  Parallelism: $(JOBS)"
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_dynamic_lib
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_dynamic_lib
+
+makedependency: | makedepedency.Dir
+	@$(ECHO) "Building: Dependencies:  Parallelism: $(JOBS)"
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_dependency
 
 _build_prog:			_stop_prog
 _build_static_lib:		_stop_static_lib
 _build_dynamic_lib:		_stop_dynamic_lib
+_build_dependency:		_stop_dependency
 
 _stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
 	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
@@ -617,10 +630,25 @@ _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 		$(RM) $${tmpfile};								\
 	fi
 
-$(DEP): makedependency/%.d: %.cpp | makedependency.Dir
+
+_stop_dependency: $(DEP)
+	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
+	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@failed=0; \
+	 for f in $(META)/err.*; do \
+	   [ -f "$$f" ] || continue; \
+	   cat "$$f" >&2; \
+	   failed=1; \
+	 done; \
+	 rm -rf $(META); \
+	 if ( test $$failed != 0 ); then exit 1; fi
+
+
+XXmakedependency/%.d: %.cpp | makedependency.Dir
 	@if ( test "$(VERBOSE)" = "On" ); then				\
 		$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
 	fi
+	$(ECHO) "WORKING: DEP $*"
 	@export tmpfile=$(shell $(MKTEMP));					\
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 	if [ $$? != 0 ];									\
@@ -664,18 +692,41 @@ $(TARGET_MODE)/%.o: %.cpp
 		else														\
 			cmd='$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))';	\
 		fi;															\
-		printf 'START:%s:%s:%s:%s\n' '%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'building'> $(META)/pipe;		\
+		$(call BUILD_PIPE_OUT,START:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'building');		\
 		export tmpfile=$(shell $(MKTEMP));							\
 		$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 		if [ $$? != 0 ]; then 										\
-			printf 'FAIL:%s:%s:%s:%s\n' '%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'ERROR'> $(META)/pipe;	\
-			echo '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))' > '$(META)/err.$*';	\
+			$(call BUILD_PIPE_OUT,FAIL:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'ERROR');	\
+			$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))' > '$(META)/err.$*';	\
 			cat "$${tmpfile}" >> '$(META)/err.$*';					\
 			rm -f $@;												\
 		else														\
-			printf 'OK:%s:%s:%s:%s\n' '%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'OK'> $(META)/pipe;	\
-			rm "$${tmpfile}";										\
+			$(call BUILD_PIPE_OUT,OK:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'OK');	\
 		fi; 														\
+		$(RM) "$${tmpfile}";											\
+	}
+
+makedependency/unittest.d: ;
+makedependency/%.d: %.cpp
+	@{ \
+		if ( test "$(VERBOSE)" = "On" ); then						\
+			cmd='$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"'; \
+		else														\
+			cmd='$(CXX) $< -MF$@ -MM -MP';							\
+		fi;															\
+		$(call BUILD_PIPE_OUT,START:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'building dep');	\
+		export tmpfile=$(shell $(MKTEMP));							\
+		$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
+		if [ $$? != 0 ];											\
+		then														\
+			$(call BUILD_PIPE_OUT,FAIL:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'ERROR');	\
+			$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"' > '$(META)/err.$*'; \
+			cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}' >> '$(META)/err.$*';	\
+			rm -f $@;												\
+		else														\
+			$(call BUILD_PIPE_OUT,OK:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'OK');	\
+		fi;															\
+		$(RM) $${tmpfile};											\
 	}
 
 $(XTARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir
