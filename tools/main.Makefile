@@ -514,12 +514,15 @@ _start:
 $(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o: | _start
 
 $(TARGET_MODE)/%.prog:	| $(TARGET_MODE).Dir
+	@$(ECHO) "Building: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_prog
 
 $(TARGET_MODE)/lib%.a:	| $(TARGET_MODE).Dir
+	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.a  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_static_lib
 
 $(TARGET_MODE)/lib%.$(SO):	| $(TARGET_MODE).Dir
+	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.$(SO)  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_dynamic_lib
 
 _build_prog:			_stop_prog
@@ -656,14 +659,23 @@ $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 
 $(TARGET_MODE)/%.o: %.cpp
 	@{ \
-	  printf 'START:%s\n' '$*' > $(META)/pipe; \
-	  if $(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) 2>$(META)/err.$*; then \
-	    printf 'OK:%s\n'   '$*' > $(META)/pipe; \
-	    rm -f $(META)/err.$*; \
-	  else \
-	    printf 'FAIL:%s\n' '$*' > $(META)/pipe; \
-	    rm -f $@; \
-	  fi; \
+		if ( test "$(VERBOSE)" = "On" ); then						\
+			cmd='$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))';			\
+		else														\
+			cmd='$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))';	\
+		fi;															\
+		printf 'START:%s:%s:%s:%s\n' '%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'building'> $(META)/pipe;		\
+		export tmpfile=$(shell $(MKTEMP));							\
+		$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
+		if [ $$? != 0 ]; then 										\
+			printf 'FAIL:%s:%s:%s:%s\n' '%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'ERROR'> $(META)/pipe;	\
+			echo '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))' > '$(META)/err.$*';	\
+			cat "$${tmpfile}" >> '$(META)/err.$*';					\
+			rm -f $@;												\
+		else														\
+			$(ECHO) 'OK:%-$(LINE_WIDTH)s %s:$*:'$${cmd}':OK'> $(META)/pipe;	\
+			rm "$${tmpfile}";										\
+		fi; 														\
 	}
 
 $(XTARGET_MODE)/%.o: %.cpp | $(TARGET_MODE).Dir

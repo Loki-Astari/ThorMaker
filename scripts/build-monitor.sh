@@ -39,16 +39,20 @@ find_slot_for() {
 }
 
 render() {
-    local slot="$1" target="$2" state="$3"
+    local slot="$1"
+    local format="$2"
+    local info="$3"
+    local state="$4"
     local up=$(( N - slot ))
 
     # Move to the slot line, erase it, print new content, return.
     printf '\e[%dA\r\e[2K' "$up"
-    case "$state" in
-        building) printf '  %-50s building...'        "$target" ;;
-        ok)       printf '  %-50s \e[32mOK\e[0m'     "$target" ;;
-        fail)     printf '  %-50s \e[31mFAIL\e[0m'   "$target" ;;
-    esac
+    printf "${format}" "${info}" "${state}"
+#    case "$state" in
+#        building) printf '  %-50s building...'        "$target" ;;
+#        ok)       printf '  %-50s \e[32mOK\e[0m'     "$target" ;;
+#        fail)     printf '  %-50s \e[31mFAIL\e[0m'   "$target" ;;
+#    esac
     printf '\e[%dB\r' "$up"
 }
 
@@ -60,26 +64,30 @@ render() {
 exec 3<> "$PIPE"
 
 while IFS= read -r line <&3; do
-    cmd="${line%%:*}"
-    target="${line#*:}"
+    IFS=':' lineArray=(${line})
+    cmd="${lineArray[0]}"
+    format="${lineArray[1]}"
+    target="${lineArray[2]}"
+    info="${lineArray[3]}"
+    state="${lineArray[4]}"
 
     case "$cmd" in
         START)
             slot=$(find_free_slot)
             slot_target[$slot]="$target"
-            render "$slot" "$target" building
+            render "$slot" "${format}" "${info}" "${state}"
             ;;
         OK)
             slot=$(find_slot_for "$target")
             if (( slot >= 0 )); then
-                render "$slot" "$target" ok
+                render "$slot" "${format}" "${info}" "${state}"
                 slot_target[$slot]=""   # free slot; line stays visible until reused
             fi
             ;;
         FAIL)
             slot=$(find_slot_for "$target")
             if (( slot >= 0 )); then
-                render "$slot" "$target" fail
+                render "$slot" "${format}" "$info" "${state}"
                 slot_target[$slot]=""
             fi
             ;;
