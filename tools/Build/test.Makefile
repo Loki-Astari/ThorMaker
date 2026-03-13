@@ -62,11 +62,17 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 	@touch test/unittest.cpp
 	# Make sure the test dependencies have been updated first.
 	$(MAKE) FILEDIR=$(FILEDIR)test/							\
-			NEOVIM=$(NEOVIM) 								\
+			NEOVIM=$(NEOVIM)								\
 			TARGET_OVERRIDE=unittest.prog					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
+			LOADLIBES="-L$(BASE)/coverage -l$(COVERAGE_LIB)"\
+			LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)"	\
+			UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)"		\
+			LINK_LIBS="$(UNITTEST_LINK_LIBS_BULD)"			\
+			EXLDLIBS="$(UNITTEST_LDLIBS) "					\
+			LDLIBS_FILTER="$(LDLIBS_FILTER)"				\
 			-C test											\
 			-f ../Makefile									\
 			makedependency

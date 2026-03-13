@@ -374,7 +374,7 @@ DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))
 .PHONY:	test
 .PHONY:	tools
 .PHONY:	coverage coveragetest veraonly
-.PHONY:	makedependency
+.PHONY:	makedependency makedependencyBuild
 
 
 .PRECIOUS: %.Dir
@@ -405,6 +405,13 @@ testonly:				ActionRunUnitTest
 covonly:				ActionRunCoverage
 veraonly:				ActionRunVera
 test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
+makedependency:
+	$(MAKE) FILEDIR=$(FILEDIR)								\
+			NEOVIM=$(NEOVIM) 								\
+			BASE=$(BASE)									\
+			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
+			-f $(BASE)/Makefile								\
+			makedependencyBuild
 done:
 
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
@@ -515,27 +522,28 @@ _start:
 # actual parallel builds. Sub-makes pass PARALLEL_BUILD=OBJ or
 # PARALLEL_BUILD=DEP to activate the appropriate dependencies.
 ifeq ($(PARALLEL_BUILD),OBJ)
-$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o: | _start
-endif
-ifneq ($(filter _build_dependency,$(MAKECMDGOALS)),)
-$(DEP): | _start
+$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o $(DEP): | _start
 endif
 
 $(TARGET_MODE)/%.prog:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@$(ECHO) "Building: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_prog
+	@$(ECHO) "DONE-----------"
 
 $(TARGET_MODE)/lib%.a:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.a  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_static_lib
+	@$(ECHO) "DONE-----------"
 
 $(TARGET_MODE)/lib%.$(SO):	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.$(SO)  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_dynamic_lib
+	@$(ECHO) "DONE-----------"
 
-makedependency: | makedepedency.Dir
+makedependencyBuild: | makedependency.Dir
 	@$(ECHO) "Building: Dependencies:  Parallelism: $(JOBS)"
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" --no-print-directory _build_dependency
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_dependency
+	@$(ECHO) "DONE-----------"
 
 _build_prog:			_stop_prog
 _build_static_lib:		_stop_static_lib
