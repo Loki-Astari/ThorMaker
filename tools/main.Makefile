@@ -673,7 +673,7 @@ $(TARGET_MODE)/%.o: %.cpp
 			cat "$${tmpfile}" >> '$(META)/err.$*';					\
 			rm -f $@;												\
 		else														\
-			$(ECHO) 'OK:%-$(LINE_WIDTH)s %s:$*:'$${cmd}':OK'> $(META)/pipe;	\
+			printf 'OK:%s:%s:%s:%s\n' '%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'OK'> $(META)/pipe;	\
 			rm "$${tmpfile}";										\
 		fi; 														\
 	}
