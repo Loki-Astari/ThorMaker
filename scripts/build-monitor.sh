@@ -2,7 +2,7 @@
 # build-monitor.sh  <pipe-path> <num-slots>
 #
 # Reads START:<target>, OK:<target>, FAIL:<target>, EXIT from the named pipe
-# and keeps N "slot" lines updated in the terminal.
+# and keeps SLOTCOUNT "slot" lines updated in the terminal.
 #
 # Layout (n=3 slots):
 #   [slot 0] foo.o                                    building...
@@ -15,16 +15,17 @@
 # so there are no interleaving writes to the terminal.
 
 PIPE="${1:?pipe path required}"
-N="${2:-8}"
+SLOTCOUNT="${2:-8}"
+LINEWIDTH="${3:-80}"
 
 declare -a slot_target   # slot_target[i] = target currently in slot i, or ""
 
-# ── Reserve N lines in the terminal ──────────────────────────────────────────
-for ((i = 0; i < N; i++)); do printf '\n'; done
+# ── Reserve SLOTCOUNT lines in the terminal ──────────────────────────────────────────
+for ((i = 0; i < SLOTCOUNT; i++)); do printf '\n'; done
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 find_free_slot() {
-    for ((i = 0; i < N; i++)); do
+    for ((i = 0; i < SLOTCOUNT; i++)); do
         [[ -z "${slot_target[$i]}" ]] && { printf '%d' "$i"; return 0; }
     done
     printf '0'   # fallback: reuse slot 0
@@ -32,27 +33,30 @@ find_free_slot() {
 
 find_slot_for() {
     local t="$1"
-    for ((i = 0; i < N; i++)); do
+    for ((i = 0; i < SLOTCOUNT; i++)); do
         [[ "${slot_target[$i]}" == "$t" ]] && { printf '%d' "$i"; return 0; }
     done
     printf '-1'
 }
 
+renderOutput() {
+    local info="$1"
+    local state="$2"
+
+    printf "%-${LINEWIDTH}s %s\n" "${info}" "${state}"
+}
 render() {
     local slot="$1"
-    local format="$2"
-    local info="$3"
-    local state="$4"
-    local up=$(( N - slot ))
+    local info="$2"
+    local state="$3"
 
-    # Move to the slot line, erase it, print new content, return.
+    local up=$(( SLOTCOUNT - slot ))
+
+# Move to the slot line, erase it, print new content, return.
     printf '\e[%dA\r\e[2K' "$up"
-    printf "${format}" "${info}" "${state}"
-#    case "$state" in
-#        building) printf '  %-50s building...'        "$target" ;;
-#        ok)       printf '  %-50s \e[32mOK\e[0m'     "$target" ;;
-#        fail)     printf '  %-50s \e[31mFAIL\e[0m'   "$target" ;;
-#    esac
+
+    renderOutput "${info}" "${state}"
+
     printf '\e[%dB\r' "$up"
 }
 
@@ -66,30 +70,32 @@ exec 3<> "$PIPE"
 while IFS= read -r line <&3; do
     IFS=':' lineArray=(${line})
     cmd="${lineArray[0]}"
-    format="${lineArray[1]}"
-    target="${lineArray[2]}"
-    info="${lineArray[3]}"
-    state="${lineArray[4]}"
+    target="${lineArray[1]}"
+    info="${lineArray[2]}"
+    state="${lineArray[3]}"
 
     case "$cmd" in
         START)
             slot=$(find_free_slot)
             slot_target[$slot]="$target"
-            render "$slot" "${format}" "${info}" "${state}"
+            render "$slot" "${info}" "${state}"
             ;;
-        OK)
+        UPDATE)
             slot=$(find_slot_for "$target")
             if (( slot >= 0 )); then
-                render "$slot" "${format}" "${info}" "${state}"
-                slot_target[$slot]=""   # free slot; line stays visible until reused
+                render "$slot" "${info}" "${state}"
             fi
             ;;
-        FAIL)
+        DONE)
             slot=$(find_slot_for "$target")
             if (( slot >= 0 )); then
-                render "$slot" "${format}" "$info" "${state}"
+                render "$slot" "$info" "${state}"
                 slot_target[$slot]=""
             fi
+            ;;
+        STATUS)
+            SLOTCOUNT=$(( SLOTCOUNT + 1 ))
+            renderOutput "${info}" "${state}"
             ;;
         EXIT)
             break

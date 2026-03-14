@@ -494,7 +494,7 @@ Note_%:
 META							:= buildmeta
 MONITOR							:= $(BUILD_ROOT)/scripts/build-monitor.sh
 JOBS							:= 8
-BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then printf '$1\n' $2 > $(META)/pipe; else printf '$1\n' $2; fi
+BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then printf '%s:%s:%s:%s\n' $1 $2 $3 $4 > $(META)/pipe; else printf "%-${LINE_WIDTH}s\n" $3 $4; fi
 
 .PHONY:		_start
 .PHONY:		_build_prog         _stop_prog
@@ -507,7 +507,7 @@ _start:
 	@mkdir -p $(META)
 	@rm -f $(META)/pipe
 	@mkfifo $(META)/pipe
-	@bash $(MONITOR) $(META)/pipe $(JOBS) &
+	@bash $(MONITOR) $(META)/pipe $(JOBS) $(LINE_WIDTH) &
 	@printf '%d\n' $$! > $(META)/pid
 
 
@@ -693,18 +693,18 @@ $(TARGET_MODE)/%.o: %.cpp
 		else														\
 			cmd='$(CXX) -c $< $(OPTIMIZER_FLAGS_DISP)  $(call expandFlag,$($*_CXXFLAGS))';	\
 		fi;															\
-		$(call BUILD_PIPE_OUT,START:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'building');		\
+		$(call BUILD_PIPE_OUT,START,$*,"$${cmd}",building);			\
 		export tmpfile=$(shell $(MKTEMP));							\
 		$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 		if [ $$? != 0 ]; then 										\
-			$(call BUILD_PIPE_OUT,FAIL:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'ERROR');	\
+			$(call BUILD_PIPE_OUT,DONE,$*,"$${cmd}",ERROR);			\
 			$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))' > '$(META)/err.$*';	\
 			cat "$${tmpfile}" >> '$(META)/err.$*';					\
 			rm -f $@;												\
 		else														\
-			$(call BUILD_PIPE_OUT,OK:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'OK');	\
+			$(call BUILD_PIPE_OUT,DONE,$*,"$${cmd}",OK);			\
 		fi; 														\
-		$(RM) "$${tmpfile}";											\
+		$(RM) "$${tmpfile}";										\
 	}
 
 makedependency/unittest.d: ;
@@ -715,17 +715,17 @@ makedependency/%.d: %.cpp
 		else														\
 			cmd='$(CXX) $< -MF$@ -MM -MP';							\
 		fi;															\
-		$(call BUILD_PIPE_OUT,START:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'building dep');	\
+		$(call BUILD_PIPE_OUT,START,$*,"$${cmd}",'building dep');	\
 		export tmpfile=$(shell $(MKTEMP));							\
 		$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<" 2> $${tmpfile}; \
 		if [ $$? != 0 ];											\
 		then														\
-			$(call BUILD_PIPE_OUT,FAIL:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'ERROR');	\
+			$(call BUILD_PIPE_OUT,DONE,$*,"$${cmd}",'ERROR');		\
 			$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"' > '$(META)/err.$*'; \
 			cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}' >> '$(META)/err.$*';	\
 			rm -f $@;												\
 		else														\
-			$(call BUILD_PIPE_OUT,OK:%s:%s:%s:%s,'%-$(LINE_WIDTH)s %s' '$*' "$${cmd}" 'OK');	\
+			$(call BUILD_PIPE_OUT,DONE,$*,"$${cmd}",'OK');			\
 		fi;															\
 		$(RM) $${tmpfile};											\
 	}
