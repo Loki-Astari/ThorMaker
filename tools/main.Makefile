@@ -374,7 +374,7 @@ DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))
 .PHONY:	test
 .PHONY:	tools
 .PHONY:	coverage coveragetest veraonly
-.PHONY:	makedependency makedependencyBuild
+.PHONY:	makeDep
 
 
 .PRECIOUS: %.Dir
@@ -392,9 +392,9 @@ release-only:			release
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionDoInstallHead ActionDoInstallRelease
 veryclean:				clean
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) INSTALL_ACTIVE=NO		ActionUInstall
-debug:					makedependency
+debug:					makeDep
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=debug		item
-release:				makedependency
+release:				makeDep
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=release	item
 lint:					doLint
 item:					PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ITEM)
@@ -404,14 +404,7 @@ buildDir:	| $(TARGET_MODE).Dir coverage.Dir
 testonly:				ActionRunUnitTest
 covonly:				ActionRunCoverage
 veraonly:				ActionRunVera
-test:					makedependency ActionRunUnitTest ActionRunCoverage ActionRunVera
-makedependency:
-	$(MAKE) FILEDIR=$(FILEDIR)								\
-			NEOVIM=$(NEOVIM) 								\
-			BASE=$(BASE)									\
-			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
-			-f $(BASE)/Makefile								\
-			makedependencyBuild
+test:					makeDep ActionRunUnitTest ActionRunCoverage ActionRunVera
 done:
 
 HEADER_ONLY_PACKAGE		= $(basename $(firstword $(TARGET)))
@@ -442,7 +435,7 @@ build-honly-tail:
 	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
 clean:
-	$(RM) -rf debug release coverage report makedependency $(META) test/coverage test/dependency test/$(META) $(TMP_SRC) $(TMP_HDR) location.hh  position.hh  stack.hh *.gcov test/*.gcov stamp-h2
+	$(RM) -rf debug release coverage report makedependency $(META) test/coverage test/makedependency test/$(META) $(TMP_SRC) $(TMP_HDR) location.hh  position.hh  stack.hh *.gcov test/*.gcov stamp-h2
 
 .SECONDARY: makedependency/%.d
 
@@ -522,7 +515,11 @@ _start:
 # actual parallel builds. Sub-makes pass PARALLEL_BUILD=OBJ or
 # PARALLEL_BUILD=DEP to activate the appropriate dependencies.
 ifeq ($(PARALLEL_BUILD),OBJ)
-$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o $(DEP): | _start
+$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o: | _start
+-include makedependency/*
+endif
+ifeq ($(PARALLEL_BUILD),DEP)
+$(DEP): | _start
 endif
 
 $(TARGET_MODE)/%.prog:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
@@ -540,9 +537,9 @@ $(TARGET_MODE)/lib%.$(SO):	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_dynamic_lib
 	@$(ECHO) "DONE-----------"
 
-makedependencyBuild: | makedependency.Dir
+makeDep: | makedependency.Dir
 	@$(ECHO) "Building: Dependencies:  Parallelism: $(JOBS)"
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=OBJ --no-print-directory _build_dependency
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=DEP --no-print-directory _build_dependency
 	@$(ECHO) "DONE-----------"
 
 _build_prog:			_stop_prog
@@ -667,10 +664,6 @@ XXmakedependency/%.d: %.cpp | makedependency.Dir
 		cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}';	\
 		exit 1;											\
 	fi
-
-ifndef NODEP
--include makedependency/*
-endif
 
 $(BASE)/coverage/MockHeaders.o: $(BASE)/coverage/MockHeaders.cpp
 	@if ( test "$(VERBOSE)" = "Off" ); then				\

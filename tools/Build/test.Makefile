@@ -75,7 +75,7 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 			LDLIBS_FILTER="$(LDLIBS_FILTER)"				\
 			-C test											\
 			-f ../Makefile									\
-			makedependency
+			makeDep
 	$(MAKE) FILEDIR=$(FILEDIR)test/							\
 			NEOVIM=$(NEOVIM)								\
 			TARGET_OVERRIDE=unittest.prog					\
