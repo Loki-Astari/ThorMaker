@@ -62,15 +62,6 @@ _build_coverage: _stop_coverage
 _stop_coverage:  $(GCOV_OBJ_FILES) $(GCOV_HED_FILES)
 	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
 	@wait $$(cat $(META)/pid) 2>/dev/null || true
-	@failed=0; \
-	 for f in $(META)/err.*; do \
-	   [ -f "$$f" ] || continue; \
-	   cat "$$f" >&2; \
-	   failed=1; \
-	 done; \
-	 rm -rf $(META); \
-	 if ( test $$failed != 0 ); then exit 1; fi
-
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out

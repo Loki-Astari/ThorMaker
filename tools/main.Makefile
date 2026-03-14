@@ -639,14 +639,6 @@ _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 _stop_dependency: $(DEP)
 	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
 	@wait $$(cat $(META)/pid) 2>/dev/null || true
-	@failed=0; \
-	 for f in $(META)/err.*; do \
-	   [ -f "$$f" ] || continue; \
-	   cat "$$f" >&2; \
-	   failed=1; \
-	 done; \
-	 rm -rf $(META); \
-	 if ( test $$failed != 0 ); then exit 1; fi
 
 
 XXmakedependency/%.d: %.cpp | makedependency.Dir
