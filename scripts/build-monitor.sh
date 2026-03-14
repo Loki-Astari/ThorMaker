@@ -2,7 +2,7 @@
 # build-monitor.sh  <pipe-path> <num-slots>
 #
 # Reads START:<target>, OK:<target>, FAIL:<target>, EXIT from the named pipe
-# and keeps SLOTCOUNT "slot" lines updated in the terminal.
+# and keeps SlotCount "slot" lines updated in the terminal.
 #
 # Layout (n=3 slots):
 #   [slot 0] foo.o                                    building...
@@ -15,17 +15,18 @@
 # so there are no interleaving writes to the terminal.
 
 PIPE="${1:?pipe path required}"
-SLOTCOUNT="${2:-8}"
-LINEWIDTH="${3:-80}"
+SlotCount="${2:-8}"
+LineWidth="${3:-80}"
+SlotsUsed=0
 
 declare -a slot_target   # slot_target[i] = target currently in slot i, or ""
 
-# ── Reserve SLOTCOUNT lines in the terminal ──────────────────────────────────────────
-for ((i = 0; i < SLOTCOUNT; i++)); do printf '\n'; done
+# ── Reserve SlotCount lines in the terminal ──────────────────────────────────────────
+# for ((i = 0; i < SlotCount; i++)); do printf '\n'; done
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 find_free_slot() {
-    for ((i = 0; i < SLOTCOUNT; i++)); do
+    for ((i = 0; i < SlotCount; i++)); do
         [[ -z "${slot_target[$i]}" ]] && { printf '%d' "$i"; return 0; }
     done
     printf '0'   # fallback: reuse slot 0
@@ -33,7 +34,7 @@ find_free_slot() {
 
 find_slot_for() {
     local t="$1"
-    for ((i = 0; i < SLOTCOUNT; i++)); do
+    for ((i = 0; i < SlotCount; i++)); do
         [[ "${slot_target[$i]}" == "$t" ]] && { printf '%d' "$i"; return 0; }
     done
     printf '-1'
@@ -45,7 +46,7 @@ renderOutput() {
 
     # print the main message with a set width
     # So the following state information lines up correctly.
-    printf "%-${LINEWIDTH}s" "${info}"
+    printf "%-${LineWidth}s" "${info}"
     # This will make sure we print any escaped colour codes.
     printf "${state}\n"
 
@@ -55,7 +56,9 @@ render() {
     local info="$2"
     local state="$3"
 
-    local up=$(( SLOTCOUNT - slot ))
+    for ((i = SlotsUsed; i < slot; i++)) do printf '\n'; SlotsUsed=$(( SlotsUsed + 1 )); done
+
+    local up=$(( SlotsUsed - slot + 1 ))
 
 # Move to the slot line, erase it, print new content, return.
     printf '\e[%dA\r\e[2K' "$up"
@@ -99,7 +102,7 @@ while IFS= read -r line <&3; do
             fi
             ;;
         STATUS)
-            SLOTCOUNT=$(( SLOTCOUNT + 1 ))
+            SlotCount=$(( SlotCount + 1 ))
             renderOutput "${info}" "${state}"
             ;;
         EXIT)
