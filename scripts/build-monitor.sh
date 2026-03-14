@@ -43,7 +43,12 @@ renderOutput() {
     local info="$1"
     local state="$2"
 
-    printf "%-${LINEWIDTH}s %s\n" "${info}" "${state}"
+    # print the main message with a set width
+    # So the following state information lines up correctly.
+    printf "%-${LINEWIDTH}s" "${info}"
+    # This will make sure we print any escaped colour codes.
+    printf "${state}\n"
+
 }
 render() {
     local slot="$1"
