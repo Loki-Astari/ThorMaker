@@ -4,7 +4,7 @@
 .PHONY: coverage-%
 # Internal
 .PHONY:	reportCoverage
-.PHONY:	check_obj_coverage check_hed_coverage
+.PHONY:	check_obj_coverage check_obj_head_coverage
 
 .PRECIOUS:	coverage/%.cpp.gcov
 .PRECIOUS:	coverage/%.tpp.gcov
@@ -29,9 +29,8 @@ report/coverage.show:
 
 report/coverage: report/test Makefile | report.Dir
 	@$(ECHO) $(call section_title,Running Coverage) | tee report/coverage
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_obj_coverage; fi
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage check_obj_coverage; fi
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage check_hed_coverage; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_coverage; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage check_coverage; fi
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  -a report/coverage; fi
 	@echo -n | cat - $$(ls coverage/*.out 2> /dev/null) >> report/coverage
 	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage reportCoverage
@@ -47,31 +46,61 @@ reportCoverage:
 		exit 1;\
 	fi
 
-check_obj_coverage:	$(GCOV_OBJ_FILES)
+ifeq ($(PARALLEL_BUILD),COV)
+coverage/%.cpp.out  coverage/%.tpp.out  coverage/%.h.out:	| _start
+coverage/%.cpp.gcov coverage/%.tpp.gcov coverage/%.h.gcov:	| _start
+$(GCOV_OBJ_FILES) $(GCOV_HED_FILES) $(GCOV_ALL_FILES):		| _start
+endif
 
-check_hed_coverage: $(GCOV_HED_FILES)
+check_coverage:	| coverage.Dir
+	@$(ECHO) "Building Coverage:  Parallelism: $(JOBS)"
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" NEOVIM="$(NEOVIM)" PARALLEL_BUILD=COV --no-print-directory _build_coverage
+	@$(ECHO) "DONE---------------"
+
+_build_coverage: _stop_coverage
+
+_stop_coverage:  $(GCOV_OBJ_FILES) $(GCOV_HED_FILES)
+	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
+	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@failed=0; \
+	 for f in $(META)/err.*; do \
+	   [ -f "$$f" ] || continue; \
+	   cat "$$f" >&2; \
+	   failed=1; \
+	 done; \
+	 rm -rf $(META); \
+	 if ( test $$failed != 0 ); then exit 1; fi
+
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
-	@$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR),$*) | awk '{printf "\t%-$(LINE_WIDTH)s", $$1}' | tee $(Ignore)coverage/$*.out
-	@if [[ "$(Ignore)" == "/tmp/" ]]; then	\
-		$(ECHO) "Processing Coverage Info"; \
-	else \
-		$(ECHO) $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a coverage/$*.out;\
+	@if [[ "$(Ignore)" != "/tmp/" ]]; then				\
+		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s\n", $$1}' | tee -a coverage/$*.out);\
+		$(call BUILD_PIPE_OUT,STATUS,"X",$*,$${result});	\
 	fi
+
+X:
+	@$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR),$*) | awk '{printf "\t%-$(LINE_WIDTH)s", $$1}' | tee $(Ignore)coverage/$*.out
+		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a coverage/$*.out);\
 	
 coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
+	$(call BUILD_PIPE_OUT,START,$*.cpp,$*.cpp,"Calculating Coverage")
 	@$(COV_TOOL) $(COV_LONG_FLAG) --object-directory coverage $*.cpp > /dev/null 2>&1
 	@for file in $$(ls $*.cpp.gcov 2> /dev/null); do mv $${file} coverage/;done
 	@checkSubFile=$$(ls $*.cpp##*.gcov 2> /dev/null);				\
 	if [[ $${checkSubFile} != "" ]]; then							\
 		mv $*.cpp##*.gcov coverage/$*.cpp.coverage/;				\
 	fi
+	$(call BUILD_PIPE_OUT,DONE,$*.cpp,$*.cpp,Done)
 
 coverage/%.tpp.gcov:	$(GCOV_ALL_FILES) | coverage.Dir
+	$(call BUILD_PIPE_OUT,START,$*.tpp,$*.tpp,"Calculating Coverage")
 	$(BUILD_ROOT)/tools/coverageBuild $*.tpp
+	$(call BUILD_PIPE_OUT,DONE,$*.tpp,$*.tpp,Done)
 coverage/%.h.gcov:		$(GCOV_ALL_FILES) | coverage.Dir
+	$(call BUILD_PIPE_OUT,START,$*.h,$*.h,"Calculating Coverage")
 	$(BUILD_ROOT)/tools/coverageBuild $*.h
+	$(call BUILD_PIPE_OUT,DONE,$*.h,$*.h,Done)
 
 
 #report/coverage: $(SRC) $(HEAD) report/test | report.Dir
