@@ -66,10 +66,11 @@ _stop_coverage:  $(GCOV_OBJ_FILES) $(GCOV_HED_FILES)
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
-	@if [[ "$(Ignore)" != "/tmp/" ]]; then										\
+	@if [[ "$(Ignore)" != "/tmp/" ]]; then					\
 		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s\n", $$1}');\
-		printf "%-$(LINE_WIDTH)s %s\n" '$*' "$${result}" >> coverage/$*.out;	\
-		$(call BUILD_PIPE_OUT,STATUS,"X",$*,$${result});						\
+		printf "%-$(LINE_WIDTH)s" '$*' >> coverage/$*.out;	\
+		printf "$${result}\n"          >> coverage/$*.out;	\
+		$(call BUILD_PIPE_OUT,STATUS,"X",$*,$${result});	\
 	fi
 
 X:
