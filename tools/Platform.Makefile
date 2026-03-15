@@ -89,7 +89,7 @@ SHARED_LIB_EXTENSOION_Linux			= so
 SHARED_LIB_EXTENSOION_MSYS_NT		= dll
 SHARED_LIB_EXTENSOION_MINGW64_NT	= dll
 
-SHARED_LIB_FLAG_Darwin				= -dynamiclib -install_name lib$*$(BUILD_EXTENSION).$(SO)
+SHARED_LIB_FLAG_Darwin				= -dynamiclib -install_name lib$(NAME)$(BUILD_EXTENSION).$(SO)
 SHARED_LIB_FLAG_Linux				= -shared
 SHARED_LIB_FLAG_MSYS_NT				= -shared
 SHARED_LIB_FLAG_MINGW64_NT			= -shared
