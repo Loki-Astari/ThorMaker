@@ -89,6 +89,7 @@ addGitIgnore () {
 confdefs.h
 
 .claude
+.clangd
 
 unittest
 
