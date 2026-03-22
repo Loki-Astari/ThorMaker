@@ -388,7 +388,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_LIB_SELECT],
 
 AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
 [
-    COLOUR_STATE="ON"
+    NEOVIM="FALSE"
     DARK_MODE=""
     AC_ARG_ENABLE(
         [colour],
@@ -401,7 +401,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
     AS_IF(
         [test "x$enable_colour" == "xno"],
         [
-            COLOUR_STATE="OFF"
+            NEOVIM="TRUE"
             subconfigure="${subconfigure} --disable-colour"
         ]
     )
@@ -412,7 +412,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
             subconfigure="${subconfigure} --enable-dark-mode"
         ]
     )
-    AC_SUBST([COLOUR_STATE], [${COLOUR_STATE}])
+    AC_SUBST([NEOVIM], [${NEOVIM}])
     AC_SUBST([DARK_MODE], [${DARK_MODE}])
 ])
 
