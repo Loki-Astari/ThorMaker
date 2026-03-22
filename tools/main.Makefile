@@ -494,7 +494,7 @@ Note_%:
 META							:= buildmeta
 MONITOR							:= $(BUILD_ROOT)/scripts/build-monitor.sh
 JOBS							?= 8
-BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then printf '%s:%s:%s:%s\n' $1 $2 $3 $4 > $(META)/pipe; else printf "%-10s" $1; printf ":%-${LINE_WIDTH}s" $3; printf $4; printf '\n'; fi
+BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then printf '%s:%s:%s:%s\n' $1 $2 $3 $4 > $(META)/pipe; else printf "%-${LINE_WIDTH}s" $3; printf $4; printf '\n'; fi
 
 .PHONY:		_start
 .PHONY:		_build_prog         _stop_prog
@@ -506,9 +506,13 @@ _start:
 	@echo "START"
 	@mkdir -p $(META)
 	@rm -f $(META)/pipe
+ifeq ($(NEOVIM),TRUE)
+	@echo 0 > $(META)/pid
+else
 	@mkfifo $(META)/pipe
 	@bash $(MONITOR) $(META)/pipe $(JOBS) $(LINE_WIDTH) &
 	@printf '%d\n' $$! > $(META)/pid
+endif
 
 
 # Only set up _start (pipe/monitor) dependency in sub-makes that do
