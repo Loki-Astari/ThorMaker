@@ -4,10 +4,10 @@
 
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
-MAKEFLAGS 		+= --silent
-SHELL			= /bin/bash
-NEOVIM			?= FALSE
-FILEDIR			?=
+MAKEFLAGS				+= --silent
+SHELL					= /bin/bash
+DISBALE_CONTROL_CODES	?= FALSE
+FILEDIR					?=
 
 
 SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
@@ -58,7 +58,7 @@ header-only:
 	dst=$$(mktemp -d);														\
 	echo "host: $${host}  dst: $${dst}";									\
 	git clone --single-branch --branch header-only $${host} $${dst};		\
-	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
+	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
 	echo "DONE";															\
 	echo "		$${dst}";													\
 	echo;																	\
@@ -67,7 +67,7 @@ headercont:
 	@host=$$(git remote get-url origin);									\
 	dst="${DST}";															\
 	echo "host: $${host}  dst: $${dst}";									\
-	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-hcont;	\
+	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-hcont;	\
 	echo "DONE";															\
 	echo "		$${dst}";													\
 	echo;																	\
@@ -83,7 +83,7 @@ docbuild:
 %.dir:
 	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
 	@if test -d $*; then														\
-		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/ NEOVIM=$(NEOVIM) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
+		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/ DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi

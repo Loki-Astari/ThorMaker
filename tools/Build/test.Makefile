@@ -14,26 +14,26 @@ UNITTEST_LINK_LIBS_BULD		= $(if $(HEADER_ONLY), ,$(LINK_LIBS) $(UNITTEST_LINK_LI
 
 ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
 test-%:
-	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage	build_unit_test
 	@TESTNAME=$* THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} make TARGET_MODE=coverage run_unit_test
 
 testrun.%:
-	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage	build_unit_test
 	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.prog --gtest_filter=$*
 
 debugrun.%:
-	$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage	build_unit_test
 	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} lldb -- test/coverage/unittest.prog --gtest_filter=$*
 
 report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage		build_unit_test; fi
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_MODE=coverage		run_unit_test; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage		build_unit_test; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage		run_unit_test; fi
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  report/test; fi
 	@touch report/test.show
 
 #
-# In NEOVIM remove a lot of redundant lines.
-TEST_FILTER_SCRIPT			= $(TEST_FILTER_SCRIPT_NV$(NEOVIM))
+# In DISBALE_CONTROL_CODES remove a lot of redundant lines.
+TEST_FILTER_SCRIPT			= $(TEST_FILTER_SCRIPT_NV$(DISBALE_CONTROL_CODES))
 TEST_FILTER_SCRIPT_NVTRUE	= /PASSED/ {next} /\[----------\]/ {next} /\[==========\]/ {next} /\[ RUN      \]/ {next} /^$$/ {next}
 
 LOG_FILE_FILTER_SCRIPT		= $(LOG_FILE_FILTER_SCRIPT_ERR) $(LOG_FILE_FILTER_SCRIPT_WARN) $(LOG_FILE_FILTER_SCRIPT_INFO)
@@ -62,7 +62,7 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 	@touch test/unittest.cpp
 	# Make sure the test dependencies have been updated first.
 	$(MAKE) FILEDIR=$(FILEDIR)test/							\
-			NEOVIM=$(NEOVIM)								\
+			DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES)	\
 			TARGET_OVERRIDE=unittest.prog					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
@@ -77,7 +77,7 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 			-f ../Makefile									\
 			makeDep
 	$(MAKE) FILEDIR=$(FILEDIR)test/							\
-			NEOVIM=$(NEOVIM)								\
+			DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES)	\
 			TARGET_OVERRIDE=unittest.prog					\
 			BASE=..											\
 			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
@@ -94,7 +94,7 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 	@rm test/unittest.cpp
 
 coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/MockHeaders.cpp test/MockHeaderInclude.h | coverage.Dir
-	@$(MAKE) FILEDIR=$(FILEDIR) NEOVIM=$(NEOVIM) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
+	@$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
 run_unit_test: $(PRETEST)

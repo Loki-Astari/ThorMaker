@@ -388,22 +388,10 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_LIB_SELECT],
 
 AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
 [
-    NEOVIM="FALSE"
     DARK_MODE=""
-    AC_ARG_ENABLE(
-        [colour],
-        AS_HELP_STRING([--disable-colour], [Turns off text colouring in the makefile output])
-    )
     AC_ARG_ENABLE(
         [dark-mode],
         AS_HELP_STRING([--enable-dark-mode], [If your background is black some text that was grey is turned yellow])
-    )
-    AS_IF(
-        [test "x$enable_colour" == "xno"],
-        [
-            NEOVIM="TRUE"
-            subconfigure="${subconfigure} --disable-colour"
-        ]
     )
     AS_IF(
         [test "x$enable_dark-mode" != "xyes"],
@@ -412,7 +400,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
             subconfigure="${subconfigure} --enable-dark-mode"
         ]
     )
-    AC_SUBST([NEOVIM], [${NEOVIM}])
     AC_SUBST([DARK_MODE], [${DARK_MODE}])
 ])
 
