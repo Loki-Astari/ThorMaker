@@ -10,8 +10,8 @@ cmakeType=${3}
 ROOT=$(pwd)
 THORSANVIL_ROOT=$(dirname ${ROOT})
 
-echo mkdir -p bin include include3rd lib share/man
-mkdir -p bin include include3rd lib share/man
+echo mkdir -p bin include lib 3rd/bin 3rd/include 3rd/lib share/man
+mkdir -p ../bin ../include ../lib ../3rd/bin ../3rd/include ../3rd/lib ../share/man
 
 if [[ -e ${THORSANVIL_ROOT}/lib/libgtest.a ]]; then
     exit 0
@@ -35,17 +35,31 @@ fi
 
 GTEST_DIR_PATH=${ROOT}/../googletest/
 GTEST_DIR=$(cd "${GTEST_DIR_PATH}";pwd)
-pushd ${GTEST_DIR}
 
 if [[ ! -e build ]]; then
+    pushd ${GTEST_DIR}
     echo "Building with >${build}< Configure with: >${cmakeType}<"
     mkdir build
     cd build
-    cmake -DCMAKE_INSTALL_PREFIX=${THORSANVIL_ROOT}   ..  ${cmakeType}
+    cmake -DCMAKE_INSTALL_PREFIX=${THORSANVIL_ROOT}/3rd   ..  ${cmakeType}
     ${build}
     ${build} install
-    mv ${THORSANVIL_ROOT}/include/gtest ${THORSANVIL_ROOT}/include3rd/gtest
+    popd
 fi
 
-popd
+if [[ ! -e 3rd/include/Mock.h ]]; then
+
+    cat - <<MOCKH > ${THORSANVIL_ROOT}/3rd/include/Mock.h
+
+#ifndef THORSANVIL_BUILDTOOLS_SYNTAX_HIGHLITING_MOCK_H
+#define THORSANVIL_BUILDTOOLS_SYNTAX_HIGHLITING_MOCK_H
+
+#define MOCK_FUNC(x) x
+
+#endif
+
+MOCKH
+
+fi
+
 

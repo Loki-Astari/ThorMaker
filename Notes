@@ -47,7 +47,7 @@ Rather then re-write and copy build files from project to project, I have my own
         ./setup
 
         "./setup":
-            1) creates bin lib include include3rd
+            1) creates bin lib include 3rd
             2) install(s) gtest
 
 ##Simplified Makefile
@@ -118,7 +118,7 @@ Rather then re-write and copy build files from project to project, I have my own
             Building debug
             g++ -c CloudStream.cpp                                               OK
             g++ -c ConfigFileLoader.cpp                                          ERROR
-            g++ -c ConfigFileLoader.cpp -o debug/ConfigFileLoader.o -std=c++0x -Wno-deprecated-declarations -fPIC -Wall -Wextra -Wstrict-aliasing -ansi -pedantic -Werror -Wunreachable-code -Wno-long-long -I/home/Loki/Clean/Cloud/build/include -isystem /home/Loki/Clean/Cloud/build/include3rd -g -std=c++0x
+            g++ -c ConfigFileLoader.cpp -o debug/ConfigFileLoader.o -std=c++0x -Wno-deprecated-declarations -fPIC -Wall -Wextra -Wstrict-aliasing -ansi -pedantic -Werror -Wunreachable-code -Wno-long-long -I/home/Loki/Clean/Cloud/build/include -isystem /home/Loki/Clean/Cloud/build/3rd -g -std=c++0x
             ========================================
             ConfigFileLoader.cpp: In member function ‘void Moz::Cloud::CloudUtil::ConfigFileLoader::convertCommandLineToJsonMap(const std::vector<std::basic_string<char> >&)’:
             ConfigFileLoader.cpp:175:13: error: expected ‘;’ before ‘}’ token

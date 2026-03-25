@@ -256,7 +256,7 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
     AX_THOR_FUNC_BUILD_COLOUR_MODE
     AX_THOR_FUNC_BUILD_GIT_SUBMODULE_RETRIEVE
 
-   
+
     AS_IF(
         [test "$2" != ""],
         [AC_CONFIG_SRCDIR([$2])]
@@ -264,7 +264,8 @@ AC_DEFUN([AX_THOR_FUNC_INIT_BUILD],
 
     AX_THOR_FUNC_LANG_FLAG([$3])
 
-    AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS
+    AX_THOR_FUNC_CHECK_SUBMODULE
+
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD_LOCAL_DIR],
@@ -277,6 +278,34 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_LOCAL_DIR],
             DefaultLinkDir="/opt/homebrew"
             AS_IF([test "${prefix}" == "NONE"], [prefix=${DefaultLinkDir}])
             AC_SUBST([DefaultLinkDir], [${DefaultLinkDir}])
+        ]
+    )
+])
+
+AC_DEFUN([AX_THOR_FUNC_CHECK_SUBMODULE],
+[
+    AC_ARG_ENABLE(
+        [submodule],
+        AS_HELP_STRING([--enable-submodule], [Enable if this is a submodule of THORBuild repository. It links them together and makes things more efficient.])
+    )
+
+    AS_IF(
+        [test "x$enable_submodule" == "xyes"],
+        [
+            rm -rf build/include
+            rm -rf build/lib
+            rm -rf build/bin
+            rm -rf build/3rd
+            rm -rf build/share
+
+            ln -s ../../../build/include     build/include
+            ln -s ../../../build/lib         build/lib
+            ln -s ../../../build/bin         build/bin
+            ln -s ../../../build/3rd         build/3rd
+            ln -s ../../../build/share       build/share
+        ],
+        [
+            AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS
         ]
     )
 ])
@@ -425,8 +454,8 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_THIRD_PARTY_LIBS],
             echo "Building Third Party: ${third}"
             pushd ${third}
             if [[ -e ./configure ]]; then
-                echo "${third}:  ./configure ${subconfigure} --prefix=${prefix} "
-                ./configure ${subconfigure} --prefix=${prefix}
+                echo "${third}:  ./configure --enable-submodule ${subconfigure} --prefix=${prefix} "
+                ./configure --enable-submodule ${subconfigure} --prefix=${prefix}
                 if [[ $? != 0 ]]; then
                     echo "Failed to configure: ${third}"
                     exit 1
