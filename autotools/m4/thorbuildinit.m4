@@ -289,6 +289,9 @@ AC_DEFUN([AX_THOR_FUNC_CHECK_SUBMODULE],
         AS_HELP_STRING([--enable-submodule], [Enable if this is a submodule of THORBuild repository. It links them together and makes things more efficient.])
     )
 
+    sedStrip='s/-.*//'
+    UNAME=`uname -s | sed "${sedStrip}"`
+
     AS_IF(
         [test "x$enable_submodule" == "xyes"],
         [
@@ -322,8 +325,6 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_SETUP_BUILDTOOLS],
     pushd build/third
     buildTool="make"
     buildConfig=""
-    sedStrip='s/-.*//'
-    UNAME=`uname -s | sed "${sedStrip}"`
     AS_IF(
         [ test "x${UNAME}" = "xMSYS_NT" || test "x${UNAME}" = "xMINGW64_NT" ],
         [
