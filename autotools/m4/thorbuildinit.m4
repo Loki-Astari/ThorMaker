@@ -57,6 +57,7 @@
 #       AX_THOR_DISABLE_TEST_REQUIREING_POSTGRES_AUTHENTICATION
 #       AX_THOR_DISABLE_TEST_REQUIREING_MONGO_QUERY
 #       AX_THOR_DISABLE_TEST_INTEGRATION
+#       AX_THOR_DISABLE_TEST_PORT80
 #
 #   Set Makefile environment
 #       AX_THOR_ENABLE_CONAN
@@ -1418,6 +1419,27 @@ To tests that you may want to disable add:
     GTEST_SKIP();
     #endif
         ]       
+    )
+])
+
+AC_DEFUN([AX_THOR_DISABLE_TEST_PORT80],
+[
+    AX_THOR_DISABLE_TEST(
+        [with-disable-port80],
+        [with_disable_port80],
+        [THOR_DISABLE_TEST_WITH_PORT80],
+        [PORT80],
+        [Disable integration tests],
+        [
+Some ISP disable outgoing port 80.
+Some unite tests try and hit google on port 80 and they will fail if port 80 are blocked.
+You can disable these tests with --
+
+If you are adding port 80 tests disable with.
+    #if defined(THOR_DISABLE_TEST_WITH_PORT80)
+    GTEST_SKIP();
+    #endif
+        ]
     )
 ])
 
