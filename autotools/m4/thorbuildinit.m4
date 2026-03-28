@@ -1425,8 +1425,8 @@ To tests that you may want to disable add:
 AC_DEFUN([AX_THOR_DISABLE_TEST_PORT80],
 [
     AX_THOR_DISABLE_TEST(
-        [with-disable-port80],
-        [with_disable_port80],
+        [with-port80],
+        [with_port80],
         [THOR_DISABLE_TEST_WITH_PORT80],
         [PORT80],
         [Disable integration tests],
