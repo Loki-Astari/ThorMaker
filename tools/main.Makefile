@@ -512,8 +512,7 @@ ifeq ($(DISBALE_CONTROL_CODES),TRUE)
 	@echo 0 > $(META)/pid
 else
 	@mkfifo $(META)/pipe
-	@bash $(MONITOR) $(META)/pipe $(JOBS) $(LINE_WIDTH) &
-	@printf '%d\n' $$! > $(META)/pid
+	@bash $(MONITOR) $(META)/pipe $(JOBS) $(LINE_WIDTH) & printf '%d\n' $$! > $(META)/pid
 endif
 
 

@@ -36,16 +36,16 @@ fi
 GTEST_DIR_PATH=${ROOT}/../googletest/
 GTEST_DIR=$(cd "${GTEST_DIR_PATH}";pwd)
 
+pushd ${GTEST_DIR}
 if [[ ! -e build ]]; then
-    pushd ${GTEST_DIR}
     echo "Building with >${build}< Configure with: >${cmakeType}<"
     mkdir build
     cd build
     cmake -DCMAKE_INSTALL_PREFIX=${THORSANVIL_ROOT}/3rd   ..  ${cmakeType}
     ${build}
     ${build} install
-    popd
 fi
+popd
 
 if [[ ! -e 3rd/include/Mock.h ]]; then
 
