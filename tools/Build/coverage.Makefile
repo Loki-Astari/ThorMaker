@@ -55,14 +55,14 @@ endif
 check_coverage:	| coverage.Dir
 	@rm -rf $(META)
 	@$(ECHO) "Building Coverage:  Parallelism: $(JOBS)"
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISBALE_CONTROL_CODES="$(DISBALE_CONTROL_CODES)" PARALLEL_BUILD=COV --no-print-directory _build_coverage
+	@$(MAKE) -f$(BASE)/Makefile -j1 NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISBALE_CONTROL_CODES="$(DISBALE_CONTROL_CODES)" PARALLEL_BUILD=COV --no-print-directory _build_coverage
 	@$(ECHO) "DONE---------------"
 
 _build_coverage: _stop_coverage
 
 _stop_coverage:  $(GCOV_OBJ_FILES) $(GCOV_HED_FILES)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then wait $$(cat $(META)/pid); fi
+	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi
 	@rm -rf $(META)
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
