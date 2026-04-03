@@ -17,6 +17,7 @@
 PIPE="${1:?pipe path required}"
 SlotCount="${2:-8}"
 LineWidth="${3:-80}"
+MAKE_PID="${4:-}"
 SlotsUsed=0
 
 declare -a slot_target   # slot_target[i] = target currently in slot i, or ""
@@ -75,7 +76,18 @@ render() {
 # the reader never gets a spurious EOF between compile-job writes.
 exec 3<> "$PIPE"
 
-while IFS= read -r line <&3; do
+# Poll make's PID to detect if it dies (e.g. Ctrl-C).
+# In non-interactive shells, & causes SIGINT to be ignored, so the
+# monitor won't be killed by Ctrl-C directly — we must poll instead.
+
+while true; do
+    if ! IFS= read -t 5 -r line <&3; then
+        # read timed out — check if make is still alive
+        if [[ -n "$MAKE_PID" ]] && ! kill -0 "$MAKE_PID" 2>/dev/null; then
+            break
+        fi
+        continue
+    fi
     IFS=':' lineArray=(${line})
     cmd="${lineArray[0]}"
     target="${lineArray[1]}"
