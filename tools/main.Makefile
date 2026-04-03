@@ -496,7 +496,7 @@ Note_%:
 META							:= buildmeta
 MONITOR							:= $(BUILD_ROOT)/scripts/build-monitor.sh
 JOBS							?= 8
-BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then printf '%s:%s:%s:%s\n' $1 $2 $3 $4 > $(META)/pipe; else printf "%-${LINE_WIDTH}s" $3; printf $4; printf '\n'; fi
+BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf '%s:%s:%s:%s\n' $1 $2 $3 $4 >&3); else printf "%-${LINE_WIDTH}s" $3; printf $4; printf '\n'; fi
 
 .PHONY:		_start
 .PHONY:		_build_prog         _stop_prog
@@ -557,8 +557,8 @@ _build_dynamic_lib:		_stop_dynamic_lib
 _build_dependency:		_stop_dependency
 
 _stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
-	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
-	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
+	@if [ -f $(META)/pid ]; then wait $$(cat $(META)/pid); fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -586,8 +586,8 @@ _stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
 	fi
 
 _stop_static_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
-	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
-	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
+	@if [ -f $(META)/pid ]; then wait $$(cat $(META)/pid); fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -615,8 +615,8 @@ _stop_static_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 	fi
 
 _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
-	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
-	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
+	@if [ -f $(META)/pid ]; then wait $$(cat $(META)/pid); fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -646,8 +646,8 @@ _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 
 
 _stop_dependency: $(DEP)
-	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
-	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
+	@if [ -f $(META)/pid ]; then wait $$(cat $(META)/pid); fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \

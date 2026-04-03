@@ -61,8 +61,9 @@ check_coverage:	| coverage.Dir
 _build_coverage: _stop_coverage
 
 _stop_coverage:  $(GCOV_OBJ_FILES) $(GCOV_HED_FILES)
-	@printf 'EXIT\n' > $(META)/pipe 2>/dev/null || true
-	@wait $$(cat $(META)/pid) 2>/dev/null || true
+	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
+	@if [ -f $(META)/pid ]; then wait $$(cat $(META)/pid); fi
+	@rm -rf $(META)
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
