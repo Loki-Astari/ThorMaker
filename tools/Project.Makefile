@@ -1,6 +1,7 @@
 
 -include $(THORSANVIL_ROOT)/Makefile.config
--include $(THORSANVIL_ROOT)/build/tools/Make/Colour.Makefile
+include $(THORSANVIL_ROOT)/build/tools/Make/Colour.Makefile
+include $(THORSANVIL_ROOT)/build/tools/Make/Platform.Makefile
 
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
@@ -9,8 +10,18 @@ SHELL					= /bin/bash
 DISBALE_CONTROL_CODES	?= FALSE
 FILEDIR					?=
 
-
-SUB_PROJECTS	= $(foreach target,$(TARGET),$(target).dir)
+filter-remove-current	= $(filter-out %.Not$(PLATFORM_CAT),$(1))
+filter-NotMac			= $(patsubst %.NotMac,%,$(1))
+filter-NotLinux			= $(patsubst %.NotLinux,%,$(1))
+filter-NotWin			= $(patsubst %.NotWin,%,$(1))
+filter-nots				= $(call filter-NotMac,$(call filter-NotLinux,$(call filter-NotWin,$(call filter-remove-current,$(1)))))
+filter-keep-current		= $(patsubst %.Only$(PLATFORM_CAT),%,$(1))
+filter-OnlyMac			= $(filter-out %.OnlyMac,$(1))
+filter-OnlyLinux		= $(filter-out %.OnlyLinux,$(1))
+filter-OnlyWin			= $(filter-out %.OnlyWin,$(1))
+filter-only				= $(call filter-OnlyMac,$(call filter-OnlyLinux,$(call filter-OnlyWin,$(call filter-keep-current,$(1)))))
+TARGET_AFTER_FILTER 	= $(call filter-only,$(call filter-nots,$(TARGET)))
+SUB_PROJECTS			= $(foreach target,$(TARGET_AFTER_FILTER),$(target).dir)
 
 all:		ACTION=build
 release-only:	ACTION=release-only
@@ -81,15 +92,14 @@ docbuild:
 	fi
 
 %.dir:
-	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Start")
+	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $(FILEDIR)$* Start")
 	@if test -d $*; then														\
 		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/ DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi
-	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Finish")
+	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $(FILEDIR)$* Finish")
 
-include $(THORSANVIL_ROOT)/build/tools/Make/Platform.Makefile
 include $(THORSANVIL_ROOT)/build/tools/Make/Lint.Makefile
 include $(THORSANVIL_ROOT)/build/tools/Make/NeoVim.Makefile
 include $(THORSANVIL_ROOT)/build/tools/Make/Help.Makefile

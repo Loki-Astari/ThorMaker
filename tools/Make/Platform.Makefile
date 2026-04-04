@@ -4,6 +4,7 @@ HARDWARE_DEFAULT_NVFALSE			:= $(shell uname -m)
 HARDWARE_DEFAULT_NVTRUE				= arm64
 
 PLATFORM							:= $(shell uname -s | sed 's/-.*//')
+PLATFORM_CAT						= $(PLATFORM_CAT_$(PLATFORM))
 HARDWARE							= $(HARDWARE_DEFAULT)
 PLATHARD							= $(PLATFORM)_$(HARDWARE)
 PLATFORMVER							:= $(subst .,_,$(shell uname -r | sed 's/-.*//'))
@@ -54,6 +55,11 @@ COVERAGE_LIB_Linux					=
 COVERAGE_LIB_MSYS_NT				=
 COVERAGE_LIB_MINGW64_NT				=
 
+
+PLATFORM_CAT_Darwin					= Mac
+PLATFORM_CAT_Linux					= Linux
+PLATFORM_CAT_MSYS_NT				= Win
+PLATFORM_CAT_MINGW64_NT				= Win
 
 PLATFORM_LIB_Darwin					=
 PLATFORM_LIB_Linux					=
