@@ -1,6 +1,0 @@
-#!/bin/bash
-
-echo "Setting up G++ Repo"
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y > /dev/null
-sudo apt-get update                                    > /dev/null
-

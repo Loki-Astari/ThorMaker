@@ -92,4 +92,5 @@ docbuild:
 include $(THORSANVIL_ROOT)/build/tools/Make/Platform.Makefile
 include $(THORSANVIL_ROOT)/build/tools/Make/Lint.Makefile
 include $(THORSANVIL_ROOT)/build/tools/Make/NeoVim.Makefile
+include $(THORSANVIL_ROOT)/build/tools/Make/Help.Makefile
 	

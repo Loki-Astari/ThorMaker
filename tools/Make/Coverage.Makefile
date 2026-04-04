@@ -38,8 +38,8 @@ report/coverage: report/test Makefile | report.Dir
 
 reportCoverage:
 	@$(ECHO) $(call subsection_title,Project-Coverage:) | awk '{printf("%-88s", $$0);}' | tee -a report/coverage
-	@$(ECHO) $(call getPercentColour, $(shell  echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a report/coverage
-	@coverage=$$(echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk);\
+	@$(ECHO) $(call getPercentColour, $(shell  echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverage/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a report/coverage
+	@coverage=$$(echo -n | cat - $$(ls coverage/*.gcov 2> /dev/null) | awk -f $(BUILD_ROOT)/tools/coverage/coverageCalc.awk);\
 	coverageInt=$$( printf "%.0f" $${coverage} );\
 	if [[ $${coverageInt} -lt $(COVERAGE_REQUIRED_TEST) ]]; then \
 		$(ECHO) $(RED_ERROR)  $(call colour_text, $(MODE_TEXT_COLOR), Coverage $${coverage} is below $(COVERAGE_REQUIRED_TEST)%);\
@@ -68,7 +68,7 @@ _stop_coverage:  $(GCOV_OBJ_FILES) $(GCOV_HED_FILES)
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 	@touch $(Ignore)coverage/$*.out
 	@if [[ "$(Ignore)" != "/tmp/" ]]; then					\
-		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s\n", $$1}');\
+		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverage/coverageCalc.awk)) | awk '{printf "%s\n", $$1}');\
 		printf "%-$(LINE_WIDTH)s" '$*' >> coverage/$*.out;	\
 		printf "$${result}\n"          >> coverage/$*.out;	\
 		$(call BUILD_PIPE_OUT,STATUS,"X",$*,$${result});	\
@@ -76,7 +76,7 @@ coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 
 X:
 	@$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR),$*) | awk '{printf "\t%-$(LINE_WIDTH)s", $$1}' | tee $(Ignore)coverage/$*.out
-		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a coverage/$*.out);\
+		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverage/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a coverage/$*.out);\
 	
 coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
 	$(call BUILD_PIPE_OUT,START,$*.cpp,$*.cpp,"Calculating Coverage")
@@ -90,11 +90,11 @@ coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
 
 coverage/%.tpp.gcov:	$(GCOV_ALL_FILES) | coverage.Dir
 	$(call BUILD_PIPE_OUT,START,$*.tpp,$*.tpp,"Calculating Coverage")
-	$(BUILD_ROOT)/tools/coverageBuild $*.tpp
+	$(BUILD_ROOT)/tools/coverage/coverageBuild $*.tpp
 	$(call BUILD_PIPE_OUT,DONE,$*.tpp,$*.tpp,Done)
 coverage/%.h.gcov:		$(GCOV_ALL_FILES) | coverage.Dir
 	$(call BUILD_PIPE_OUT,START,$*.h,$*.h,"Calculating Coverage")
-	$(BUILD_ROOT)/tools/coverageBuild $*.h
+	$(BUILD_ROOT)/tools/coverage/coverageBuild $*.h
 	$(call BUILD_PIPE_OUT,DONE,$*.h,$*.h,Done)
 
 

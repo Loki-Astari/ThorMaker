@@ -421,7 +421,7 @@ build-honly-head:
 	@echo
 
 build-honly-convert:
-	@$(BUILD_ROOT)/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
+	@$(BUILD_ROOT)/tools/headeronly/convert_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
 build-honly-tail:
 	@echo
@@ -434,7 +434,7 @@ build-honly-tail:
 	@CWD="$$(pwd)";	\
 	cd "$(PREFIX)/$(HEADER_ONLY_PACKAGE)";	\
 	HEADER_ONLY=1 THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXFLAGS="-I$(PREFIX)" LDLIBS_FILTER="$(patsubst $(PREFIX)/%,%,$(wildcard $(PREFIX)/*))" $(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) test
-	@$(BUILD_ROOT)/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
+	@$(BUILD_ROOT)/tools/headeronly/commit_project $(PREFIX) $(HEADER_ONLY_PACKAGE) $(NAMESPACE)
 
 clean:
 	$(RM) -rf debug release coverage report makedependency $(META) test/coverage test/makedependency test/$(META) $(TMP_SRC) $(TMP_HDR) location.hh  position.hh  stack.hh *.gcov test/*.gcov stamp-h2
@@ -495,7 +495,7 @@ Note_%:
 	@$(ECHO) $(call subsection_title, Done Building $(TARGET_MODE)/defer)
 
 META							:= buildmeta
-MONITOR							:= $(BUILD_ROOT)/scripts/build-monitor.sh
+MONITOR							:= $(BUILD_ROOT)/tools/scripts/build-monitor.sh
 JOBS							?= 8
 BUILD_PIPE_OUT					= if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf '%s:%s:%s:%s\n' $1 $2 $3 $4 >&3); else printf "%-${LINE_WIDTH}s" $3; printf $4; printf '\n'; fi
 

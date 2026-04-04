@@ -3,7 +3,7 @@ LOCAL_ROOT		?= $(shell pwd)
 # TODO: Remove the need for BASE
 BASE			?= .
 
-RELATIVEPATH=$(shell $(THORSANVIL_ROOT)/build/tools/RelPath "$(realpath $(LOCAL_ROOT))" "$(abspath $(THORSANVIL_ROOT)/)")
+RELATIVEPATH=$(shell $(THORSANVIL_ROOT)/build/tools/util/RelPath "$(realpath $(LOCAL_ROOT))" "$(abspath $(THORSANVIL_ROOT)/)")
 
 -include $(THORSANVIL_ROOT)/Makefile.config
 

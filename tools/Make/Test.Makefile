@@ -113,9 +113,9 @@ run_unit_test: $(PRETEST)
 # Allows for easy mocking of system calls for unit tests.
 #
 coverage/Mock.built:	| coverage.Dir
-$(BASE)/coverage/MockHeaders.h: $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix test/MockHeaderInclude.h | coverage.Dir
+$(BASE)/coverage/MockHeaders.h: $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.h.prefix $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.h.suffix test/MockHeaderInclude.h | coverage.Dir
 	@rm -f coverage/MockHeaders.h.tmp
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.prefix	>> coverage/MockHeaders.h.tmp
+	@cat $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.h.prefix	>> coverage/MockHeaders.h.tmp
 	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' $(CPP_FILES)	\
 		| sort	| uniq																																	\
 		| perl -ne '/([^-]*)-(.*)/ and print "extern MockFunctionHolder<RemoveNoExcept<$$1>> MOCK_BUILD_MOCK_SNAME($$2);\n"'							\
@@ -135,7 +135,7 @@ $(BASE)/coverage/MockHeaders.h: $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.pref
 	@echo "				((void)parent);"					>>	coverage/MockHeaders.h.tmp
 	@echo "        }"										>>	coverage/MockHeaders.h.tmp
 	@echo "};"												>>	coverage/MockHeaders.h.tmp
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.suffix >>	coverage/MockHeaders.h.tmp
+	@cat $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.h.suffix >>	coverage/MockHeaders.h.tmp
 	if [[ -e coverage/MockHeaders.h ]]; then							\
 		diff coverage/MockHeaders.h.tmp coverage/MockHeaders.h;			\
 		if [[ $$? == 1 ]]; then											\
@@ -150,9 +150,9 @@ $(BASE)/coverage/MockHeaders.h: $(THORSANVIL_ROOT)/build/mock/MockHeaders.h.pref
 	fi
 
 
-$(BASE)/coverage/MockHeaders.cpp: $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix test/MockHeaderInclude.h coverage/Mock.built coverage/MockHeaders.h | coverage.Dir
+$(BASE)/coverage/MockHeaders.cpp: $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.cpp.prefix $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.cpp.suffix test/MockHeaderInclude.h coverage/Mock.built coverage/MockHeaders.h | coverage.Dir
 	@rm -f coverage/MockHeaders.cpp.tmp
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.prefix >> coverage/MockHeaders.cpp.tmp
+	@cat $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.cpp.prefix >> coverage/MockHeaders.cpp.tmp
 	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' $(CPP_FILES)	\
 		| sort	| uniq																																	\
 		| perl -ne '/([^-]*)-(.*)/ and print "MockFunctionHolder<RemoveNoExcept<$$1>> MOCK_BUILD_MOCK_SNAME($$2)(\"$$2\", ::$$2);\n"'					\
@@ -161,7 +161,7 @@ $(BASE)/coverage/MockHeaders.cpp: $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.
 		| sort	| uniq																																	\
 		| perl -ne '/([^-]*)-(.*)/ and print "MockResultHolder<RemoveNoExcept<$$1>> MOCK2_BUILD_MOCK_SNAME($$2)(\"$$2\", ::$$2);\n"'					\
 		>> coverage/MockHeaders.cpp.tmp
-	@cat $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp.tmp
+	@cat $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.cpp.suffix >> coverage/MockHeaders.cpp.tmp
 	if [[ -e coverage/MockHeaders.cpp ]]; then							\
 		diff coverage/MockHeaders.cpp.tmp coverage/MockHeaders.cpp;		\
 		if [[ $$? == 1 ]]; then											\
@@ -175,5 +175,5 @@ $(BASE)/coverage/MockHeaders.cpp: $(THORSANVIL_ROOT)/build/mock/MockHeaders.cpp.
 		mv coverage/MockHeaders.cpp.tmp coverage/MockHeaders.cpp;		\
 	fi
 
-$(BASE)/test/MockHeaderInclude.h: $(THORSANVIL_ROOT)/build/mock/buildMockHeaderInclude
-	$(THORSANVIL_ROOT)/build/mock/buildMockHeaderInclude
+$(BASE)/test/MockHeaderInclude.h: $(THORSANVIL_ROOT)/build/tools/mock/buildMockHeaderInclude
+	$(THORSANVIL_ROOT)/build/tools/mock/buildMockHeaderInclude
