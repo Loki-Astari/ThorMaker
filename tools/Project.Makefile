@@ -1,6 +1,6 @@
 
 -include $(THORSANVIL_ROOT)/Makefile.config
--include $(THORSANVIL_ROOT)/build/tools/Colour.Makefile
+-include $(THORSANVIL_ROOT)/build/tools/Make/Colour.Makefile
 
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
@@ -89,7 +89,7 @@ docbuild:
 	fi
 	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $* Finish")
 
-include $(THORSANVIL_ROOT)/build/tools/Platform.Makefile
-include $(THORSANVIL_ROOT)/build/tools/lint.Makefile
-include $(THORSANVIL_ROOT)/build/tools/NeoVim.Makefile
+include $(THORSANVIL_ROOT)/build/tools/Make/Platform.Makefile
+include $(THORSANVIL_ROOT)/build/tools/Make/Lint.Makefile
+include $(THORSANVIL_ROOT)/build/tools/Make/NeoVim.Makefile
 	

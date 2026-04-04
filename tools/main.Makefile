@@ -131,9 +131,9 @@ SHELL=/bin/bash
 -include $(realpath $(THORSANVIL_ROOT)/third/$(CONFIG_NAME)/Makefile.config)
 BUILD_ROOT		?= $(THORSANVIL_ROOT)/build
 BASE			?= .
-include $(BUILD_ROOT)/tools/Colour.Makefile
-include $(BUILD_ROOT)/tools/Platform.Makefile
-include $(BUILD_ROOT)/tools/ThorsAnvilLibs.Makefile
+include $(BUILD_ROOT)/tools/Make/Platform.Makefile
+include $(BUILD_ROOT)/tools/Make/Colour.Makefile
+include $(BUILD_ROOT)/tools/Make/ThorsAnvilLibs.Makefile
 
 LOCAL_ROOT		?= $(shell pwd)
 
@@ -442,14 +442,14 @@ clean:
 .SECONDARY: makedependency/%.d
 
 
-include $(BUILD_ROOT)/tools/Build/install.Makefile
-include $(BUILD_ROOT)/tools/Build/test.Makefile
-include $(BUILD_ROOT)/tools/Build/coverage.Makefile
-include $(BUILD_ROOT)/tools/Build/vera.Makefile
-include $(BUILD_ROOT)/tools/Build/Help.Makefile
-include $(BUILD_ROOT)/tools/lint.Makefile
-include $(BUILD_ROOT)/tools/Doc.Makefile
-include $(BUILD_ROOT)/tools/NeoVim.Makefile
+include $(BUILD_ROOT)/tools/Make/Install.Makefile
+include $(BUILD_ROOT)/tools/Make/Test.Makefile
+include $(BUILD_ROOT)/tools/Make/Coverage.Makefile
+include $(BUILD_ROOT)/tools/Make/Vera.Makefile
+include $(BUILD_ROOT)/tools/Make/Help.Makefile
+include $(BUILD_ROOT)/tools/Make/Lint.Makefile
+include $(BUILD_ROOT)/tools/Make/Doc.Makefile
+include $(BUILD_ROOT)/tools/Make/NeoVim.Makefile
 
 
 Note_%:
