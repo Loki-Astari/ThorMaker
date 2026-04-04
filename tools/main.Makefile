@@ -446,6 +446,7 @@ include $(BUILD_ROOT)/tools/Build/install.Makefile
 include $(BUILD_ROOT)/tools/Build/test.Makefile
 include $(BUILD_ROOT)/tools/Build/coverage.Makefile
 include $(BUILD_ROOT)/tools/Build/vera.Makefile
+include $(BUILD_ROOT)/tools/Build/Help.Makefile
 include $(BUILD_ROOT)/tools/lint.Makefile
 include $(BUILD_ROOT)/tools/Doc.Makefile
 include $(BUILD_ROOT)/tools/NeoVim.Makefile
