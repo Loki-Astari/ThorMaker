@@ -20,8 +20,10 @@ filter-OnlyMac			= $(filter-out %.OnlyMac,$(1))
 filter-OnlyLinux		= $(filter-out %.OnlyLinux,$(1))
 filter-OnlyWin			= $(filter-out %.OnlyWin,$(1))
 filter-only				= $(call filter-OnlyMac,$(call filter-OnlyLinux,$(call filter-OnlyWin,$(call filter-keep-current,$(1)))))
+TARGET_AFTER_HEAD_FILTER= $(call filter-NotMac,$(call filter-NotLinux,$(call filter-NotWin,$(1))))
 TARGET_AFTER_FILTER 	= $(call filter-only,$(call filter-nots,$(TARGET)))
 SUB_PROJECTS			= $(foreach target,$(TARGET_AFTER_FILTER),$(target).dir)
+HEAD_SUB_PROJECTS		= $(foreach target,$(TARGET_AFTER_HEAD_FILTER),$(target).dir)
 
 all:		ACTION=build
 release-only:	ACTION=release-only
@@ -58,8 +60,8 @@ build:		$(SUB_PROJECTS)
 lint:		check_lint $(SUB_PROJECTS)
 vera:		$(SUB_PROJECTS)
 doc:		$(SUB_PROJECTS) docbuild
-build-honly:$(SUB_PROJECTS)
-build-hcont:$(SUB_PROJECTS)
+build-honly:$(HEAD_SUB_PROJECTS)
+build-hcont:$(HEAD_SUB_PROJECTS)
 print:		$(SUB_PROJECTS)
 tools:		$(SUB_PROJECTS)
 dumpversion:$(SUB_PROJECTS)
