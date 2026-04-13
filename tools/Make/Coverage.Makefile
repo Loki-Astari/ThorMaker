@@ -72,14 +72,14 @@ coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 		printf "%-$(LINE_WIDTH)s" '$*' >> coverage/$*.out;	\
 		printf "$${result}\n"          >> coverage/$*.out;	\
 		$(call BUILD_PIPE_OUT,DONE,$*,$*,$${result});	\
-	else
-		$(call BUILD_PIPE_OUT,DONE,$*,$*,$${result});	\
+	else												\
+		$(call BUILD_PIPE_OUT,DONE,$*,$*,"Done");		\
 	fi
 
 X:
 	@$(ECHO) $(call colour_text, $(MODE_TEXT_COLOR),$*) | awk '{printf "\t%-$(LINE_WIDTH)s", $$1}' | tee $(Ignore)coverage/$*.out
 		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverage/coverageCalc.awk)) | awk '{printf "%s%%\n", $$1}' | tee -a coverage/$*.out);\
-	
+
 coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
 	$(call BUILD_PIPE_OUT,START,$*.cpp,$*.cpp,"Calculating Coverage")
 	@$(COV_TOOL) $(COV_LONG_FLAG) --object-directory coverage $*.cpp > /dev/null 2>&1
