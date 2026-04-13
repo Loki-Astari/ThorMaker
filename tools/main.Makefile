@@ -708,7 +708,6 @@ $(TARGET_MODE)/%.o: %.cpp
 		$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS)) 2>$${tmpfile};	\
 		if [ $$? != 0 ]; then 										\
 			$(call BUILD_PIPE_OUT,DONE,$*,"$${cmd}",$(RED_ERROR));	\
-			$(call BUILD_PIPE_OUT,STATUS,X,"$${cmd}",$(RED_ERROR));	\
 			$(ECHO) '$(CXX) -c $< -o $@ $(CPPFLAGS) $(CXXFLAGS) $(MOCK_HEADERS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))' > '$(META)/err.$*';	\
 			cat "$${tmpfile}" >> '$(META)/err.$*';					\
 			rm -f $@;												\
@@ -732,7 +731,6 @@ makedependency/%.d: %.cpp
 		if [ $$? != 0 ];											\
 		then														\
 			$(call BUILD_PIPE_OUT,DONE,$*,"$${cmd}",${RED_ERROR});	\
-			$(call BUILD_PIPE_OUT,STATUS,X,"$${cmd}",${RED_ERROR});	\
 			$(ECHO) '$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(ARCH_FLAG) $(call expandFlag,$($*_CXXFLAGS))  -MF"$@" -MM -MP -MT"debug/$(<:.cpp=.o)" -MT"release/$(<:.cpp=.o)" -MT"coverage/$(<:.cpp=.o)" "$<"' > '$(META)/err.$*'; \
 			cat $${tmpfile} | awk '/error:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /note:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} /warning:/ {if (index($$1, "/") != 1){printf("$(FILEDIR)");}} {print}' >> '$(META)/err.$*';	\
 			rm -f $@;												\

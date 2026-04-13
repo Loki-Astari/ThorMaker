@@ -71,7 +71,9 @@ coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
 		result=$$( echo $(call getPercentColour,$(shell echo -n | cat - $$(ls coverage/$*.gcov 2>/dev/null) | awk -f $(BUILD_ROOT)/tools/coverage/coverageCalc.awk)) | awk '{printf "%s\n", $$1}');\
 		printf "%-$(LINE_WIDTH)s" '$*' >> coverage/$*.out;	\
 		printf "$${result}\n"          >> coverage/$*.out;	\
-		$(call BUILD_PIPE_OUT,STATUS,"X",$*,$${result});	\
+		$(call BUILD_PIPE_OUT,DONE,$*,$*,$${result});	\
+	else
+		$(call BUILD_PIPE_OUT,DONE,$*,$*,$${result});	\
 	fi
 
 X:
@@ -86,16 +88,13 @@ coverage/%.cpp.gcov:	coverage/%.o | coverage.Dir coverage/%.cpp.coverage.Dir
 	if [[ $${checkSubFile} != "" ]]; then							\
 		mv $*.cpp##*.gcov coverage/$*.cpp.coverage/;				\
 	fi
-	$(call BUILD_PIPE_OUT,DONE,$*.cpp,$*.cpp,Done)
 
 coverage/%.tpp.gcov:	$(GCOV_ALL_FILES) | coverage.Dir
 	$(call BUILD_PIPE_OUT,START,$*.tpp,$*.tpp,"Calculating Coverage")
 	$(BUILD_ROOT)/tools/coverage/coverageBuild $*.tpp
-	$(call BUILD_PIPE_OUT,DONE,$*.tpp,$*.tpp,Done)
 coverage/%.h.gcov:		$(GCOV_ALL_FILES) | coverage.Dir
 	$(call BUILD_PIPE_OUT,START,$*.h,$*.h,"Calculating Coverage")
 	$(BUILD_ROOT)/tools/coverage/coverageBuild $*.h
-	$(call BUILD_PIPE_OUT,DONE,$*.h,$*.h,Done)
 
 
 #report/coverage: $(SRC) $(HEAD) report/test | report.Dir
