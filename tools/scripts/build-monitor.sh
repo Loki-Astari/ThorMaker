@@ -24,6 +24,8 @@ trap 'rm -f "${PIPE}"' EXIT
 SlotCount="${2:-8}"
 LineWidth="${3:-80}"
 MAKE_PID="${4:-}"
+activeConnection=0
+startupCountDown=5
 
 declare -a slot_target   # slot_target[i] = target currently in slot i, or ""
 declare -a slot_info     # slot_info[i]   = info text for slot i
@@ -167,8 +169,14 @@ while true; do
         if [[ -n "$MAKE_PID" ]] && ! kill -0 "$MAKE_PID" 2>/dev/null; then
             break
         fi
+        startupCountDown=$(( startupCountDown - 1 ))
+        if [[ activeConnection == 0 && startupCountDown == 0]]; then
+            # If the make script is stalled out then exit.
+            break
+        fi
         continue
     fi
+    activeConnection=1
     tick_all_active
     IFS=':' lineArray=(${line})
     cmd="${lineArray[0]}"
