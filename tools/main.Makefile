@@ -530,25 +530,25 @@ endif
 
 $(TARGET_MODE)/%.prog:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@rm -rf $(META)
-	@$(ECHO) "Building: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)"
+	@$(ECHO) "Building: PROG: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISBALE_CONTROL_CODES="$(DISBALE_CONTROL_CODES)" PARALLEL_BUILD=OBJ --no-print-directory _build_prog
 	@$(ECHO) "DONE-----------"
 
 $(TARGET_MODE)/lib%.a:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@rm -rf $(META)
-	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.a  Dependencies:  Parallelism: $(JOBS)"
+	@$(ECHO) "Building: STAT: $(TARGET_MODE)/lib$*.a  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISBALE_CONTROL_CODES="$(DISBALE_CONTROL_CODES)" PARALLEL_BUILD=OBJ --no-print-directory _build_static_lib
 	@$(ECHO) "DONE-----------"
 
 $(TARGET_MODE)/lib%.$(SO):	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@rm -rf $(META)
-	@$(ECHO) "Building: $(TARGET_MODE)/lib$*.$(SO)  Dependencies:  Parallelism: $(JOBS)"
+	@$(ECHO) "Building: DYNA: $(TARGET_MODE)/lib$*.$(SO)  Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISBALE_CONTROL_CODES="$(DISBALE_CONTROL_CODES)" PARALLEL_BUILD=OBJ --no-print-directory _build_dynamic_lib
 	@$(ECHO) "DONE-----------"
 
 makeDep: | makedependency.Dir
 	@rm -rf $(META)
-	@$(ECHO) "Building: Dependencies:  Parallelism: $(JOBS)"
+	@$(ECHO) "Building: DEPS: Dependencies:  Parallelism: $(JOBS)"
 	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISBALE_CONTROL_CODES="$(DISBALE_CONTROL_CODES)" PARALLEL_BUILD=DEP --no-print-directory _build_dependency
 	@$(ECHO) "DONE-----------"
 
@@ -559,7 +559,7 @@ _build_dependency:		_stop_dependency
 
 _stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi
+	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -588,7 +588,7 @@ _stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
 
 _stop_static_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi
+	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -617,7 +617,7 @@ _stop_static_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 
 _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi
+	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -648,7 +648,7 @@ _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 
 _stop_dependency: $(DEP)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi
+	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -656,7 +656,7 @@ _stop_dependency: $(DEP)
 	   failed=1; \
 	 done; \
 	 rm -rf $(META); \
-	 if ( test $$failed != 0 ); then exit 1; fi
+	 if ( test $$failed != 0 ); then exit 1; fi;\
 
 
 XXmakedependency/%.d: %.cpp | makedependency.Dir
