@@ -559,7 +559,7 @@ _build_dependency:		_stop_dependency
 
 _stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
+	@if [ -p $(META)/pipe ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -588,7 +588,7 @@ _stop_prog:	$(OBJ) $(DEFER_OBJ) $(TARGET_MODE)/$(NAME).o
 
 _stop_static_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
+	@if [ -p $(META)/pipe ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -617,7 +617,7 @@ _stop_static_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 
 _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
+	@if [ -p $(META)/pipe ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \
@@ -648,7 +648,7 @@ _stop_dynamic_lib:	$(GCOV_OBJ) $(DEFER_OBJ)
 
 _stop_dependency: $(DEP)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
+	@if [ -p $(META)/pipe ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi; fi
 	@failed=0; \
 	 for f in $(META)/err.*; do \
 	   [ -f "$$f" ] || continue; \

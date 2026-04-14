@@ -20,6 +20,7 @@
 # All terminal writes happen in this single process, so no interleaving.
 
 PIPE="${1:?pipe path required}"
+trap 'rm -f "${PIPE}"' EXIT
 SlotCount="${2:-8}"
 LineWidth="${3:-80}"
 MAKE_PID="${4:-}"

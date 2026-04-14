@@ -62,7 +62,7 @@ _build_coverage: _stop_coverage
 
 _stop_coverage:  $(GCOV_OBJ_FILES) $(GCOV_HED_FILES)
 	@if [ -p $(META)/pipe ]; then (exec 3<>$(META)/pipe && printf 'EXIT\n' >&3); fi
-	@if [ -f $(META)/pid ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do echo "sleep";sleep 0.1; done; fi; fi
+	@if [ -p $(META)/pipe ]; then pid=$$(cat $(META)/pid); if [ $$pid != 0 ]; then echo "Kill: $$pid";while kill -0 "$$pid" 2>/dev/null; do sleep 0.1; done; fi; fi
 	@rm -rf $(META)
 
 coverage/%.out:			coverage/%.gcov | $(Ignore)coverage.Dir
