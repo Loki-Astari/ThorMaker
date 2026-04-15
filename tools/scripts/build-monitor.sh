@@ -170,7 +170,7 @@ while true; do
             break
         fi
         startupCountDown=$(( startupCountDown - 1 ))
-        if [[ activeConnection == 0 && startupCountDown == 0]]; then
+        if [[ ${activeConnection} == 0 && ${startupCountDown} == 0 ]]; then
             # If the make script is stalled out then exit.
             break
         fi
