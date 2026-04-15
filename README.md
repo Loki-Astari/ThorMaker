@@ -98,7 +98,7 @@ This makefile contains three lines:
 
     THORSANVIL_ROOT             = $(realpath ../)
 
-    TARGET                      = ThorsIOUtil ThorsCrypto ThorsSocket ThorsDB ThorsDBCommon MySQL Postgres Mongo ThorsDBBuild ThorsDBBuildTest
+    TARGET						= ThorsLogging fast_float Serialize ThorsCrypto ThorsStorage ThorsSocket ThorsMongo NisseServer NisseHTTP NisseLib ThorsSlack ThorsMug TestExtra.NotWin Mug.NotWin
 
     include $(THORSANVIL_ROOT)/build/tools/Project.Makefile
 
