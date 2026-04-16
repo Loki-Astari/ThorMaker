@@ -183,6 +183,18 @@ VERA_ROOT		= --root=$(THORSANVIL_ROOT)/build/vera-plusplus
 MAKEFLAGS 		+= --silent
 
 TESTNAME		?= *
+
+#
+# Pass-through variables for recursive $(MAKE) invocations.
+# Listing them here avoids having to repeat them on every sub-make command line.
+# Per-call overrides (TARGET_MODE, BASE, TEST_STATE, INSTALL_ACTIVE, LINK_LIBS,
+# EXLDLIBS, LOADLIBES, NAME, TARGET_DST, TARGET_OVERRIDE, PARALLEL_BUILD, Ignore)
+# still go on the command line — command-line values outrank env, so they win
+# over the exported value where the child needs a different value.
+export FILEDIR DISABLE_CONTROL_CODES THORSANVIL_ROOT CXXSTDVER PREFIX
+export BASE TARGET_MODE TEST_STATE
+export LDLIBS_EXTERN_BUILD UNITTEST_CXXFLAGS LDLIBS_FILTER
+export LINK_LIBS EXLDLIBS LOADLIBES
 	
 #
 # This is obviously not working
@@ -384,20 +396,20 @@ DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))
 
 all:					build
 install:				test debug release
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) INSTALL_ACTIVE=YES		ActionInstall
+	@$(MAKE) INSTALL_ACTIVE=YES	ActionInstall
 uninstall:
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) INSTALL_ACTIVE=YES		ActionUInstall
+	@$(MAKE) INSTALL_ACTIVE=YES	ActionUInstall
 build:					test debug release
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) INSTALL_ACTIVE=NO		ActionInstall
+	@$(MAKE) INSTALL_ACTIVE=NO	ActionInstall
 	@$(MAKE) done
 release-only:			release
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) INSTALL_ACTIVE=NO		ActionDoInstallHead ActionDoInstallRelease
+	@$(MAKE) INSTALL_ACTIVE=NO	ActionDoInstallHead ActionDoInstallRelease
 veryclean:				clean
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) INSTALL_ACTIVE=NO		ActionUInstall
+	@$(MAKE) INSTALL_ACTIVE=NO	ActionUInstall
 debug:					makeDep
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=debug		item
+	@$(MAKE) TARGET_MODE=debug	item
 release:				makeDep
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=release	item
+	@$(MAKE) TARGET_MODE=release	item
 lint:					doLint
 item:					PrintDebug buildDir Note_Building_$(TARGET_MODE) $(TARGET_ITEM)
 buildDir:	| $(TARGET_MODE).Dir coverage.Dir
@@ -530,25 +542,25 @@ endif
 $(TARGET_MODE)/%.prog:	%.cpp $(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@rm -rf $(META)
 	@if [[ "$${DEBUG}" == "1" ]];then $(ECHO) "Building: PROG: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)";fi
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISABLE_CONTROL_CODES="$(DISABLE_CONTROL_CODES)" PARALLEL_BUILD=OBJ --no-print-directory _build_prog
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" PARALLEL_BUILD=OBJ --no-print-directory _build_prog
 	@if [[ "$${DEBUG}" == "1" ]];then $(ECHO) "DONE-----------";fi
 
 $(TARGET_MODE)/lib%.a:	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@rm -rf $(META)
 	@if [[ "$${DEBUG}" == "1" ]];then $(ECHO) "Building: STAT: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)";fi
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISABLE_CONTROL_CODES="$(DISABLE_CONTROL_CODES)" PARALLEL_BUILD=OBJ --no-print-directory _build_static_lib
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" PARALLEL_BUILD=OBJ --no-print-directory _build_static_lib
 	@if [[ "$${DEBUG}" == "1" ]];then $(ECHO) "DONE-----------";fi
 
 $(TARGET_MODE)/lib%.$(SO):	$(SRC) $(HEAD) | $(TARGET_MODE).Dir
 	@rm -rf $(META)
 	@if [[ "$${DEBUG}" == "1" ]];then $(ECHO) "Building: DYNA: $(TARGET_MODE)/$*.prog  Dependencies:  Parallelism: $(JOBS)";fi
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISABLE_CONTROL_CODES="$(DISABLE_CONTROL_CODES)" PARALLEL_BUILD=OBJ --no-print-directory _build_dynamic_lib
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.$(SO)" PARALLEL_BUILD=OBJ --no-print-directory _build_dynamic_lib
 	@if [[ "$${DEBUG}" == "1" ]];then $(ECHO) "DONE-----------";fi
 
 makeDep: | makedependency.Dir
 	@rm -rf $(META)
 	@if [[ "$${DEBUG}" == "1"1 ]];then $(ECHO) "Building: DEPS: Dependencies:  Parallelism: $(JOBS)";fi
-	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISABLE_CONTROL_CODES="$(DISABLE_CONTROL_CODES)" PARALLEL_BUILD=DEP --no-print-directory _build_dependency
+	@$(MAKE) -f$(BASE)/Makefile -j$(JOBS) NAME="$*" TARGET_DST="$(TARGET_MODE)/lib$*.a" PARALLEL_BUILD=DEP --no-print-directory _build_dependency
 	@if [[ "$${DEBUG}" == "1" ]];then $(ECHO) "DONE-----------";fi
 
 _build_prog:			_stop_prog

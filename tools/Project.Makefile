@@ -10,6 +10,11 @@ SHELL					= /bin/bash
 DISABLE_CONTROL_CODES	?= FALSE
 FILEDIR					?=
 
+#
+# Pass-through variables for recursive $(MAKE) invocations.
+# The per-subdir %.dir rule modifies FILEDIR; other exports flow unchanged.
+export DISABLE_CONTROL_CODES THORSANVIL_ROOT PREFIX CXXSTDVER
+
 filter-remove			= $(filter-out %.Not$(2),$(1))
 filter-NotMac			= $(patsubst %.NotMac,%,$(1))
 filter-NotLinux			= $(patsubst %.NotLinux,%,$(1))
@@ -71,7 +76,7 @@ header-only:
 	dst=$$(mktemp -d);														\
 	echo "host: $${host}  dst: $${dst}";									\
 	git clone --single-branch --branch header-only $${host} $${dst};		\
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
+	$(MAKE) PREFIX=$${dst} build-honly;										\
 	echo "DONE";															\
 	echo "		$${dst}";													\
 	echo;																	\
@@ -80,7 +85,7 @@ headercont:
 	@host=$$(git remote get-url origin);									\
 	dst="${DST}";															\
 	echo "host: $${host}  dst: $${dst}";									\
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-hcont;	\
+	$(MAKE) PREFIX=$${dst} build-hcont;										\
 	echo "DONE";															\
 	echo "		$${dst}";													\
 	echo;																	\
@@ -96,7 +101,7 @@ docbuild:
 %.dir:
 	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $(FILEDIR)$* Start")
 	@if test -d $*; then														\
-		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/ DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
+		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/;						\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi

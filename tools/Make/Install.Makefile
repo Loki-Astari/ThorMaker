@@ -88,17 +88,17 @@ ActionInstall:				ActionDoInstallHead  ActionDoInstallDebug  ActionDoInstallRele
 ActionUInstall:				ActionDoUInstallHead ActionDoUInstallDebug ActionDoUInstallRelease ActionDoUInstallMan ActionDoUInstallConfig ActionTryUInstallDRoot
 
 ActionDoInstallDebug:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=debug	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
+	$(MAKE) TARGET_MODE=debug	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
 ActionDoInstallRelease:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=release ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
+	$(MAKE) TARGET_MODE=release	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
 ActionDoInstallHead:		ActionTryInstallHead
 ActionDoInstallMan:			ActionTryInstallMan
 ActionDoInstallConfig:		ActionTryInstallConfig
 
 ActionDoUInstallDebug:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=debug	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
+	$(MAKE) TARGET_MODE=debug	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
 ActionDoUInstallRelease:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=release	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
+	$(MAKE) TARGET_MODE=release	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
 ActionDoUInstallHead:		ActionTryUInstallHead
 ActionDoUInstallMan:		ActionTryUInstallMan
 ActionDoUInstallConfig:		ActionTryUInstallConfig
