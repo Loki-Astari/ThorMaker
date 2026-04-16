@@ -25,7 +25,7 @@ SlotCount="${2:-8}"
 LineWidth="${3:-80}"
 MAKE_PID="${4:-}"
 activeConnection=0
-startupCountDown=5
+startupCountDown=1
 
 declare -a slot_target   # slot_target[i] = target currently in slot i, or ""
 declare -a slot_info     # slot_info[i]   = info text for slot i

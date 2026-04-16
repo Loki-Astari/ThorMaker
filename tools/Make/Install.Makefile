@@ -120,21 +120,21 @@ ActionTryUInstallConfig:	$(if $(strip $(INSTALL_CONFIG)),		ActionUInstallConfig)
 ActionTryUInstallDefer:		$(if $(strip $(INSTALL_DEFER)),			ActionUInstallDefer)
 ActionTryUInstallDRoot:		$(if $(strip $(INSTALL_DEFER_DIR)),		ActionUInstallDRoot)
 
-ActionInstallApp:			Note_Start_Installing_Applications $(INSTALL_APP)           Note_End_Installing_Applications
-ActionInstallSlib:			Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)    Note_End_Installing_Libraries
-ActionInstallAlib:			Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)    Note_End_Installing_Libraries
-ActionInstallAHead:			Note_Start_Installing_Headers      $(INSTALL_HEADER)        Note_End_Installing_Headers
-ActionInstallMan:			Note_Start_Installing_Man          $(INSTALL_MAN)           Note_End_Installing_Man
-ActionInstallConfig:		Note_Start_Installing_Config       $(INSTALL_CONFIG)        Note_End_Installing_Config
-ActionInstallDefer:			Note_Start_Installing_DeferLib     $(INSTALL_DEFER)         Note_End_Installing_DeferLib
-ActionUInstallApp:			Note_Start_Clean_Applications      $(patsubst install_%, uninstall_%, $(INSTALL_APP))               Note_End_Clean_Applications
-ActionUInstallSlib:			Note_Start_Clean_Libraries         $(patsubst install_%, uninstall_%, $(INSTALL_SHARED_LIB))        Note_End_Clean_Libraries
-ActionUInstallAlib:			Note_Start_Clean_Libraries         $(patsubst install_%, uninstall_%, $(INSTALL_STATIC_LIB))        Note_End_Clean_Libraries
-ActionUInstallAHead:		Note_Start_Clean_Headers           $(patsubst install_%, uninstall_%, $(INSTALL_HEADER))            Note_End_Clean_Headers
-ActionUInstallMan:			Note_Start_Clean_Man               $(patsubst install_%, uninstall_%, $(INSTALL_MAN))               Note_End_Clean_Man
-ActionUInstallConfig:		Note_Start_Clean_Config            $(patsubst install_%, uninstall_%, $(INSTALL_CONFIG))            Note_End_Clean_Config
-ActionUInstallDefer:		Note_Start_Clean_Defer             $(patsubst install_%, uninstall_%, $(INSTALL_DEFER))             Note_End_Clean_Defer
-ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, uninstall_%, $(INSTALL_DEFER_DIR))         Note_End_Clean_Defer_Root
+ActionInstallApp:			Note_Start_Installing_Applications $(INSTALL_APP)
+ActionInstallSlib:			Note_Start_Installing_Libraries    $(INSTALL_SHARED_LIB)
+ActionInstallAlib:			Note_Start_Installing_Libraries    $(INSTALL_STATIC_LIB)
+ActionInstallAHead:			Note_Start_Installing_Headers      $(INSTALL_HEADER)
+ActionInstallMan:			Note_Start_Installing_Man          $(INSTALL_MAN)
+ActionInstallConfig:		Note_Start_Installing_Config       $(INSTALL_CONFIG)
+ActionInstallDefer:			Note_Start_Installing_DeferLib     $(INSTALL_DEFER)
+ActionUInstallApp:			Note_Start_Clean_Applications      $(patsubst install_%, uninstall_%, $(INSTALL_APP))
+ActionUInstallSlib:			Note_Start_Clean_Libraries         $(patsubst install_%, uninstall_%, $(INSTALL_SHARED_LIB))
+ActionUInstallAlib:			Note_Start_Clean_Libraries         $(patsubst install_%, uninstall_%, $(INSTALL_STATIC_LIB))
+ActionUInstallAHead:		Note_Start_Clean_Headers           $(patsubst install_%, uninstall_%, $(INSTALL_HEADER))
+ActionUInstallMan:			Note_Start_Clean_Man               $(patsubst install_%, uninstall_%, $(INSTALL_MAN))
+ActionUInstallConfig:		Note_Start_Clean_Config            $(patsubst install_%, uninstall_%, $(INSTALL_CONFIG))
+ActionUInstallDefer:		Note_Start_Clean_Defer             $(patsubst install_%, uninstall_%, $(INSTALL_DEFER))
+ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, uninstall_%, $(INSTALL_DEFER_DIR))
 
 #
 # For No install (When TEST_ONLY = YES) no action taken.
