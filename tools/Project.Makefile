@@ -7,7 +7,7 @@ include $(THORSANVIL_ROOT)/build/tools/Make/Platform.Makefile
 
 MAKEFLAGS				+= --silent
 SHELL					= /bin/bash
-DISBALE_CONTROL_CODES	?= FALSE
+DISABLE_CONTROL_CODES	?= FALSE
 FILEDIR					?=
 
 filter-remove			= $(filter-out %.Not$(2),$(1))
@@ -71,7 +71,7 @@ header-only:
 	dst=$$(mktemp -d);														\
 	echo "host: $${host}  dst: $${dst}";									\
 	git clone --single-branch --branch header-only $${host} $${dst};		\
-	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
+	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-honly;	\
 	echo "DONE";															\
 	echo "		$${dst}";													\
 	echo;																	\
@@ -80,7 +80,7 @@ headercont:
 	@host=$$(git remote get-url origin);									\
 	dst="${DST}";															\
 	echo "host: $${host}  dst: $${dst}";									\
-	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-hcont;	\
+	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$${dst} build-hcont;	\
 	echo "DONE";															\
 	echo "		$${dst}";													\
 	echo;																	\
@@ -96,7 +96,7 @@ docbuild:
 %.dir:
 	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $(FILEDIR)$* Start")
 	@if test -d $*; then														\
-		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/ DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
+		$(MAKE) -j1 -C $* $(ACTION) FILEDIR=$(FILEDIR)$*/ DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) THORSANVIL_ROOT=$(THORSANVIL_ROOT) PREFIX=$(PREFIX) CXXSTDVER=$(CXXSTDVER);		\
 	else																		\
 		$(ECHO) $(call colour_text, RED, "Sub Project $* non local ignoring");		\
 	fi

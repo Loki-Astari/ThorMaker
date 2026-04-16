@@ -20,7 +20,7 @@ ActionRunCoverage:		report/coverage report/coverage.show
 
 coverage-%:
 	@if [[ ! -e $* ]]; then $(ECHO) $(RED_ERROR); $(ECHO) "No such file as >$*<"; exit 1; fi
-	@if [[ ! -e coverage/$*.out ]]; then	$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage coverage/$*.out; fi
+	@if [[ ! -e coverage/$*.out ]]; then	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage coverage/$*.out; fi
 	@cat coverage/$*.gcov
 	@cat coverage/$*.out
 
@@ -29,11 +29,11 @@ report/coverage.show:
 
 report/coverage: report/test Makefile | report.Dir
 	@$(ECHO) $(call section_title,Running Coverage) | tee report/coverage
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_coverage; fi
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage check_coverage; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) BASE=.. Ignore="/tmp/" THORSANVIL_ROOT=$(THORSANVIL_ROOT) TARGET_MODE=coverage -C test -f ../Makefile check_coverage; fi
+	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage check_coverage; fi
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  -a report/coverage; fi
 	@echo -n | cat - $$(ls coverage/*.out 2> /dev/null) >> report/coverage
-	@$(MAKE) FILEDIR=$(FILEDIR) DISBALE_CONTROL_CODES=$(DISBALE_CONTROL_CODES) TARGET_MODE=coverage reportCoverage
+	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage reportCoverage
 	@touch report/coverage.show
 
 reportCoverage:
@@ -55,7 +55,7 @@ endif
 check_coverage:	| coverage.Dir
 	@rm -rf $(META)
 	@$(ECHO) "Building Coverage:  Parallelism: $(JOBS)"
-	@$(MAKE) -f$(BASE)/Makefile -j1 NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISBALE_CONTROL_CODES="$(DISBALE_CONTROL_CODES)" PARALLEL_BUILD=COV --no-print-directory _build_coverage
+	@$(MAKE) -f$(BASE)/Makefile -j1 NAME="$*" TARGET_DST="$(TARGET_MODE)/$*.prog" THORSANVIL_ROOT="$(THORSANVIL_ROOT)" CXXSTDVER="$(CXXSTDVER)" BASE="$(BASE)" LINK_LIBS="$(LINK_LIBS)" EXLDLIBS="$(EXLDLIBS)" LDLIBS_FILTER="$(LDLIBS_FILTER)" UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)" TEST_STATE="$(TEST_STATE)" LOADLIBES="$(LOADLIBES)" LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)" TARGET_MODE="$(TARGET_MODE)" FILEDIR="$(FILEDIR)" DISABLE_CONTROL_CODES="$(DISABLE_CONTROL_CODES)" PARALLEL_BUILD=COV --no-print-directory _build_coverage
 	@$(ECHO) "DONE---------------"
 
 _build_coverage: _stop_coverage
