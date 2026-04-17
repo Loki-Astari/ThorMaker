@@ -143,17 +143,15 @@ ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, u
 
 #
 # For No install (When TEST_ONLY = YES) no action taken.
-noinstall_app_%:
-
-noinstall_shared_lib_%:
-
-noinstall_static_lib_%:
-
-noinstall_head_$(LIBBASENAME):
-
-noinstall_man_NO:
-
-noinstall_man_YES:
+# The ";" is an explicit empty recipe — required for pattern rules so they
+# are treated as "rule matches, do nothing" rather than as a cancellation
+# of any previously-defined matching pattern rule.
+noinstall_app_%: ;
+noinstall_shared_lib_%: ;
+noinstall_static_lib_%: ;
+noinstall_head_$(LIBBASENAME): ;
+noinstall_man_NO: ;
+noinstall_man_YES: ;
 
 
 install_app_%:				$(PREFIX_BIN)/%$(BUILD_EXTENSION)
