@@ -16,6 +16,31 @@ include $(THORSANVIL_ROOT)/build/tools/Makefile
 Setting neither (or both) is an error. For initial setup (first clone, gtest
 install, etc.) see [setup.md](setup.md).
 
+### SUBDIRS platform filters
+
+In driver mode, individual subdirectory names can be suffixed to restrict
+them to specific platforms:
+
+| Suffix       | Effect                              |
+|--------------|-------------------------------------|
+| `.NotMac`    | Build on every platform except Mac  |
+| `.NotLinux`  | Build on every platform except Linux|
+| `.NotWin`    | Build on every platform except Windows |
+| `.OnlyMac`   | Build on Mac only                   |
+| `.OnlyLinux` | Build on Linux only                 |
+| `.OnlyWin`   | Build on Windows only               |
+
+The suffix is stripped from the directory name before recursing. Example:
+
+```make
+SUBDIRS = Core NetworkLib.NotWin GuiApp.OnlyMac
+```
+
+This builds `Core` everywhere, `NetworkLib` on Linux and Mac, and `GuiApp`
+on Mac only.
+
+---
+
 This file documents **leaf mode** — the suffix semantics of items in
 `TARGET`, what each build goal does, and the flags that control it.
 
@@ -147,6 +172,13 @@ This builds `ThorsDB.lib` from the three defer projects above.
 | `COVERAGE_REQUIRED` | Minimum coverage %. Override per-project to reduce.      | `80`               |
 | `CMAKE_CONFIG=yes`  | **Driver mode only.** Install ThorsAnvil CMake package config files so downstream CMake consumers can `find_package()`. Typically set only at the top-level project-root Makefile. | unset |
 | `THOR_DEBUG_LOAD=1` | **Leaf mode only.** Disable goal-based lazy-loading and force every fragment to load. Use when diagnosing "why isn't goal X defined?" or when `make print` needs the full variable surface. Normal builds leave this unset. | unset |
+| `CONFIG_NAME`   | Subproject name used to locate `third/<CONFIG_NAME>/Makefile.config`. Set in every leaf Makefile that belongs to a third-party subproject so that configure-generated settings are picked up. | unset |
+| `NAMESPACE`     | C++ namespace used by the header-only conversion tool (`build-honly` / `build-hcont`). | unset |
+| `DEFER_NAME`    | Grouping name for `.defer` targets. Object files are saved under `$(PREFIX_DEFER_OBJ)/<DEFER_NAME>/`. Automatically extracted from the `.defer` suffix in `TARGET` — only set it explicitly if you need a name that differs from the target basename. | auto |
+| `DEFER_LIBS`    | List of defer project names whose objects should be combined into the final library. Used in the "collector" directory that builds a `.lib` from multiple `.defer` projects. | unset |
+| `EXCLUDE_HEADERS` | Header files to exclude from installation. Applied as a `filter-out` against the discovered `*.h *.tpp *.hpp` files. | unset |
+| `EXTRA_HEADERS` | Additional header files to install that are not matched by the default `*.h *.tpp *.hpp` globs. | unset |
+| `VERA`          | Override the vera++ command. Set to `echo` to disable static analysis for a single project (e.g., third-party headers). | `vera++` |
 
 ### Standard Make flag variables
 
@@ -184,6 +216,9 @@ UNITTEST_CXXFLAGS             = <flags>
 UNITTEST_FILE_WARNING_FLAGS   = <flags>
 <SOURCE>_CXXFLAGS             = <flags>  # per-source, usually to suppress warnings
 FILE_WARNING_FLAGS            = <flags>  # project-wide extra warning flags
+FILE_WARNING_FLAGS_<PLATFORM> = <flags>  # platform-specific warning flags (Darwin, Linux, MSYS_NT, MINGW64_NT)
+LDLIBS_<PLATFORM>             = <libs>   # platform-specific linker libs
+CONAN_FILE_WARNING_FLAGS      = <flags>  # extra warning flags applied only in Conan builds
 ```
 
 You can also use make's target-specific variable syntax on the generated
