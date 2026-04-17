@@ -145,6 +145,7 @@ This builds `ThorsDB.lib` from the three defer projects above.
 | `NO_HEADER`         | Prevents header files from being installed (for libs)    | unset              |
 | `TEST_ONLY=YES`     | Build locally only; do not push to `$(BUILD_ROOT)`       | `NO`               |
 | `COVERAGE_REQUIRED` | Minimum coverage %. Override per-project to reduce.      | `80`               |
+| `CMAKE_CONFIG=yes`  | **Driver mode only.** Install ThorsAnvil CMake package config files so downstream CMake consumers can `find_package()`. Typically set only at the top-level project-root Makefile. | unset |
 
 ### Standard Make flag variables
 

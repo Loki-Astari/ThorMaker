@@ -29,6 +29,23 @@ SUBDIRS         = lib app tools
 include $(THORSANVIL_ROOT)/build/tools/Makefile
 ```
 
+If this is the top-level project-root Makefile and you want to ship
+CMake package config files so downstream consumers can use
+`find_package(ThorsAnvil)`, add one flag:
+
+```make
+THORSANVIL_ROOT = $(realpath ./)
+SUBDIRS         = lib app tools
+CMAKE_CONFIG    = yes
+include $(THORSANVIL_ROOT)/build/tools/Makefile
+```
+
+Set `CMAKE_CONFIG = yes` only in the **top-level** driver — not in
+nested sub-driver Makefiles, and not in leaf Makefiles. In leaf mode
+the flag is silently ignored (so that a top-level `make
+CMAKE_CONFIG=yes` command-line override can propagate harmlessly through
+sub-make recursion via make's `MAKEOVERRIDES`).
+
 See [target-conventions.md](target-conventions.md) for the full surface
 (TARGET suffixes, flags, goals, test conventions, artifact naming).
 

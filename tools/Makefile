@@ -55,7 +55,17 @@ ifneq ($(strip $(SUBDIRS)),)
   endif
   include $(BUILD_ROOT)/tools/drivers/subdirs.mk
 
+  # Optional driver add-ons. CMAKE_CONFIG installs the ThorsAnvil CMake
+  # package config files so downstream CMake consumers can find_package().
+  # Typically set only at the top-level project-root driver Makefile.
+  ifeq ($(strip $(CMAKE_CONFIG)),yes)
+    include $(BUILD_ROOT)/tools/targets/cmake-install.mk
+  endif
+
 else ifneq ($(strip $(TARGET)),)
+  # CMAKE_CONFIG is silently ignored in leaf mode. The top-level driver
+  # may have set it on its command line, which make auto-propagates to
+  # leaf sub-makes via MAKEOVERRIDES — erroring here would break that.
   include $(BUILD_ROOT)/tools/core/variables.mk
 
   # Top-level goals + header-only workflow
