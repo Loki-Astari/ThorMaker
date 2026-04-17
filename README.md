@@ -80,6 +80,7 @@ make clean           # remove build artifacts
 
 ## Example project
 
+[ThorsAnvil](https://github.com/Loki-Astari/ThorsAnvil) uses
 [ThorsSerializer](https://github.com/Loki-Astari/ThorsSerializer) uses
 ThorMaker end-to-end and is a good reference for feature usage.
 
