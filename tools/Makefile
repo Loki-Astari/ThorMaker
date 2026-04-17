@@ -1,17 +1,89 @@
+# =============================================================================
+# tools/Makefile — ThorMaker entry point + orchestrator
+#
+# This is the ONLY file a project Makefile needs to include. The mode is
+# selected by which variable the project sets before the include:
+#
+#   Leaf project  — builds files in the current directory:
+#     TARGET  = foo.prog bar.slib
+#     include $(THORSANVIL_ROOT)/build/tools/Makefile
+#
+#   Driver project — recurses into a list of subdirectories:
+#     SUBDIRS = src tools doc
+#     include $(THORSANVIL_ROOT)/build/tools/Makefile
+#
+# Setting neither (or both) is an error.
+#
+# See tools/docs/target-conventions.md for the public API — TARGET suffix
+# semantics (.prog .a .slib .lib .head .defer .test), per-target variables,
+# and the top-level goals (all / build / debug / release / test / install /
+# coverage / vera / lint / doc).
+#
+# Directory layout:
+#   core/         — always-loaded kernel (platform, colour, data tables)
+#   rules/        — pattern rules + parallel-build engine       (leaf only)
+#   targets/      — one file per user-visible goal family       (leaf + some driver)
+#   drivers/      — multi-subdir orchestrators                  (driver only)
+#   integrations/ — help, editor, header-only workflow
+#   debug/        — diagnostic printers, never on the hot build path
+#   docs/         — markdown documentation
+# =============================================================================
+
+SHELL=/bin/bash
 
 LOCAL_ROOT		?= $(shell pwd)
-# TODO: Remove the need for BASE
 BASE			?= .
 
 RELATIVEPATH=$(shell $(THORSANVIL_ROOT)/build/tools/util/RelPath "$(realpath $(LOCAL_ROOT))" "$(abspath $(THORSANVIL_ROOT)/)")
 
 -include $(THORSANVIL_ROOT)/Makefile.config
+-include $(THORSANVIL_ROOT)/third/$(CONFIG_NAME)/Makefile.config
 
 BUILD_ROOT		?= $(BUILD_ROOT_IS$(HEADER_ONLY))
 BUILD_ROOT_IS	= $(abspath $(LOCAL_ROOT)/$(RELATIVEPATH))/build
 BUILD_ROOT_IS1	= $(THORSANVIL_ROOT)/build
 
-include $(BUILD_ROOT)/tools/main.Makefile
+# --- Always-loaded core ---------------------------------------------------
+include $(BUILD_ROOT)/tools/core/platform.mk
+include $(BUILD_ROOT)/tools/core/colour.mk
+include $(BUILD_ROOT)/tools/core/thors-anvil-libs.mk
+
+# --- Mode dispatch: SUBDIRS (driver) vs TARGET (leaf) ---------------------
+ifneq ($(strip $(SUBDIRS)),)
+  ifneq ($(strip $(TARGET)),)
+    $(error ThorMaker: set either TARGET (leaf project) or SUBDIRS (driver), not both)
+  endif
+  include $(BUILD_ROOT)/tools/drivers/subdirs.mk
+
+else ifneq ($(strip $(TARGET)),)
+  include $(BUILD_ROOT)/tools/core/variables.mk
+
+  # Top-level goals + header-only workflow
+  include $(BUILD_ROOT)/tools/targets/build.mk
+  include $(BUILD_ROOT)/tools/integrations/header-only.mk
+
+  # Target-level features
+  include $(BUILD_ROOT)/tools/targets/install.mk
+  include $(BUILD_ROOT)/tools/targets/test.mk
+  include $(BUILD_ROOT)/tools/targets/coverage.mk
+  include $(BUILD_ROOT)/tools/targets/vera.mk
+  include $(BUILD_ROOT)/tools/integrations/help.mk
+  include $(BUILD_ROOT)/tools/targets/lint.mk
+  include $(BUILD_ROOT)/tools/targets/doc.mk
+  include $(BUILD_ROOT)/tools/integrations/neovim.mk
+
+  # Pattern rules + parallel engine
+  include $(BUILD_ROOT)/tools/rules/link.mk
+  include $(BUILD_ROOT)/tools/rules/parallel.mk
+  include $(BUILD_ROOT)/tools/rules/compile.mk
+  include $(BUILD_ROOT)/tools/rules/generate.mk
+
+  # Diagnostics
+  include $(BUILD_ROOT)/tools/debug/print.mk
+
+else
+  $(error ThorMaker: no TARGET or SUBDIRS declared — set TARGET=... for a leaf project, or SUBDIRS=... for a multi-subdir driver)
+endif
 
 
 check:
@@ -22,5 +94,3 @@ check:
 	@echo "abspath(THORSANVIL_ROOT): $(abspath $(THORSANVIL_ROOT)/)"
 	@echo "RELATIVEPATH:             $(RELATIVEPATH)"
 	@echo "BUILD_ROOT:               $(BUILD_ROOT)"
-
-

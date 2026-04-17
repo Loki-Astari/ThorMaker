@@ -1,9 +1,23 @@
 # TARGET Conventions
 
-A leaf project Makefile declares what to build by setting `TARGET` before
-including `$(THORSANVIL_ROOT)/build/tools/Makefile`. The suffix on each
-name in `TARGET` determines what is built. The `TARGET` variable may list
-multiple items.
+`tools/Makefile` is the single ThorMaker entry point. A project Makefile
+selects its mode by which variable it sets before the include:
+
+```make
+# Leaf project — builds files in the current directory:
+TARGET  = foo.prog bar.slib
+include $(THORSANVIL_ROOT)/build/tools/Makefile
+
+# Driver — recurses into a list of subdirectories:
+SUBDIRS = src tools doc
+include $(THORSANVIL_ROOT)/build/tools/Makefile
+```
+
+Setting neither (or both) is an error.
+
+This file documents the **leaf mode** — the suffix semantics of the items
+in `TARGET`. The suffix on each name determines what is built. The
+`TARGET` variable may list multiple items.
 
 ## TARGET suffix semantics
 

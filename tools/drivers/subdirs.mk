@@ -1,36 +1,32 @@
 # =============================================================================
-# drivers/project.mk — multi-subdirectory orchestrator
+# drivers/subdirs.mk — multi-subdirectory orchestrator
 #
-# Used by a top-of-tree Makefile whose role is to recurse into a list of
-# subdirectories. Each subdirectory's Makefile includes tools/Makefile
-# (the leaf entry point); this driver fans out user goals across them.
+# Used when a project Makefile sets SUBDIRS. Walks each listed directory
+# and runs the requested action in it via a recursive $(MAKE) -C.
 #
-# Requires: TARGET (list of subdirectory names, possibly suffixed with
-#           platform filters like .NotMac / .OnlyLinux, see below)
+# Requires: SUBDIRS          (list of subdirectory names, possibly suffixed
+#                              with platform filters — see below)
 #           THORSANVIL_ROOT  (the repo root)
+#           BUILD_ROOT       (computed by tools/Makefile)
 #           PLATFORM_CAT     (provided by core/platform.mk)
-# Defines:  filter-*  TARGET_AFTER_HEAD_FILTER  TARGET_AFTER_FILTER
-#           SUB_PROJECTS  HEAD_SUB_PROJECTS  ACTION BUILD_ROOT PREFIX
+#           colour helpers   (provided by core/colour.mk)
+# Defines:  filter-*  SUBDIRS_AFTER_HEAD_FILTER  SUBDIRS_AFTER_FILTER
+#           SUB_PROJECTS  HEAD_SUB_PROJECTS  ACTION
 # Exports:  DISABLE_CONTROL_CODES THORSANVIL_ROOT PREFIX CXXSTDVER
 # Goals:    all test clean veryclean install uninstall profile build
 #           lint vera doc build-honly build-hcont print tools dumpversion
 #           release-only %.dir header-only headercont docbuild
 #
-# Platform filters:
+# Platform filters (suffix on each SUBDIRS entry):
 #   foo.NotMac    → build on non-Mac only
 #   foo.NotLinux  → build on non-Linux only
 #   foo.NotWin    → build on non-Windows only
 #   foo.OnlyMac   → build on Mac only     (etc.)
 # =============================================================================
 
--include $(THORSANVIL_ROOT)/Makefile.config
-include $(THORSANVIL_ROOT)/build/tools/core/colour.mk
-include $(THORSANVIL_ROOT)/build/tools/core/platform.mk
-
 .PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
 
 MAKEFLAGS				+= --silent
-SHELL					= /bin/bash
 DISABLE_CONTROL_CODES	?= FALSE
 FILEDIR					?=
 
@@ -39,20 +35,20 @@ FILEDIR					?=
 # The per-subdir %.dir rule modifies FILEDIR; other exports flow unchanged.
 export DISABLE_CONTROL_CODES THORSANVIL_ROOT PREFIX CXXSTDVER
 
-filter-remove			= $(filter-out %.Not$(2),$(1))
-filter-NotMac			= $(patsubst %.NotMac,%,$(1))
-filter-NotLinux			= $(patsubst %.NotLinux,%,$(1))
-filter-NotWin			= $(patsubst %.NotWin,%,$(1))
-filter-nots				= $(call filter-NotMac,$(call filter-NotLinux,$(call filter-NotWin,$(call filter-remove,$(1),$(PLATFORM_CAT)))))
-filter-keep-current		= $(patsubst %.Only$(PLATFORM_CAT),%,$(1))
-filter-OnlyMac			= $(filter-out %.OnlyMac,$(1))
-filter-OnlyLinux		= $(filter-out %.OnlyLinux,$(1))
-filter-OnlyWin			= $(filter-out %.OnlyWin,$(1))
-filter-only				= $(call filter-OnlyMac,$(call filter-OnlyLinux,$(call filter-OnlyWin,$(call filter-keep-current,$(1)))))
-TARGET_AFTER_HEAD_FILTER= $(call filter-remove,$(call filter-remove,$(call filter-remove,$(TARGET),Win),Linux),Mac)
-TARGET_AFTER_FILTER 	= $(call filter-only,$(call filter-nots,$(TARGET)))
-SUB_PROJECTS			= $(foreach target,$(TARGET_AFTER_FILTER),$(target).dir)
-HEAD_SUB_PROJECTS		= $(foreach target,$(TARGET_AFTER_HEAD_FILTER),$(target).dir)
+filter-remove				= $(filter-out %.Not$(2),$(1))
+filter-NotMac				= $(patsubst %.NotMac,%,$(1))
+filter-NotLinux				= $(patsubst %.NotLinux,%,$(1))
+filter-NotWin				= $(patsubst %.NotWin,%,$(1))
+filter-nots					= $(call filter-NotMac,$(call filter-NotLinux,$(call filter-NotWin,$(call filter-remove,$(1),$(PLATFORM_CAT)))))
+filter-keep-current			= $(patsubst %.Only$(PLATFORM_CAT),%,$(1))
+filter-OnlyMac				= $(filter-out %.OnlyMac,$(1))
+filter-OnlyLinux			= $(filter-out %.OnlyLinux,$(1))
+filter-OnlyWin				= $(filter-out %.OnlyWin,$(1))
+filter-only					= $(call filter-OnlyMac,$(call filter-OnlyLinux,$(call filter-OnlyWin,$(call filter-keep-current,$(1)))))
+SUBDIRS_AFTER_HEAD_FILTER	= $(call filter-remove,$(call filter-remove,$(call filter-remove,$(SUBDIRS),Win),Linux),Mac)
+SUBDIRS_AFTER_FILTER 		= $(call filter-only,$(call filter-nots,$(SUBDIRS)))
+SUB_PROJECTS				= $(foreach dir,$(SUBDIRS_AFTER_FILTER),$(dir).dir)
+HEAD_SUB_PROJECTS			= $(foreach dir,$(SUBDIRS_AFTER_HEAD_FILTER),$(dir).dir)
 
 all:		ACTION=build
 release-only:	ACTION=release-only
@@ -73,7 +69,6 @@ tools:		ACTION=tools
 dumpversion:ACTION=dumpversion
 
 ACTION		?=all
-BUILD_ROOT	?=$(THORSANVIL_ROOT)/build
 PREFIX		?=$(BUILD_ROOT)
 
 
@@ -131,6 +126,6 @@ docbuild:
 	fi
 	@$(ECHO) $(call colour_text, LIGHT_PURPLE, "Building Dir $(FILEDIR)$* Finish")
 
-include $(THORSANVIL_ROOT)/build/tools/targets/lint.mk
-include $(THORSANVIL_ROOT)/build/tools/integrations/neovim.mk
-include $(THORSANVIL_ROOT)/build/tools/integrations/help.mk
+include $(BUILD_ROOT)/tools/targets/lint.mk
+include $(BUILD_ROOT)/tools/integrations/neovim.mk
+include $(BUILD_ROOT)/tools/integrations/help.mk

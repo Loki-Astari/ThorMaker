@@ -98,18 +98,18 @@ This makefile contains three lines:
 
     THORSANVIL_ROOT             = $(realpath ../)
 
-    TARGET						= ThorsLogging fast_float Serialize ThorsCrypto ThorsStorage ThorsSocket ThorsMongo NisseServer NisseHTTP NisseLib ThorsSlack ThorsMug TestExtra.NotWin Mug.NotWin
+    SUBDIRS						= ThorsLogging fast_float Serialize ThorsCrypto ThorsStorage ThorsSocket ThorsMongo NisseServer NisseHTTP NisseLib ThorsSlack ThorsMug TestExtra.NotWin Mug.NotWin
 
-    include $(THORSANVIL_ROOT)/build/tools/Project.Makefile
+    include $(THORSANVIL_ROOT)/build/tools/Makefile
 
 
 What each line means:
 
 The `THORSANVIL_ROOT` is a variable used within the makefiles and points to the directory that contains the "build" directory. This directory contains all the build tools you need and any intermediate objects will be built into the "$(THORSANVIL_ROOT)/build" direcotory.
 
-The `TARGET` is a list of sub directories. It will execute the `Makefile` in each of these subdirectories.
+The `SUBDIRS` is a list of sub directories. The driver will execute the `Makefile` in each of these subdirectories. (Setting `SUBDIRS` tells `tools/Makefile` to run in driver mode; a leaf project sets `TARGET` instead.)
 
-The `include` line simply includes a generic Makefile that will expand the `TARGET` variable and provides all the target information.
+The `include` line simply includes the ThorMaker entry point. It dispatches on `SUBDIRS` vs `TARGET` to select driver or leaf mode.
 
 ### Project Makefile
 
