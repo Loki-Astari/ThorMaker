@@ -174,14 +174,25 @@ These look similar but serve different roles:
 ### Per-target / per-file flags
 
 ```
-<TARGET>_LDLIBS     = <libs>           # literal, no processing
-<TARGET>_LINK_LIBS  = <libs>           # each expanded with -l<lib><build-extension>
-UNITTEST_LDLIBS             = <libs>
-UNITTEST_LINK_LIBS          = <libs>
-UNITTEST_LDLIBS_HEADERONLY  = <libs>
-UNITTEST_CXXFLAGS
-<SOURCE>_CXXFLAGS   = <flags>          # per-source, usually to suppress warnings
-FILE_WARNING_FLAGS  = <flags>          # project-wide extra warning flags
+<TARGET>_LDLIBS               = <libs>   # literal, no processing
+<TARGET>_LINK_LIBS            = <libs>   # each expanded with -l<lib><build-extension>
+UNITTEST_LDLIBS               = <libs>
+UNITTEST_LINK_LIBS            = <libs>
+UNITTEST_LDLIBS_HEADERONLY    = <libs>
+UNITTEST_CXXFLAGS             = <flags>
+UNITTEST_FILE_WARNING_FLAGS   = <flags>
+<SOURCE>_CXXFLAGS             = <flags>  # per-source, usually to suppress warnings
+FILE_WARNING_FLAGS            = <flags>  # project-wide extra warning flags
+```
+
+You can also use make's target-specific variable syntax on the generated
+object file to override flags for a single source, optionally scoped to
+a build mode:
+
+```make
+%/File.o:          CXXFLAGS += -Wno-deprecated-declarations   # all modes
+debug/File.o:      CXXFLAGS += -gExtra                        # debug only
+release/File.o:    CXXFLAGS += -OMyFlag                       # release only
 ```
 
 ### LDLIBS_EXTERN_BUILD — the magic flag

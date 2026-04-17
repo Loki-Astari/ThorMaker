@@ -1,5 +1,23 @@
 # Setup
 
+## Prerequisites
+
+ThorMaker uses autotools for project generation. Install autoconf,
+automake, and libtool:
+
+```bash
+# macOS
+brew install autoconf automake libtool
+
+# Debian / Ubuntu
+sudo apt install autoconf automake libtool
+```
+
+The optional lint pass also needs `cppcheck` and `vera++`; google-test
+is installed automatically by `./setup` below.
+
+## Clone and initialise
+
 The short version:
 
 ```bash
