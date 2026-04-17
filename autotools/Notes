@@ -37,16 +37,10 @@ CONFIGUREAC
 
 addMakeFile () {
 
-    Cmake=""
-    if [[ "$5" != "" ]]; then
-        Cmake="CMAKE_CONFIG						= yes"
-    fi
-
     mkdir -p $1
     cat - > $1/Makefile <<Makefile
 THORSANVIL_ROOT				= \$(realpath $2)
 $4						= $3
-$Cmake
 
 
 include \$(THORSANVIL_ROOT)/build/tools/Makefile
@@ -193,7 +187,7 @@ startConfigure() {
 
         echo "Creating Base Autotools Files"
         addConfigureAC ${BaseName}
-        addMakeFile . ./ src SUBDIRS CMAKE
+        addMakeFile . ./ src SUBDIRS
         addMakeFile src ../ "$*" SUBDIRS
         addMakeFileExtra
         addMakeFileConfig
