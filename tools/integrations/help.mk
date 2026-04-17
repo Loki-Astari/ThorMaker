@@ -1,4 +1,12 @@
-
+# =============================================================================
+# integrations/help.mk — `make help` surface
+#
+# Renders markdown help files via `glow` if available, falling back to `cat`.
+#
+# Requires: BUILD_ROOT
+#           help files in $(BUILD_ROOT)/tools/help/make-%.md
+# Goals:    help  help-%  command-glow  command-cat
+# =============================================================================
 
 GLOW_CHECK			:= $(shell  command -v glow > /dev/null 2>&1 && echo 'glow')
 GLOW				:= $(if $(GLOW_CHECK),$(GLOW_CHECK),cat)

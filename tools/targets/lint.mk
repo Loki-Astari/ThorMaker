@@ -1,3 +1,9 @@
+# =============================================================================
+# targets/lint.mk — cppcheck + vera++ front-end
+#
+# Requires: CPP_SRC APP_SRC HEAD ECHO THORSANVIL_ROOT
+# Goals:    lint doLint check_lint lintExecute
+# =============================================================================
 
 .PHONY:	doLint check_lint lintExecute
 
@@ -33,4 +39,3 @@ lintExecute:	$(CPP_SRC) $(APP_SRC) $(HEAD)
 		$(ECHO) "vera++ --root $(THORSANVIL_ROOT)/build/lint/vera --profile Thor.vera $?";	\
 		vera++ --root $(THORSANVIL_ROOT)/build/lint/vera --profile Thor.vera $?;			\
 	fi
-

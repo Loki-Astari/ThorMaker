@@ -1,6 +1,16 @@
+# =============================================================================
+# core/colour.mk — terminal colour helpers
+#
+# Requires: ECHO DISABLE_CONTROL_CODES DARK_MODE
+# Defines:  COLOUR_STATE MODE_TEXT_COLOR COLOUR_TERMINAL_*
+#           colour_text color_text GREEN_OK RED_ERROR
+#           section_title subsection_title paragraph
+#           toInt getPercentColour GOOD_COLOUR_TEST
+# Goals:    (none — pure helpers)
+# =============================================================================
 
 #
-# Also check out echo in the Platform.Makefile
+# Also check out echo in core/platform.mk
 
 DEFAULT_COLOUR					= $(DEFAULT_COLOUR_NV$(DISABLE_CONTROL_CODES))
 DEFAULT_COLOUR_NVFALSE			= ON

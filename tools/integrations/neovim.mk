@@ -1,5 +1,13 @@
-
-
+# =============================================================================
+# integrations/neovim.mk — editor-integration helpers
+#
+# Emits the flags an LSP front-end (clangd / nvim+coc / nvim+ALE) needs
+# and can generate a project-local `.clangd` file.
+#
+# Requires: CXX_STD_FLAG THORSANVIL_ROOT LDLIBS_EXTERN_INC_LOC
+#           CXX_EXTERN_HEADER_ONLY RUNTIME_PATHS_USED_TO_LOAD
+# Goals:    neovimflags neovimruntime .clangd
+# =============================================================================
 
 neovimflags:
 	@echo -DDISABLE_CONTROL_CODES=1 "$(CXX_STD_FLAG) -I.. -I$$(realpath $(THORSANVIL_ROOT))/build/include -I/opt/homebrew/include -I$$(realpath $(THORSANVIL_ROOT))/build/3rd/include --include Mock.h $(LDLIBS_EXTERN_INC_LOC) $(CXX_EXTERN_HEADER_ONLY)"
@@ -36,4 +44,3 @@ neovimflags:
 # We build shared libraries into these local directories
 neovimruntime:
 	@echo "$(RUNTIME_PATHS_USED_TO_LOAD)"
-

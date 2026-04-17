@@ -1,6 +1,19 @@
-# ---------------------------------------------------------------------------
-# CMake package config installation
-# ---------------------------------------------------------------------------
+# =============================================================================
+# targets/cmake-install.mk — CMake package config installation
+#
+# Installs the ThorsAnvil CMake package config files so downstream CMake
+# projects can `find_package(ThorsAnvil)` against this build.
+#
+# Loaded only when the project sets CMAKE_CONFIG=yes in driver (SUBDIRS)
+# mode. Typically enabled at the top-level project-root Makefile and
+# nowhere else in the tree. Silently unused in leaf mode.
+#
+# Requires: THORSANVIL_ROOT BUILD_ROOT libdir SUB_PROJECTS
+#           (SUB_PROJECTS comes from drivers/subdirs.mk — hence driver-only)
+# Goals:    install-cmake-sys install-cmake-local uninstall-cmake
+#           (extends: install build uninstall)
+# =============================================================================
+
 CMAKE_SRC_DIR			= $(THORSANVIL_ROOT)/cmake
 CMAKE_LOCAL_INSTALL_DIR	= $(BUILD_ROOT)/lib/cmake/ThorsAnvil
 CMAKE_SYS_INSTALL_DIR	= $(libdir)/cmake/ThorsAnvil

@@ -1,20 +1,25 @@
-
+# =============================================================================
+# targets/install.mk — install and uninstall rules for every artifact type
 #
-# Input:
-#		TARGET_ALL:		Expanded set of TARGET
-#						Anything to do with "TARGET" will be installed/uninstalled
-#		NO_HEADER:		1:			Will only install headers.
-#						0(Empty)	Normal install. Will install libs executables
+# Requires: TARGET_ALL NO_HEADER INSTALL_ACTIVE DEFER_NAME           (core/variables.mk)
+#           PREFIX_BIN PREFIX_LIB PREFIX_INC PREFIX_MAN PREFIX_CONFIG
+#           BUILD_EXTENSION BUILD_SUFFIX SO HEAD OBJ
+#           paragraph CP LNSOFT RM RMDIR ECHO TARGET_MODE
+# Defines:  LIBBASENAME INSTALL_* (many)
+# Goals:    ActionInstall ActionUInstall and their supporting machinery.
 #
-#		INSTALL_ACTIVE:	YES =>	/usr/local
-#						NO  =>  <ROOT>/build/
-#							The "Defered" objects are only installed locally (NO)
-#							This allows future targets to be built using the deferred objects.
+# Input contract:
+#   TARGET_ALL:        Expanded set of TARGET. Anything in here will be
+#                      installed or uninstalled.
+#   NO_HEADER:         1        → only install headers
+#                      0/unset  → normal install (libs, exes)
+#   INSTALL_ACTIVE:    YES → /usr/local (the configure --prefix)
+#                      NO  → <ROOT>/build/   ("defer" artifacts only install
+#                            locally so future targets can pick them up).
 #
 # Usage:
-#	Add "ActionInstall" or "ActionUInstall" as a dependency.
-#
-#
+#   Add "ActionInstall" or "ActionUInstall" as a dependency.
+# =============================================================================
 
 ##### External
 .PHONY:	ActionInstall ActionUInstall
@@ -60,7 +65,7 @@ INSTALL_ACTION				= $(INSTALL_TEST_$(TEST_ONLY))
 # If we don't want headers and this is a full install
 # Then don't do any work with the headers (ie. don't install into /usr/local/include)
 # All other situations above we make a copy locally.
-LIBBASENAME_NO_YES			= 
+LIBBASENAME_NO_YES			=
 LIBBASENAME					= $(LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
 INSTALL_MAN_SRC				= $(wildcard man/man*/*)
 INSTALL_MAN_DIR				= $(patsubst man/%, $(PREFIX_MAN)/%.Dir, $(sort $(dir $(INSTALL_MAN_SRC))))
@@ -78,7 +83,7 @@ INSTALL_CONFIG				= $(INSTALL_CONFIG_LOCAL) $(INSTALL_CONFIG_ROOT)
 INSTALL_DEFER				= $(patsubst %, install_defer_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 INSTALL_DEFER_DIR			= $(patsubst %, install_defer_dir_$(INSTALL_ACTIVE)_%, $(DEFER_NAME))
 INSTALL_HEAD				= $(patsubst %, $(PREFIX_INC)/$(LIBBASENAME)/%, $(HEAD))
-INSTALL_DEFER_OBJ			= $(patsubst %, $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/%, $(OBJ)) 
+INSTALL_DEFER_OBJ			= $(patsubst %, $(PREFIX_DEFER_OBJ)/$(DEFER_NAME)/%, $(OBJ))
 
 
 # This is the interface to this makefile.
@@ -88,17 +93,17 @@ ActionInstall:				ActionDoInstallHead  ActionDoInstallDebug  ActionDoInstallRele
 ActionUInstall:				ActionDoUInstallHead ActionDoUInstallDebug ActionDoUInstallRelease ActionDoUInstallMan ActionDoUInstallConfig ActionTryUInstallDRoot
 
 ActionDoInstallDebug:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=debug	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
+	$(MAKE) TARGET_MODE=debug	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
 ActionDoInstallRelease:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=release ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
+	$(MAKE) TARGET_MODE=release	ActionTryInstallApp  ActionTryInstallSlib ActionTryInstallAlib ActionTryInstallDefer
 ActionDoInstallHead:		ActionTryInstallHead
 ActionDoInstallMan:			ActionTryInstallMan
 ActionDoInstallConfig:		ActionTryInstallConfig
 
 ActionDoUInstallDebug:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=debug	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
+	$(MAKE) TARGET_MODE=debug	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
 ActionDoUInstallRelease:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=release	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
+	$(MAKE) TARGET_MODE=release	ActionTryUInstallApp ActionTryUInstallSlib ActionTryUInstallAlib ActionTryUInstallDefer
 ActionDoUInstallHead:		ActionTryUInstallHead
 ActionDoUInstallMan:		ActionTryUInstallMan
 ActionDoUInstallConfig:		ActionTryUInstallConfig
@@ -138,18 +143,16 @@ ActionUInstallDRoot:		Note_Start_Clean_Defer_Root        $(patsubst install_%, u
 
 #
 # For No install (When TEST_ONLY = YES) no action taken.
-noinstall_app_%:
-	
-noinstall_shared_lib_%:
-	
-noinstall_static_lib_%:
-	
-noinstall_head_$(LIBBASENAME):
-	
-noinstall_man_NO:
-	
-noinstall_man_YES:
-	
+# The ";" is an explicit empty recipe — required for pattern rules so they
+# are treated as "rule matches, do nothing" rather than as a cancellation
+# of any previously-defined matching pattern rule.
+noinstall_app_%: ;
+noinstall_shared_lib_%: ;
+noinstall_static_lib_%: ;
+noinstall_head_$(LIBBASENAME): ;
+noinstall_man_NO: ;
+noinstall_man_YES: ;
+
 
 install_app_%:				$(PREFIX_BIN)/%$(BUILD_EXTENSION)
 	@# Don't know why I need this!
@@ -275,5 +278,4 @@ uninstall_defer_dir_YES_%:
 uninstall_defer_dir_NO_%:
 	@$(ECHO) $(call paragraph, Clean Defer $* ROOT)
 	@if [[ -e $(PREFIX_DEFER_OBJ)/$*/ ]]; then $(RMDIR) $(PREFIX_DEFER_OBJ)/$*/; fi
-
 

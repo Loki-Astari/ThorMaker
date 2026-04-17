@@ -1,3 +1,20 @@
+# =============================================================================
+# targets/test.mk — unit-test build and run
+#
+# Requires: TARGET_MODE SRC HEAD CPP_FILES                          (core/variables.mk)
+#           BASE LDLIBS_EXTERN_BUILD UNITTEST_CXXFLAGS LDLIBS_FILTER
+#           LINK_LIBS UNITTEST_LINK_LIBS UNITTEST_LDLIBS HEADER_ONLY
+#           PREFIX_LIB DEFAULT_LIB_DIR RUNTIME_SHARED_PATH_SET RUNTIME_PATHS_USED_TO_LOAD
+#           colour helpers, ECHO, RM
+# Defines:  TEST_FILES GCOV_LIB COVERAGE_LIB UNITTEST_LINK_LIBS_BULD
+#           TEST_FILTER_SCRIPT LOG_FILE_FILTER_SCRIPT GTEST_ADD_FILE FILTER_SCRIPT
+# Goals:    ActionRunUnitTest test-% testrun.% debugrun.%
+#           report/test report/test.show reportErrorCheck
+#           build_unit_test run_unit_test
+#           test/coverage/unittest.prog coverage/$(COVERAGE_LIB)
+#           MockHeaders.h / MockHeaders.cpp generation
+#           $(BASE)/test/MockHeaderInclude.h
+# =============================================================================
 
 # External
 .PHONY:	ActionRunUnitTest
@@ -14,20 +31,20 @@ UNITTEST_LINK_LIBS_BULD		= $(if $(HEADER_ONLY), ,$(LINK_LIBS) $(UNITTEST_LINK_LI
 
 ActionRunUnitTest:		report/test	 report/test.show reportErrorCheck
 test-%:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) TARGET_MODE=coverage	build_unit_test
 	@TESTNAME=$* THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} make TARGET_MODE=coverage run_unit_test
 
 testrun.%:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) TARGET_MODE=coverage	build_unit_test
 	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.prog --gtest_filter=$*
 
 debugrun.%:
-	$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage	build_unit_test
+	$(MAKE) TARGET_MODE=coverage	build_unit_test
 	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} lldb -- test/coverage/unittest.prog --gtest_filter=$*
 
 report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage		build_unit_test; fi
-	@if [[ -d test ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage		run_unit_test; fi
+	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		build_unit_test; fi
+	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		run_unit_test; fi
 	@if [[ ! -d test ]]; then $(ECHO) "No Tests" | tee  report/test; fi
 	@touch report/test.show
 
@@ -62,39 +79,29 @@ test/coverage/unittest.prog: coverage/$(COVERAGE_LIB) $(TEST_FILES) | test/cover
 	@touch test/unittest.cpp
 	# Make sure the test dependencies have been updated first.
 	$(MAKE) FILEDIR=$(FILEDIR)test/							\
-			DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES)	\
 			TARGET_OVERRIDE=unittest.prog					\
 			BASE=..											\
-			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
 			LOADLIBES="-L$(BASE)/coverage -l$(COVERAGE_LIB)"\
-			LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)"	\
-			UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)"		\
 			LINK_LIBS="$(UNITTEST_LINK_LIBS_BULD)"			\
 			EXLDLIBS="$(UNITTEST_LDLIBS) "					\
-			LDLIBS_FILTER="$(LDLIBS_FILTER)"				\
 			-C test											\
 			-f ../Makefile									\
 			makeDep
 	$(MAKE) FILEDIR=$(FILEDIR)test/							\
-			DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES)	\
 			TARGET_OVERRIDE=unittest.prog					\
 			BASE=..											\
-			THORSANVIL_ROOT=$(THORSANVIL_ROOT)				\
 			TEST_STATE=on									\
 			LOADLIBES="-L$(BASE)/coverage -l$(COVERAGE_LIB)"\
-			LDLIBS_EXTERN_BUILD="$(LDLIBS_EXTERN_BUILD)"	\
-			UNITTEST_CXXFLAGS="$(UNITTEST_CXXFLAGS)"		\
 			LINK_LIBS="$(UNITTEST_LINK_LIBS_BULD)"			\
 			EXLDLIBS="$(UNITTEST_LDLIBS) "					\
-			LDLIBS_FILTER="$(LDLIBS_FILTER)"				\
 			-C test											\
 			-f ../Makefile									\
 			item
 	@rm test/unittest.cpp
 
 coverage/$(COVERAGE_LIB): $(SRC) $(HEAD) coverage/MockHeaders.h coverage/MockHeaders.cpp test/MockHeaderInclude.h | coverage.Dir
-	@$(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
+	@$(MAKE) TARGET_OVERRIDE=$(COVERAGE_LIB).a item
 	@touch coverage/$(COVERAGE_LIB)
 
 run_unit_test: $(PRETEST)

@@ -1,3 +1,14 @@
+# =============================================================================
+# core/platform.mk — OS, hardware and compiler detection
+#
+# Requires: (nothing — this is core; loaded first)
+# Defines:  PLATFORM HARDWARE PLATHARD PLATFORMVER PLATFORM_CAT
+#           SO SONAME SHARED_LIB_FLAG ECHO MKTEMP CXX COV ARCH_FLAG
+#           COVERAGE_LIB PLATFORM_LIB VERA COMPILER_NAME COMPILER_VERSION
+#           COMPILER_EXT COV_TOOL RUNTIME_SHARED_PATH_SET DEFAULT_LIB_DIR
+#           RUNTIME_PATHS_USED_TO_LOAD and platform-specific lookup tables.
+# Goals:    (none — pure definitions)
+# =============================================================================
 
 HARDWARE_DEFAULT					= $(HARDWARE_DEFAULT_NV$(DISABLE_CONTROL_CODES))
 HARDWARE_DEFAULT_NVFALSE			:= $(shell uname -m)
@@ -120,4 +131,3 @@ DEFAULT_LIB_DIR_Linux				= /usr/local/lib
 DEFAULT_LIB_DIR_MSYS_NT				= /usr/local/lib
 DEFAULT_LIB_DIR_MINGW64_NT			= /usr/local/lib
 RUNTIME_PATHS_USED_TO_LOAD			= $(RUNTIME_PATH):$(LDLIBS_EXTERN_PATH):$(DEFAULT_LIB_DIR)
-

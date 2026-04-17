@@ -1,7 +1,18 @@
+# =============================================================================
+# targets/vera.mk — vera++ per-file static analysis pass
+#
+# Requires: VERA VERA_ROOT SRC HEAD VERA_SRC                         (core/variables.mk)
+#           ECHO colour_text LINE_WIDTH MODE_TEXT_COLOR RED_ERROR GREEN_OK
+# Defines:  VERA_OBJ VERA_EXCLUDE_FILE VERA_EXLUSION
+# Goals:    ActionRunVera vera-% report/vera report/vera.show
+#           coverage/%.vera
+# =============================================================================
 
 # External
 .PHONY:	ActionRunVera vera-%
 # Internal
+
+.PRECIOUS:	%.vera
 
 VERA_OBJ					= $(patsubst %,coverage/%.vera, $(VERA_SRC))
 
@@ -16,7 +27,7 @@ vera-%:
 
 report/vera:  $(SRC) $(HEAD) | report.Dir
 	@$(ECHO) $(call section_title,Static Analysis) | tee report/vera
-	@if [[ "$(VERA)" != "off" ]]; then $(MAKE) FILEDIR=$(FILEDIR) DISABLE_CONTROL_CODES=$(DISABLE_CONTROL_CODES) TARGET_MODE=coverage $(VERA_OBJ); fi
+	@if [[ "$(VERA)" != "off" ]]; then $(MAKE) TARGET_MODE=coverage $(VERA_OBJ); fi
 	@echo -n | cat - $$(ls coverage/*.vera 2> /dev/null) >> report/vera
 	@touch report/vera.show
 
