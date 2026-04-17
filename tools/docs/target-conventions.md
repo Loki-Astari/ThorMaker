@@ -146,6 +146,7 @@ This builds `ThorsDB.lib` from the three defer projects above.
 | `TEST_ONLY=YES`     | Build locally only; do not push to `$(BUILD_ROOT)`       | `NO`               |
 | `COVERAGE_REQUIRED` | Minimum coverage %. Override per-project to reduce.      | `80`               |
 | `CMAKE_CONFIG=yes`  | **Driver mode only.** Install ThorsAnvil CMake package config files so downstream CMake consumers can `find_package()`. Typically set only at the top-level project-root Makefile. | unset |
+| `THOR_DEBUG_LOAD=1` | **Leaf mode only.** Disable goal-based lazy-loading and force every fragment to load. Use when diagnosing "why isn't goal X defined?" or when `make print` needs the full variable surface. Normal builds leave this unset. | unset |
 
 ### Standard Make flag variables
 
