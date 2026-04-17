@@ -10,7 +10,7 @@
 # =============================================================================
 
 #
-# Also check out echo in the Platform.Makefile
+# Also check out echo in core/platform.mk
 
 DEFAULT_COLOUR					= $(DEFAULT_COLOUR_NV$(DISABLE_CONTROL_CODES))
 DEFAULT_COLOUR_NVFALSE			= ON

@@ -59,7 +59,7 @@ COVERAGE_REQUIRED	?= 80
 COVERAGE_REQUIRED_TEST = $(if $(filter-out MSYS_NT, $(filter-out MINGW64_NT, $(PLATFORM))), $(COVERAGE_REQUIRED), 0)
 
 #
-# Look in Platform.Makefile
+# Look in core/platform.mk
 # These value may have platform specific values.
 # They are defined here as a last resort (i.e. default values)
 #
