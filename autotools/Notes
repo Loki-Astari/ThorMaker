@@ -39,11 +39,11 @@ addMakeFile () {
 
     mkdir -p $1
     cat - > $1/Makefile <<Makefile
-THORSANVIL_ROOT             = \$(realpath $2)
+THORSANVIL_ROOT				= \$(realpath $2)
+$4						= $3
 
-TARGET                      = $3
 
-include \$(THORSANVIL_ROOT)/build/tools/$4
+include \$(THORSANVIL_ROOT)/build/tools/Makefile
 Makefile
 }
 
@@ -145,7 +145,7 @@ usage2 () {
 
 checkForBuildTools () {
 
-    if [[ ! -e build/Notes ]]; then
+    if [[ ! -e build/autotools/Notes ]]; then
         echo "Installing ThorMaker"
         git submodule init
         git submodule add https://github.com/Loki-Astari/ThorMaker.git build
@@ -187,8 +187,8 @@ startConfigure() {
 
         echo "Creating Base Autotools Files"
         addConfigureAC ${BaseName}
-        addMakeFile . ./ src Project.Makefile
-        addMakeFile src ../ "$*" Project.Makefile
+        addMakeFile . ./ src SUBDIRS
+        addMakeFile src ../ "$*" SUBDIRS
         addMakeFileExtra
         addMakeFileConfig
         addConfigHIN
@@ -203,7 +203,7 @@ startConfigure() {
             mkdir -p src/${a}
             echo "#include \"${a}.h\""       > src/${a}/${a}.cpp
             echo "#include \"${a}Config.h\"" > src/${a}/${a}.h 
-            addMakeFile src/${a} ../../ ${a}.slib Makefile
+            addMakeFile src/${a} ../../ ${a}.slib TARGET
         done
 
         fixConfigHIn
