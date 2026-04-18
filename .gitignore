@@ -8,3 +8,4 @@ dobj
 dlib
 .build
 *.swp
+.claude
