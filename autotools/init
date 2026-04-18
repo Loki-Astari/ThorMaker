@@ -241,6 +241,9 @@ createConfigure() {
     done
 
     fixConfigHIn
+    #
+    # Notes should have been linked to build/autotools/Notes by now.
+    ./Notes
 
     echo "Adding base files to git"
     git add Notes
@@ -263,9 +266,6 @@ createConfigure() {
 checkState $@
 echo "Starting Configuration"
 createConfigure $@
-#
-# Notes should have been linked to build/autotools/Notes by now.
-./Notes
 
 echo ""
 echo "Project is ready."
