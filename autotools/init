@@ -217,6 +217,7 @@ createConfigure() {
     echo "Installing ThorMaker"
     git submodule add https://github.com/Loki-Astari/ThorMaker.git build
     git submodule update --init --recursive
+    sed -i -e 's#https://github.com#../..#' .gitmodules
     ln -s build/autotools/Notes .
 
     echo "Creating Base Autotools Files"
@@ -246,6 +247,7 @@ createConfigure() {
     ./Notes
 
     echo "Adding base files to git"
+    git add .gitmodules
     git add Notes
     git add configure configure.ac
     git add Makefile.config.in
@@ -253,7 +255,6 @@ createConfigure() {
     git add Makefile src/Makefile
     git add config.h.in
     git add .gitignore
-    git add Notes
 
     for a in $@; do
         git add src/${a}/${a}.cpp src/${a}/${a}.h src/${a}/Makefile
