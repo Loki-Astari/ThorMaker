@@ -257,11 +257,6 @@ createConfigure() {
     done
 
     git commit -a -m "Initial commit"
-
-    echo ""
-    echo "Project is ready."
-    echo "Run:  cd $(basename $(pwd)) && ./configure && make"
-    exit
 }
 
 
@@ -271,4 +266,8 @@ createConfigure $@
 #
 # Notes should have been linked to build/autotools/Notes by now.
 ./Notes
+
+echo ""
+echo "Project is ready."
+echo "Run:  cd $(basename $(pwd)) && ./configure && make"
 
