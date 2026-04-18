@@ -2,7 +2,7 @@
 
 #
 # Set the Version of C++ you want to use.
-#   Check a set of compieler flags that are not consistent across platforms.
+#   Check a set of compiler flags that are not consistent across platforms.
 #       All Flags are put in Makefile.config.in automatically.
 #       All Flags are used by the build/tools/Makefile
 #
@@ -425,7 +425,7 @@ AC_DEFUN([AX_THOR_FUNC_BUILD_COLOUR_MODE],
         AS_HELP_STRING([--enable-dark-mode], [If your background is black some text that was grey is turned yellow])
     )
     AS_IF(
-        [test "x$enable_dark-mode" != "xyes"],
+        [test "x$enable_dark-mode" == "xyes"],
         [
             DARK_MODE="ON"
             subconfigure="${subconfigure} --enable-dark-mode"
@@ -792,7 +792,7 @@ AC_DEFUN([AX_THOR_CHECK_IS_SLACK_TESTABLE],
             Failed to authenticate with slack please check your token
 
             Command used:
-                curl --header "authorization: Bearer ${with_slack_botToken}" --header "content-type: application/json; charset=utf-8" --request GET https://slack.com/api/auth.test
+                curl --header "authorization: Bearer <Token>" --header "content-type: application/json; charset=utf-8" --request GET https://slack.com/api/auth.test
 
             Response:
                 ${data}
@@ -1081,7 +1081,6 @@ You can install this with
 Alternately if you have manually installed magic_enum you can specify its location with
     --with-magicenum-header-only-root=<location of magic_enum installation>/include
 
-            ])
         ]
     )
 ])
@@ -1340,7 +1339,7 @@ AC_DEFUN([AX_THOR_CHECK_USE_SMARTY],
 [
     AC_CHECK_LIB(
         [smarty],
-        [__ZN6snappy10UncompressEPNS_6SourceEPNS_4SinkE]
+        [__ZN6snappy10UncompressEPNS_6SourceEPNS_4SinkE],
         [],
         [
             AC_MSG_ERROR([
@@ -1525,7 +1524,7 @@ Error: Could not find `timegm()` function on your system.
         )
     ],
     [
-        AC_DEFINE([THOR_USE_TIMEGM_FLASE], [1], [Disable tests that use timegm()])
+        AC_DEFINE([THOR_USE_TIMEGM_FALSE], [1], [Disable tests that use timegm()])
     ])
 ])
 
@@ -1810,7 +1809,7 @@ AC_DEFUN([AX_THOR_FUNC_TEST_BINARY],
                         [networkbyteorderfunction="thorsNetworkByteOrder"],
                         [
                             AX_BSWAP64
-                            networkbyteorderfunction = bswap64_function;
+                            networkbyteorderfunction=bswap64_function;
                         ]
                     )
                 ]
@@ -2033,7 +2032,7 @@ AC_DEFUN([AX_THOR_SERVICE_AVAILABLE_MONGO],
 
 AC_DEFUN([AX_THOR_DEPIRCATE],
 [
-    AC_MSG_FAILURE([Depricated: $1 => $2])
+    AC_MSG_FAILURE([Deprecated: $1 => $2])
 ])
 
 AC_DEFUN([AX_THOR_FUNC_BUILD],                  AX_THOR_DEPIRCATE([D_AX_THOR_FUNC_BUILD],                   [D_AX_THOR_FUNC_INIT_BUILD]))
