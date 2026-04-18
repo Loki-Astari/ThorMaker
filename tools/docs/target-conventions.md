@@ -68,16 +68,14 @@ Each mode builds object files into its own directory: `debug/`, `release/`,
 | Suffix   | Meaning                                                                                        |
 |----------|------------------------------------------------------------------------------------------------|
 | `.prog`  | An executable. The `.prog` suffix is stripped from the final name.                             |
-|          | (Older versions used `.app`; that is not viable on a Mac.)                                     |
-| `.dir`   | Build a subdirectory.                                                                          |
-| `.a`     | A static library. The `lib` prefix is added automatically.                                     |
-| `.slib`  | A shared library. `lib` prefix added; platform-specific suffix replaces `slib`.                |
+| `.lib`   | Static or shared, depending on `THOR_TARGETLIBS` (usually set by configure).                   |
+| `.a`     | Specifically static library. The `lib` prefix is added automatically.                          |
+| `.slib`  | Specifically shared library. Platform specific prefix added.                                   |
 | `.head`  | A header-only library.                                                                         |
 | `.defer` | Build object files but do not build a library. See [Defer mode](#defer-mode).                  |
 | `.test`  | Only build and run the test. No debug/release/install action.                                  |
-| `.lib`   | Static or shared, depending on `THOR_TARGETLIBS` (usually set by configure).                   |
-|          | Empty `THOR_TARGETLIBS` defaults to shared. Each value in `THOR_TARGETLIBS` adds a version of the library to the target. |
-|          | `TARGET=XXX.lib THOR_TARGETLIBS="slib a"` → `NEW_TARGET=XXX.slib XXX.a`                         |
+| -------  | --------                                                                                       |
+|          | Empty `THOR_TARGETLIBS` defaults to shared. Each value in `THOR_TARGETLIBS` adds a version of the library to the target. `TARGET=XXX.lib THOR_TARGETLIBS="slib a"` → `NEW_TARGET=XXX.slib XXX.a`  |
 
 ## Artifact naming
 
@@ -93,9 +91,7 @@ libX17.so     X, C++17, release
 libX17D.so    X, C++17, debug
 ```
 
-Format: `lib<Name><CXXSTDVER>[D].<platform-ext>` where the trailing `D`
-appears for debug and coverage modes. (A future `S` suffix is reserved for
-explicitly single-threaded builds.)
+Format: `lib<Name><CXXSTDVER>[D].<platform-ext>` where the trailing `D` appears for debug builds. Note: When fully installed symbolic links are provided from `lib<Name>.<platform-ext>` -> Current release version.
 
 ## Source files
 
@@ -109,8 +105,7 @@ The build picks up these extensions from the current directory:
 | `*.l`                        | Flex/lex lexer               |
 | `*.gperf`                    | gperf perfect-hash input     |
 
-Plain `*.c` files are not picked up — compile everything through a C++
-compiler.
+Plain `*.c` files are not picked up — compile everything through a C++ compiler.
 
 ## Multiple targets and the "only target" rule
 
@@ -137,7 +132,7 @@ For applications:
 No extra setup required — if the build finds a `test/` directory next to
 your sources, it will:
 
-1. Build a unit-test binary from the files in `test/`.
+1. Build a unit-test binary from the files in `test/` with flags to get coverage information.
 2. Run the binary.
 3. Compute coverage against the code in the parent directory.
 
@@ -164,21 +159,19 @@ This builds `ThorsDB.lib` from the three defer projects above.
 
 | Flag                | Purpose                                                  | Default            |
 |---------------------|----------------------------------------------------------|--------------------|
-| `CXXSTDVER`         | 03 / 11 / 14 / 17 / 20                                   | `11`               |
-| `CXX_STD_FLAG`      | Explicit `-std=` flag                                    | `-std=c++11`       |
+| `CXXSTDVER`         | 03 / 11 / 14 / 17 / 20                                   | `20`               |
 | `VERBOSE=On`        | Print the full compile command rather than a summary     | `NONE`             |
 | `NO_HEADER`         | Prevents header files from being installed (for libs)    | unset              |
 | `TEST_ONLY=YES`     | Build locally only; do not push to `$(BUILD_ROOT)`       | `NO`               |
 | `COVERAGE_REQUIRED` | Minimum coverage %. Override per-project to reduce.      | `80`               |
 | `CMAKE_CONFIG=yes`  | **Driver mode only.** Install ThorsAnvil CMake package config files so downstream CMake consumers can `find_package()`. Typically set only at the top-level project-root Makefile. | unset |
 | `THOR_DEBUG_LOAD=1` | **Leaf mode only.** Disable goal-based lazy-loading and force every fragment to load. Use when diagnosing "why isn't goal X defined?" or when `make print` needs the full variable surface. Normal builds leave this unset. | unset |
-| `CONFIG_NAME`   | Subproject name used to locate `third/<CONFIG_NAME>/Makefile.config`. Set in every leaf Makefile that belongs to a third-party subproject so that configure-generated settings are picked up. | unset |
-| `NAMESPACE`     | C++ namespace used by the header-only conversion tool (`build-honly` / `build-hcont`). | unset |
-| `DEFER_NAME`    | Grouping name for `.defer` targets. Object files are saved under `$(PREFIX_DEFER_OBJ)/<DEFER_NAME>/`. Automatically extracted from the `.defer` suffix in `TARGET` — only set it explicitly if you need a name that differs from the target basename. | auto |
-| `DEFER_LIBS`    | List of defer project names whose objects should be combined into the final library. Used in the "collector" directory that builds a `.lib` from multiple `.defer` projects. | unset |
-| `EXCLUDE_HEADERS` | Header files to exclude from installation. Applied as a `filter-out` against the discovered `*.h *.tpp *.hpp` files. | unset |
-| `EXTRA_HEADERS` | Additional header files to install that are not matched by the default `*.h *.tpp *.hpp` globs. | unset |
-| `VERA`          | Override the vera++ command. Set to `echo` to disable static analysis for a single project (e.g., third-party headers). | `vera++` |
+| `CONFIG_NAME`       | Subproject name used to locate `third/<CONFIG_NAME>/Makefile.config`. Set in every leaf Makefile that belongs to a third-party subproject so that configure-generated settings are picked up. | unset |
+| `NAMESPACE`         | C++ namespace used by the header-only conversion tool (`build-honly` / `build-hcont`). | unset |
+| `DEFER_NAME`        | Grouping name for `.defer` targets. Object files are saved under `$(PREFIX_DEFER_OBJ)/<DEFER_NAME>/`. Automatically extracted from the `.defer` suffix in `TARGET` — only set it explicitly if you need a name that differs from the target basename. | auto |
+| `DEFER_LIBS`        | List of defer project names whose objects should be combined into the final library. Used in the "collector" directory that builds a `.lib` from multiple `.defer` projects. | unset |
+| `EXCLUDE_HEADERS`   | Header files to exclude from installation. Applied as a `filter-out` against the discovered `*.h *.tpp *.hpp` files. | unset |
+| `EXTRA_HEADERS`     | Additional header files to install that are not matched by the default `*.h *.tpp *.hpp` globs. | unset |
 
 ### Standard Make flag variables
 
@@ -201,8 +194,8 @@ These look similar but serve different roles:
 - **`LINK_LIBS`** — libraries built by **this** repo (or any repo using
   ThorMaker). Each name is auto-suffixed with the current build extension
   so you link against the matching debug/release/C++-standard variant.
-  Example: `LINK_LIBS = ThorsLogging ThorSerialize` → `-lThorsLogging11D
-  -lThorSerialize11D` in a C++11 debug build.
+  Example: `LINK_LIBS = ThorsLogging ThorSerialize` → `-lThorsLogging20D
+  -lThorSerialize20D` in a C++20 debug build.
 
 ### Per-target / per-file flags
 
@@ -255,5 +248,5 @@ will usually see `foo_ROOT_DIR` defined there.
 make test-<TestName>       # <TestName> may be *, ClassName.*, or ClassName.TestMethod
 make testrun.<TestName>    # only run, don't rebuild
 make debugrun.<TestName>   # run under lldb
-make coverage-file.h       # display coverage for file.h
+make coverage-<FileName>   # display coverage for "FileName"
 ```

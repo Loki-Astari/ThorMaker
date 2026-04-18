@@ -37,14 +37,11 @@ Install prerequisites (autoconf, automake, libtool — see
 [tools/docs/setup.md](tools/docs/setup.md)), then bootstrap a new project:
 
 ```bash
-mkdir MyProj && cd MyProj
-git init
-curl -LO https://raw.githubusercontent.com/Loki-Astari/ThorMaker/master/autotools/Notes
-chmod +x Notes
-./Notes MyProj
-git commit -a -m "Initial commit"
+bash <(curl -fsSL https://raw.githubusercontent.com/Loki-Astari/ThorMaker/master/autotools/Notes) MyProj
+cd MyProj
 ```
 
+### Example
 A minimal leaf-project Makefile:
 
 ```make

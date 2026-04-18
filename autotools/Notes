@@ -1,15 +1,57 @@
 #!/bin/bash
 
+
+###
+#   usage ()                    print usage instructions.
+#   checkAutoTools()            Validate that you have the auto tools set up
+#   addConfigureAC ()           Create:         configure.ac
+#   addMakeFile ()              Create:         Makefile
+#   addMakeFileExtra ()         Create:         Makefile.extra.am
+#                                               Makefile.extra.in
+#   addMakeFileConfig ()        Create:         Makefile.config.in
+#   addConfigHIN ()             Creage:         config.h.in
+#   fixConfigHIn()              Create:         config.h.in
+#   addGitIgnore ()             Create:         .gitignore
+#   initNewProject ()           Set up directory and call git init.
+#   checkForBuildTools ()       Link the build tools to your directory.
+#   createConfigure()           Call all the above functions.
+#   updateConfigure()           Build/ReBuild the configure file from configure.ac
+###
+
+usage () {
+    echo "First time usage. Please provide the name of your package you want to build"
+    echo
+    echo "Exmaple:"
+    echo "    # This will set up a basic project for building the shared library BobsPastry.so"
+    echo "    bash <(curl -fsSL https://raw.githubusercontent.com/Loki-Astari/ThorMaker/master/autotools/Notes) MyProj"
+    echo
+    echo "    # This will set up a project for building multiple shared library Bobs.so Pastry.so And.so Tarts.so"
+    echo "    bash <(curl -fsSL https://raw.githubusercontent.com/Loki-Astari/ThorMaker/master/autotools/Notes) Bobs Pastry And Tarts"
+    echo
+    exit 1
+}
+
+checkAutoTools() {
+   autoreconf --version > /dev/null
+   if [[ $? != 0 ]]; then
+       echo "Can not find autotools"
+       echo "Please install"
+       echo
+       echo "On a mac use: brew install autoconf automake libtool"
+       exit 1
+   fi
+}
+
 addConfigureAC () {
 
-BaseName=$1
-BaseNameUpper=$( echo ${BaseName} | tr '[:lower:]' '[:upper:]' )
+    BaseName=$1
+    BaseNameUpper=$( echo ${BaseName} | tr '[:lower:]' '[:upper:]' )
 
-ConfFiles1=""
-for a in $*; do
-    ConfFiles1="${ConfFiles1} src/${a}/${a}Config.h:config.h.in"
-done
-ConfFiles=$(echo ${ConfFiles1} | xargs)
+    ConfFiles1=""
+    for a in $*; do
+        ConfFiles1="${ConfFiles1} src/${a}/${a}Config.h:config.h.in"
+    done
+    ConfFiles=$(echo ${ConfFiles1} | xargs)
 
     cat - > configure.ac <<CONFIGUREAC
 AC_INIT([$(basename $(pwd))], [0.1], [YourName+$(basename $(pwd))@Email.com])
@@ -79,6 +121,21 @@ addConfigHIN () {
 
 }
 
+fixConfigHIn() {
+
+    grep -A1 -B2 HEADER_ONLY config.h.in > config.HO
+
+    grep -v HEADER_ONLY config.h.in | awk '/^#define  [A-Z_]*_CONFIG_H$/ {print $0;print "#ifndef  THORS_PACKAGE_INFO_CONFIG_H"; print "#define  THORS_PACKAGE_INFO_CONFIG_H";next;} /^#endif$/ {next;} {print $0}' > config.tmp
+    echo "#endif" >> config.tmp
+    echo "" >> config.tmp
+    cat config.HO >> config.tmp
+    echo "" >> config.tmp
+    echo "#endif" >> config.tmp
+
+    mv config.tmp config.h.in 
+    rm config.HO
+}
+
 addGitIgnore () {
 
     cat - >> .gitignore << GitIgnore
@@ -122,25 +179,15 @@ GitIgnore
 
 }
 
-usage1 () {
-    echo "We were expecting this to be a git repository"
-    echo
-    echo "Create one with: "
-    echo "    git init"
-    exit
-}
-
-usage2 () {
-    echo "First time usage. Please provide the name of your package you want to build"
-    echo
-    echo "Exmaple:"
-    echo "    # This will set up a basic project for building the shared library BobsPastry.so"
-    echo "    ./Notes BobsPastry"
-    echo
-    echo "    # This will set up a project for building multiple shared library Bobs.so Pastry.so And.so Tarts.so"
-    echo "    ./Notes Bobs Pastry And Tarts"
-    echo
-    exit
+initNewProject () {
+    ProjectName="$1"
+    if [[ -e "${ProjectName}" ]]; then
+        echo "Error: '${ProjectName}' already exists"
+        exit 1
+    fi
+    mkdir "${ProjectName}"
+    cd "${ProjectName}"
+    git init
 }
 
 checkForBuildTools () {
@@ -154,74 +201,65 @@ checkForBuildTools () {
     fi
 }
 
-fixConfigHIn() {
+createConfigure() {
 
-    grep -A1 -B2 HEADER_ONLY config.h.in > config.HO
+    if [[ "$#" == "0" ]]; then
+        usage
+    fi
+    if [[ ! -e .git ]]; then
+        initNewProject "$1"
+    fi
+    echo "Building Example Configuration"
+    BaseName=$*
 
-    grep -v HEADER_ONLY config.h.in | awk '/^#define  [A-Z_]*_CONFIG_H$/ {print $0;print "#ifndef  THORS_PACKAGE_INFO_CONFIG_H"; print "#define  THORS_PACKAGE_INFO_CONFIG_H";next;} /^#endif$/ {next;} {print $0}' > config.tmp
-    echo "#endif" >> config.tmp
-    echo "" >> config.tmp
-    cat config.HO >> config.tmp
-    echo "" >> config.tmp
-    echo "#endif" >> config.tmp
+    checkForBuildTools
 
-    mv config.tmp config.h.in 
-    rm config.HO
+    echo "Creating Base Autotools Files"
+    addConfigureAC ${BaseName}
+    addMakeFile . ./ src SUBDIRS
+    addMakeFile src ../ "$*" SUBDIRS
+    addMakeFileExtra
+    addMakeFileConfig
+    addConfigHIN
+    addGitIgnore ${BaseName}
+
+    echo "Initial run of Autotools"
+    autoreconf --install
+    echo "" > Makefile.extra.in
+
+    echo "Install First Source Files"
+    for a in $*; do
+        mkdir -p src/${a}
+        echo "#include \"${a}.h\""       > src/${a}/${a}.cpp
+        echo "#include \"${a}Config.h\"" > src/${a}/${a}.h 
+        addMakeFile src/${a} ../../ ${a}.slib TARGET
+    done
+
+    fixConfigHIn
+
+    echo "Adding base files to git"
+    git add Notes
+    git add configure configure.ac
+    git add Makefile.config.in
+    git add Makefile.extra.am Makefile.extra.in
+    git add Makefile src/Makefile
+    git add config.h.in
+    git add .gitignore
+
+    for a in $*; do
+        git add src/${a}/${a}.cpp src/${a}/${a}.h src/${a}/Makefile
+    done
+
+    git commit -a -m "Initial commit"
+
+    echo ""
+    echo "Project is ready."
+    echo "Run:  cd $(basename $(pwd)) && ./configure && make"
+    exit
 }
 
-startConfigure() {
 
-    echo "Starting Configuration"
-    if [[ ! -e configure.ac ]]; then
-
-        if [[ ! -e .git ]]; then
-            usage1
-        fi
-        if [[ "$#" == "0" ]]; then
-            usage2
-        fi
-        echo "Building Example Configuration"
-        BaseName=$*
-
-        checkForBuildTools
-
-        echo "Creating Base Autotools Files"
-        addConfigureAC ${BaseName}
-        addMakeFile . ./ src SUBDIRS
-        addMakeFile src ../ "$*" SUBDIRS
-        addMakeFileExtra
-        addMakeFileConfig
-        addConfigHIN
-        addGitIgnore ${BaseName}
-
-        echo "Initial run of Autotools"
-        autoreconf --install
-        echo "" > Makefile.extra.in
-
-        echo "Install First Source Files"
-        for a in $*; do
-            mkdir -p src/${a}
-            echo "#include \"${a}.h\""       > src/${a}/${a}.cpp
-            echo "#include \"${a}Config.h\"" > src/${a}/${a}.h 
-            addMakeFile src/${a} ../../ ${a}.slib TARGET
-        done
-
-        fixConfigHIn
-
-        echo "Adding base files to git"
-        git add Notes
-        git add configure configure.ac
-        git add Makefile.config.in
-        git add Makefile.extra.am Makefile.extra.in
-        git add Makefile src/Makefile
-        git add config.h.in
-        git add .gitignore
-
-        for a in $*; do
-            git add src/${a}/${a}.cpp src/${a}/${a}.h src/${a}/Makefile
-        done
-        exit
-    fi
+updateConfigure () {
 
     echo "Configuring"
     rm configure
@@ -247,18 +285,12 @@ SUBMODULE_UPDATE
     git submodule update --recursive
 }
 
-checkAutoTools() {
-   autoreconf --version > /dev/null
-   if [[ $? != 0 ]]; then
-       echo "Can not find autotools"
-       echo "Please install"
-       echo
-       echo "On a mac use: brew install autoconf automake libtool"
-       exit 1
-   fi
-}
 
 
 checkAutoTools
-startConfigure $1
+echo "Starting Configuration"
+if [[ ! -e configure.ac ]]; then
+    createConfigure $1
+fi
+updateConfigure $1
 

@@ -169,8 +169,9 @@ GCOV_REPORT					= $(patsubst coverage/%.gcov, %_report_coverage, $(GCOV_SRC)) $(
 # NONE:		Turn of messages and build in parallel
 VERBOSE						?=	NONE
 #
-# Set to 03 for old C++
-CXXSTDVER					?=  11
+# Default to a decent version.
+# Usually set via the configure tools. Which will set a value Makefile.config in your root directory.
+CXXSTDVER					?=  20
 #
 # By default build debug when in a directory
 TARGET_MODE					?=	debug
