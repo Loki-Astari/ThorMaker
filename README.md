@@ -37,7 +37,7 @@ Install prerequisites (autoconf, automake, libtool — see
 [tools/docs/setup.md](tools/docs/setup.md)), then bootstrap a new project:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Loki-Astari/ThorMaker/master/autotools/Notes) MyProj
+bash <(curl -fsSL https://raw.githubusercontent.com/Loki-Astari/ThorMaker/master/autotools/init) MyProj
 cd MyProj
 ```
 

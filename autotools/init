@@ -210,18 +210,17 @@ createConfigure() {
     echo "Building Example Configuration"
     BaseName=$1
 
-    mkdir ${BaseName}
     mkdir "${BaseName}"
     cd "${BaseName}"
     git init
 
     echo "Installing ThorMaker"
-    git submodule update --init
-    git submodule add --recursive https://github.com/Loki-Astari/ThorMaker.git build
+    git submodule add https://github.com/Loki-Astari/ThorMaker.git build
+    git submodule update --init --recursive
     ln -s build/autotools/Notes .
 
     echo "Creating Base Autotools Files"
-    addConfigureAC ${BaseName}
+    addConfigureAC $@
     addMakeFile . ./ src SUBDIRS
     addMakeFile src ../ "$*" SUBDIRS
     addMakeFileExtra
