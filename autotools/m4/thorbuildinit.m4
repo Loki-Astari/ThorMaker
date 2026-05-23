@@ -1100,8 +1100,13 @@ AC_DEFUN([AX_THOR_CHECK_USE_EVENT],
 
     AS_IF(
         [test "x${with_custom_event}" != "x"],
-        [thor_event_lib=${with_custom_event}],
-        [thor_event_lib=event]
+        [
+            thor_event_lib=${with_custom_event}
+            subconfigure="${subconfigure} --with-custom-event=${with_custom_event}"
+        ],
+        [
+            thor_event_lib=event
+        ]
     )
 
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
