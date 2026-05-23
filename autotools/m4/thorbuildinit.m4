@@ -1093,12 +1093,23 @@ AC_DEFUN([AX_THOR_CHECK_USE_EVENT],
         [threadEvent=event_pthreads]
     )
 
+    AC_ARG_WITH(
+        [custom-event],
+        AS_HELP_STRING([--with-custom-event=<lib>], [Override the libevent library name (default: event). Use event_core for Conan component-split builds.])
+    )
+
+    AS_IF(
+        [test "x${with_custom_event}" != "x"],
+        [thor_event_lib=${with_custom_event}],
+        [thor_event_lib=event]
+    )
+
     AX_THOR_CHECK_TEMPLATE_LIBRARY_TEST(
         [event],
         [event],
         [Event],
-        [event], [event_dispatch],
-        [event ${threadEvent}],
+        [${thor_event_lib}], [event_dispatch],
+        [${thor_event_lib} ${threadEvent}],
         [EVENT],
         [event],
         [NotThor],
@@ -1112,6 +1123,9 @@ Error: Could not find libevent
 
     If libevent is not installed in the default location (/usr/local or /opt/homebrew) then you will need to specify its location.
     --with-event-root=<location of event installation>
+
+    If libevent is installed with split components (e.g. Conan), use:
+    --with-custom-event=event_core
 
 
         ]
