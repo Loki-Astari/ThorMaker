@@ -117,7 +117,7 @@ addMakeFile () {
 
     mkdir -p "$1"
     cat - > "$1/Makefile" <<Makefile
-THORSANVIL_ROOT				= \$(realpath $2)
+THORSANVIL_ROOT				?= \$(realpath $2)
 $4						= $3
 
 
