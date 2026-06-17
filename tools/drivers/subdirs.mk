@@ -24,7 +24,7 @@
 #   foo.OnlyMac   → build on Mac only     (etc.)
 # =============================================================================
 
-.PHONY:	all test clean veryclean install uninstall profile build lint vera doc %.dir
+.PHONY:	all test clean veryclean install uninstall devinstall devuninstall profile build lint vera doc %.dir
 
 MAKEFLAGS				+= --silent
 DISABLE_CONTROL_CODES	?= FALSE
@@ -57,6 +57,8 @@ clean:		ACTION=clean
 veryclean:	ACTION=veryclean NODEP=1
 install:	ACTION=install
 uninstall:	ACTION=uninstall
+devinstall:	ACTION=devinstall
+devuninstall:	ACTION=devuninstall
 profile:	ACTION=profile
 build:		ACTION=build
 lint:		ACTION=lint
@@ -79,6 +81,8 @@ clean:		$(SUB_PROJECTS)
 veryclean:	$(SUB_PROJECTS)
 install:	$(SUB_PROJECTS)
 uninstall:	$(SUB_PROJECTS)
+devinstall:	$(SUB_PROJECTS)
+devuninstall:	$(SUB_PROJECTS)
 profile:	$(SUB_PROJECTS)
 build:		$(SUB_PROJECTS)
 lint:		check_lint $(SUB_PROJECTS)

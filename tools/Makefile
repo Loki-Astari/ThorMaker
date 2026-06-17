@@ -103,6 +103,7 @@ else ifneq ($(strip $(TARGET)),)
   # `make print` needs to see the full surface.
   ifneq ($(strip $(THOR_DEBUG_LOAD)),)
     include $(BUILD_ROOT)/tools/targets/install.mk
+    include $(BUILD_ROOT)/tools/targets/devinstall.mk
     include $(BUILD_ROOT)/tools/targets/test.mk
     include $(BUILD_ROOT)/tools/targets/coverage.mk
     include $(BUILD_ROOT)/tools/targets/vera.mk
@@ -111,22 +112,26 @@ else ifneq ($(strip $(TARGET)),)
     include $(BUILD_ROOT)/tools/integrations/neovim.mk
     include $(BUILD_ROOT)/tools/integrations/header-only.mk
   else
-    ifneq ($(filter all build install uninstall release-only veryclean \
+    ifneq ($(filter all build install uninstall devinstall release-only veryclean \
                     ActionInstall% ActionUInstall% ActionDo% ActionTry%,$(_GOALS)),)
       include $(BUILD_ROOT)/tools/targets/install.mk
     endif
-    ifneq ($(filter all build install test testonly \
+    ifneq ($(filter devinstall devuninstall \
+                    ActionDevInstall% ActionDevUInstall%,$(_GOALS)),)
+      include $(BUILD_ROOT)/tools/targets/devinstall.mk
+    endif
+    ifneq ($(filter all build install devinstall test testonly \
                     ActionRunUnitTest build_unit_test run_unit_test \
                     test-% testrun.% debugrun.% reportErrorCheck,$(_GOALS)),)
       include $(BUILD_ROOT)/tools/targets/test.mk
     endif
-    ifneq ($(filter all build install test covonly \
+    ifneq ($(filter all build install devinstall test covonly \
                     ActionRunCoverage coverage-% coverage/%.out \
                     check_coverage _build_coverage _stop_coverage \
                     reportCoverage,$(_GOALS)),)
       include $(BUILD_ROOT)/tools/targets/coverage.mk
     endif
-    ifneq ($(filter all build install test veraonly vera \
+    ifneq ($(filter all build install devinstall test veraonly vera \
                     ActionRunVera vera-% coverage/%.vera,$(_GOALS)),)
       include $(BUILD_ROOT)/tools/targets/vera.mk
     endif

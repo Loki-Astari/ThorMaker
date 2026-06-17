@@ -22,6 +22,7 @@
 #	$(CC) $(LDFLAGS) N.o $(LOADLIBES) $(LDLIBS)
 
 .PHONY:	all install uninstall build veryclean debug release lint item
+.PHONY:	devinstall devuninstall
 .PHONY: buildDir
 .PHONY:	testonly covonly
 .PHONY:	test
@@ -38,6 +39,10 @@ install:				test debug release
 	@$(MAKE) INSTALL_ACTIVE=YES	ActionInstall
 uninstall:
 	@$(MAKE) INSTALL_ACTIVE=YES	ActionUInstall
+devinstall:				build
+	@$(MAKE) INSTALL_ACTIVE=YES	ActionDevInstall
+devuninstall:
+	@$(MAKE) INSTALL_ACTIVE=YES	ActionDevUInstall
 build:					test debug release
 	@$(MAKE) INSTALL_ACTIVE=NO	ActionInstall
 	@$(MAKE) done
