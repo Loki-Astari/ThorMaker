@@ -34,6 +34,14 @@ DEVINSTALL_SRC_BIN				= $(BUILD_ROOT)/bin
 DEVINSTALL_SRC_LIB				= $(BUILD_ROOT)/lib
 DEVINSTALL_SRC_INC				= $(BUILD_ROOT)/include
 
+LIBBASENAME_ONE_OF				?= $(patsubst %.a,    %, $(filter %.a,    $(TARGET_ALL)))	\
+									  $(patsubst %.slib, %, $(filter %.slib, $(TARGET_ALL)))	\
+									  $(patsubst %.lib,  %, $(filter %.lib,  $(TARGET_ALL)))	\
+									  $(patsubst %.head, %, $(filter %.head, $(TARGET_ALL)))	\
+									  $(patsubst %.test, %, $(filter %.test, $(TARGET_ALL)))	\
+									  $(patsubst %.defer,%, $(filter %.defer,$(TARGET_ALL)))
+LIBBASENAME_ACTUAL				?= $(strip $(firstword $(LIBBASENAME_ONE_OF)))
+
 USE_HEADER						?= $(if $(NO_HEADER),NO,YES)
 DEVINSTALL_LIBBASENAME_NO_YES	=
 DEVINSTALL_LIBBASENAME			= $(DEVINSTALL_LIBBASENAME_$(USE_HEADER)_$(INSTALL_ACTIVE))
@@ -49,7 +57,6 @@ DEVINSTALL_APP					= $(patsubst %.prog,   $(DEVINSTALL_ACTION)_app_%,			$(filter
 DEVINSTALL_SHARED_LIB			= $(patsubst %.slib,   $(DEVINSTALL_ACTION)_shared_lib_%,	$(filter %.slib,  $(TARGET_ALL)))
 DEVINSTALL_STATIC_LIB			= $(patsubst %.a,      $(DEVINSTALL_ACTION)_static_lib_%,	$(filter %.a,     $(TARGET_ALL)))
 DEVINSTALL_HEADER				= $(patsubst %,        $(DEVINSTALL_ACTION)_head_%,			$(DEVINSTALL_LIBBASENAME))
-
 
 # This is the interface to this makefile.
 # Use either ActionDevInstall or ActionDevUInstall

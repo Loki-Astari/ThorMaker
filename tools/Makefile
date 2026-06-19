@@ -113,7 +113,8 @@ else ifneq ($(strip $(TARGET)),)
     include $(BUILD_ROOT)/tools/integrations/header-only.mk
   else
     ifneq ($(filter all build install uninstall devinstall release-only veryclean \
-                    ActionInstall% ActionUInstall% ActionDo% ActionTry%,$(_GOALS)),)
+                    ActionInstall% ActionUInstall% ActionDo% ActionTry% \
+                    ActionDevInstall% ActionDevUInstall%,$(_GOALS)),)
       include $(BUILD_ROOT)/tools/targets/install.mk
     endif
     ifneq ($(filter devinstall devuninstall \
