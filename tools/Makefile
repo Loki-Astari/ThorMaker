@@ -117,7 +117,9 @@ else ifneq ($(strip $(TARGET)),)
       include $(BUILD_ROOT)/tools/targets/install.mk
     endif
     ifneq ($(filter devinstall devuninstall \
-                    ActionDevInstall% ActionDevUInstall%,$(_GOALS)),)
+                    ActionDevInstall% ActionDevUInstall% \
+                    ActionTryDevInstall% ActionTryDevUInstall% \
+                    ActionDoDevInstall% ActionDoDevUInstall%,$(_GOALS)),)
       include $(BUILD_ROOT)/tools/targets/devinstall.mk
     endif
     ifneq ($(filter all build install devinstall test testonly \
