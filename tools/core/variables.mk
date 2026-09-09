@@ -268,6 +268,8 @@ BUILD_EXTENSION_TYPE_debug		=	D
 BUILD_EXTENSION_TYPE_coverage	=	D
 BUILD_EXTENSION_TYPE_profile	=	P
 
-RUNTIME_PATH				= $(shell $(ECHO) $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIME_SHARED_PATH_SET))| sed '-e s/ /:/')
+# NOTE: joined with $(subst); a plain `sed s/ /:/` replaces only the first
+#       separator, which corrupts the list once more than one part is set.
+RUNTIME_PATH				= $(subst $(SPACE),:,$(strip $(PREFIX_LIB) $(UNITTEST_RUNTIME_PATH) $($(RUNTIME_SHARED_PATH_SET))))
 
 DEFER_NAME					= $(strip $(patsubst %.defer, %, $(filter %.defer, $(TARGET_ALL))))

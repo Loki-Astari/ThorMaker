@@ -36,11 +36,16 @@ test-%:
 
 testrun.%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
-	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.prog --gtest_filter=$*
+	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB):$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} test/coverage/unittest.prog --gtest_filter=$*
 
+# On macOS, System Integrity Protection strips DYLD_* from the environment of a
+# protected binary, and lldb is one. Exporting the search path in the shell
+# therefore never reaches the debuggee, which then fails to load its shared
+# libraries. Hand the environment to lldb explicitly instead; target.env-vars
+# is applied on top of the inherited environment, and works on Linux too.
 debugrun.%:
 	$(MAKE) TARGET_MODE=coverage	build_unit_test
-	@$(RUNTIME_SHARED_PATH_SET)="$(PREFIX_LIB)/lib:$(DEFAULT_LIB_DIR)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG} lldb -- test/coverage/unittest.prog --gtest_filter=$*
+	@lldb -o "settings set target.env-vars $(RUNTIME_SHARED_PATH_SET)=$(PREFIX_LIB):$(DEFAULT_LIB_DIR) THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-DEBUG}" -- test/coverage/unittest.prog --gtest_filter=$*
 
 report/test:  $(SRC) $(HEAD) $(TEST_FILES) | report.Dir
 	@if [[ -d test ]]; then $(MAKE) TARGET_MODE=coverage		build_unit_test; fi
@@ -109,7 +114,7 @@ run_unit_test: $(PRETEST)
 	-@$(RM) coverage/*gcda coverage/*gcov test/coverage/*gcda test/coverage/*gcov
 	@$(ECHO) "$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" test/coverage/unittest.prog --gtest_filter=$(TESTNAME)"
 	@$(ECHO) "To easily debug use:"
-	@$(ECHO) "     $(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" lldb test/coverage/unittest.prog"
+	@$(ECHO) "     lldb -o 'settings set target.env-vars $(RUNTIME_SHARED_PATH_SET)=$(RUNTIME_PATHS_USED_TO_LOAD)' -- test/coverage/unittest.prog"
 	@$(RUNTIME_SHARED_PATH_SET)="$(RUNTIME_PATHS_USED_TO_LOAD)" THOR_LOG_LEVEL=$${THOR_LOG_LEVEL:-0} test/coverage/unittest.prog --gtest_color=$(GTEST_COLOUR) --gtest_filter=$(TESTNAME) 2>&1 |	\
 			tee report/test |	\
 			awk '$(FILTER_SCRIPT) {print}';	\
