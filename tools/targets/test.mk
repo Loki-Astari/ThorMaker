@@ -128,7 +128,7 @@ coverage/Mock.built:	| coverage.Dir
 $(BASE)/coverage/MockHeaders.h: $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.h.prefix $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.h.suffix test/MockHeaderInclude.h | coverage.Dir
 	@rm -f coverage/MockHeaders.h.tmp
 	@cat $(THORSANVIL_ROOT)/build/tools/mock/MockHeaders.h.prefix	>> coverage/MockHeaders.h.tmp
-	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' $(CPP_FILES)	/dev/nulll \
+	@perl -ne '/MOCK_(T?)FUNC\([ \t]*([^\) \t]*)/ and print $$1 eq "T" ? "ThorsAnvil::BuildTools::Mock::FuncType_$$2" : "decltype(::$$2)", "-$$2\n"' $(CPP_FILES)	/dev/null \
 		| sort	| uniq																																	\
 		| perl -ne '/([^-]*)-(.*)/ and print "extern MockFunctionHolder<RemoveNoExcept<$$1>> MOCK_BUILD_MOCK_SNAME($$2);\n"'							\
 		>> coverage/MockHeaders.h.tmp
