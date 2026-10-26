@@ -172,6 +172,7 @@ confdefs.h
 
 .claude
 .clangd
+.prompt-history
 
 unittest
 
