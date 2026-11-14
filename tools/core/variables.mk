@@ -126,7 +126,7 @@ YACC_SRC					:= $(wildcard *.y)
 TMP_SRC						= $(patsubst %.y,%.tab.cpp,$(YACC_SRC)) $(patsubst %.l,%.lex.cpp,$(LEX_SRC))
 TMP_HDR						= $(patsubst %.y,%.tab.h,$(YACC_SRC)) $(patsubst %.l,%.lex.h,$(LEX_SRC)) $(patsubst %.y,%.tab.hpp,$(YACC_SRC)) $(patsubst %.l,%.lex.hpp,$(LEX_SRC))
 SRC							= $(TMP_SRC) $(patsubst %.gperf,%.gperf.cpp,$(GPERF_SRC)) $(CPP_SRC)
-DEP							= $(patsubst %.cpp, makedependency/%.d, $(filter-out unittest.cpp,$(SRC)))
+DEP							= $(patsubst %.cpp, makedependency/%.d, $(filter-out unittest.cpp,$(SRC) $(APP_SRC)))
 HEAD						:= $(filter-out $(EXCLUDE_HEADERS), $(wildcard *.h *.tpp *.hpp)) $(EXTRA_HEADERS)
 OBJ							= $(patsubst %.cpp,$(TARGET_MODE)/%.o,$(SRC))
 VERA_SRC					:= $(filter-out $(TEST_IGNORE) $(TMP_SRC), $(CPP_SRC) $(APP_SRC)) $(filter-out %Config.h $(TEST_IGNORE) $(TMP_HDR), $(CPP_HDR)) $(wildcard *.tpp)
@@ -239,9 +239,9 @@ OPTIMIZER_FLAGS_HIDE_profile	=	-g -pg -DPROFILE_TEST
 #
 # Deliberately use C++ compiler for all compilation.
 CC							=	$(CXX)
-CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC3RD) $(TEST_FLAGS) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
+CXXFLAGS					+=	-fPIC $(WARNING_FLAGS) $(THORSANVIL_FLAGS) -isystem $(PREFIX_INC3RD) $(TEST_FLAGS) $(DEFAULT_LINK_INC) $(OPTIMIZER_FLAGS) $(ENVIRONMENT_FLAGS) $(CXX_STD_FLAG)
 
-ALL_LDLIBS					+=	-L $(PREFIX_LIB3RD) $(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS)
+ALL_LDLIBS					+=	-L $(PREFIX_LIB3RD) $(TEST_LIBS) $(OPTIMIZER_LIBS) $(THORSANVIL_LIBS) $(DEFAULT_LINK_LIB)
 
 MOCK_HEADER_INCLUDES_FILES	:=	$(strip $(wildcard MockHeaderInclude.h) $(wildcard test/MockHeaderInclude.h))
 MOCK_HEADER_INCLUDES		=   $(if $(MOCK_HEADER_INCLUDES_FILES), -include $(MOCK_HEADER_INCLUDES_FILES))

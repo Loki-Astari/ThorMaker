@@ -29,6 +29,9 @@ includedir?=@includedir@
 mandir?=@mandir@
 
 DefaultLinkDir=@DefaultLinkDir@
-CXXFLAGS += $(if $(DefaultLinkDir), -I $(DefaultLinkDir)/include)
-LDFLAGS += $(if $(DefaultLinkDir), -L $(DefaultLinkDir)/lib)
+# Not added to CXXFLAGS/LDFLAGS directly: core/variables.mk appends these
+# after the local build/include and build/lib so locally built ThorsAnvil
+# headers and libraries take precedence over installed (e.g. Homebrew) copies.
+DEFAULT_LINK_INC = $(if $(DefaultLinkDir), -I $(DefaultLinkDir)/include)
+DEFAULT_LINK_LIB = $(if $(DefaultLinkDir), -L $(DefaultLinkDir)/lib)
 
